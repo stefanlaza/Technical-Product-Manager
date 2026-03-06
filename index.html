@@ -72,6 +72,59 @@ rect[data-node]:hover{filter:brightness(1.2)}
 .diagram .hint{position:absolute;bottom:12px;right:16px;font-size:0.6rem;color:var(--muted);opacity:0.5;pointer-events:none;transition:opacity 0.3s}
 .diagram.active .hint{opacity:0}
 
+/* CASE STUDIES */
+.case-studies{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:960px;width:100%;margin-top:2.5rem}
+.case-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;transition:transform 0.3s,border-color 0.3s}
+.case-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.12)}
+.case-label{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem;display:inline-block;padding:0.25rem 0.7rem;border-radius:6px}
+.case-card h3{font-size:1.05rem;font-weight:600;margin-bottom:0.6rem}
+.case-card .case-desc{font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:1.2rem}
+.metrics-row{display:flex;gap:1.2rem;flex-wrap:wrap}
+.metric{text-align:center;flex:1;min-width:70px}
+.metric-val{font-size:1.6rem;font-weight:700;letter-spacing:-0.03em;line-height:1.2}
+.metric-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:0.15rem}
+.case-before-after{display:flex;align-items:center;gap:0.5rem;margin-top:1rem;font-size:0.72rem;color:var(--muted)}
+.case-before-after .arrow{color:var(--green);font-size:1rem}
+
+/* MONITORING DASHBOARD */
+.dashboard{width:min(94vw,960px);margin:2.5rem auto 0;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden;padding:1.5rem}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.5rem}
+.dash-title{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)}
+.dash-status{display:flex;align-items:center;gap:0.5rem;font-size:0.72rem;font-weight:600;color:var(--green)}
+.dash-status .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.4}}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+@media(max-width:700px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
+.dash-stat{background:var(--surface);border-radius:12px;padding:1rem;text-align:center}
+.dash-stat-val{font-size:1.5rem;font-weight:700;letter-spacing:-0.03em}
+.dash-stat-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:0.2rem}
+.dash-charts{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:700px){.dash-charts{grid-template-columns:1fr}}
+.dash-chart{background:var(--surface);border-radius:12px;padding:1rem;position:relative}
+.dash-chart-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.8rem}
+.dash-chart svg{width:100%;height:auto;display:block}
+
+/* ADR SECTION */
+.adr-list{max-width:960px;width:100%;margin-top:2.5rem;display:flex;flex-direction:column;gap:1rem}
+.adr-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:border-color 0.3s}
+.adr-card:hover{border-color:rgba(255,255,255,0.12)}
+.adr-header{padding:1.5rem 2rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.adr-header h3{font-size:0.95rem;font-weight:600;flex:1}
+.adr-meta{display:flex;gap:0.8rem;align-items:center;flex-shrink:0}
+.adr-date{font-size:0.65rem;color:var(--muted)}
+.adr-badge{font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:6px}
+.adr-chevron{width:20px;height:20px;color:var(--muted);transition:transform 0.3s;flex-shrink:0}
+.adr-card.open .adr-chevron{transform:rotate(180deg)}
+.adr-body{max-height:0;overflow:hidden;transition:max-height 0.4s ease}
+.adr-card.open .adr-body{max-height:600px}
+.adr-content{padding:0 2rem 1.5rem;border-top:1px solid var(--border);padding-top:1.2rem}
+.adr-content h4{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.4rem;margin-top:1rem}
+.adr-content h4:first-child{margin-top:0}
+.adr-content p,.adr-content ul{font-size:0.82rem;color:var(--muted);line-height:1.7}
+.adr-content ul{padding-left:1.2rem;margin-top:0.3rem}
+.adr-content li{margin-bottom:0.2rem}
+.adr-content .chosen{color:var(--green);font-weight:600}
+
 /* RESPONSIVE */
 @media(max-width:700px){
   nav{padding:0.8rem 1rem}.nav-links{gap:0.8rem}.nav-links a{font-size:0.7rem}
@@ -94,6 +147,9 @@ rect[data-node]:hover{filter:brightness(1.2)}
     <a href="#microservices">Microservices</a>
     <a href="#monolith">Monolith</a>
     <a href="#services">Services</a>
+    <a href="#case-studies">Impact</a>
+    <a href="#monitoring">Dashboard</a>
+    <a href="#adrs">ADRs</a>
     <a href="#contact">Contact</a>
   </div>
 </nav>
@@ -953,6 +1009,318 @@ rect[data-node]:hover{filter:brightness(1.2)}
   </div>
 </section>
 
+<!-- ══════════ CASE STUDIES ══════════ -->
+<section id="case-studies" class="alt-bg">
+  <div class="tag reveal" style="color:var(--green)">Proven Results</div>
+  <h2 class="reveal">Case Studies</h2>
+  <p class="sub reveal">Measurable outcomes from real-world infrastructure and delivery projects.</p>
+
+  <div class="case-studies reveal">
+    <div class="case-card">
+      <span class="case-label" style="background:rgba(52,211,153,0.1);color:var(--green)">CI/CD Optimization</span>
+      <h3>Deployment Pipeline Overhaul</h3>
+      <p class="case-desc">Migrated a monolithic Jenkins pipeline to GitHub Actions with parallelized builds, Docker layer caching, and blue-green deployments on ECS Fargate.</p>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-val" style="color:var(--green)">92%</div><div class="metric-label">Faster Deploys</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--blue)">2hr</div><div class="metric-label">to 8min</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--purple)">0</div><div class="metric-label">Downtime</div></div>
+      </div>
+      <div class="case-before-after">
+        <span>Manual deploys, 2hr windows</span>
+        <span class="arrow">&rarr;</span>
+        <span>Automated, 8min end-to-end</span>
+      </div>
+    </div>
+
+    <div class="case-card">
+      <span class="case-label" style="background:rgba(255,153,0,0.1);color:var(--aws)">Cost Optimization</span>
+      <h3>AWS Infrastructure Right-Sizing</h3>
+      <p class="case-desc">Audited 120+ EC2 instances using CloudWatch metrics, migrated to Graviton, implemented Savings Plans and spot instances for non-critical workloads.</p>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-val" style="color:var(--aws)">41%</div><div class="metric-label">Cost Reduction</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--green)">$18K</div><div class="metric-label">/mo saved</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--blue)">99.97%</div><div class="metric-label">Uptime kept</div></div>
+      </div>
+      <div class="case-before-after">
+        <span>$44K/mo overspend</span>
+        <span class="arrow">&rarr;</span>
+        <span>$26K/mo, same performance</span>
+      </div>
+    </div>
+
+    <div class="case-card">
+      <span class="case-label" style="background:rgba(248,113,113,0.1);color:var(--red)">Incident Response</span>
+      <h3>Production Outage &mdash; RDS Failover</h3>
+      <p class="case-desc">Led incident response for a critical database failure. Identified root cause (storage I/O exhaustion), executed Multi-AZ failover, and implemented automated alerting to prevent recurrence.</p>
+      <div class="metrics-row">
+        <div class="metric"><div class="metric-val" style="color:var(--red)">23min</div><div class="metric-label">MTTR</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--green)">100%</div><div class="metric-label">Data Intact</div></div>
+        <div class="metric"><div class="metric-val" style="color:var(--purple)">4</div><div class="metric-label">Runbooks Added</div></div>
+      </div>
+      <div class="case-before-after">
+        <span>No runbooks, 2hr MTTR</span>
+        <span class="arrow">&rarr;</span>
+        <span>Automated failover, 23min MTTR</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ MONITORING DASHBOARD ══════════ -->
+<section id="monitoring">
+  <div class="tag reveal" style="color:var(--red)">Observability</div>
+  <h2 class="reveal">Live Dashboard</h2>
+  <p class="sub reveal">A production-grade monitoring view — the kind I build and maintain for every system I run.</p>
+
+  <div class="dashboard reveal">
+    <div class="dash-header">
+      <span class="dash-title">Production &mdash; us-east-1</span>
+      <span class="dash-status"><span class="dot"></span> All Systems Operational</span>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-stat">
+        <div class="dash-stat-val" style="color:var(--green)" id="dash-uptime">99.98%</div>
+        <div class="dash-stat-label">Uptime (30d)</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-val" style="color:var(--blue)" id="dash-latency">42ms</div>
+        <div class="dash-stat-label">P95 Latency</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-val" style="color:var(--cyan)" id="dash-rps">1.2K</div>
+        <div class="dash-stat-label">Requests/sec</div>
+      </div>
+      <div class="dash-stat">
+        <div class="dash-stat-val" style="color:var(--green)" id="dash-errors">0.02%</div>
+        <div class="dash-stat-label">Error Rate</div>
+      </div>
+    </div>
+    <div class="dash-charts">
+      <div class="dash-chart">
+        <div class="dash-chart-title">Request Latency (ms) — 24h</div>
+        <svg id="latency-chart" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="latGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a9eff" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#4a9eff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <text x="2" y="28" fill="rgba(255,255,255,0.15)" font-size="7">100ms</text>
+          <text x="2" y="58" fill="rgba(255,255,255,0.15)" font-size="7">50ms</text>
+          <text x="2" y="88" fill="rgba(255,255,255,0.15)" font-size="7">25ms</text>
+          <!-- Area fill -->
+          <path d="M0,70 Q20,65 40,68 T80,60 T120,55 T160,62 T200,48 T240,52 T280,45 T320,50 T360,42 T400,44 L400,120 L0,120Z" fill="url(#latGrad)"/>
+          <!-- Line -->
+          <path d="M0,70 Q20,65 40,68 T80,60 T120,55 T160,62 T200,48 T240,52 T280,45 T320,50 T360,42 T400,44" stroke="#4a9eff" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Current value dot -->
+          <circle cx="400" cy="44" r="3" fill="#4a9eff"/>
+        </svg>
+      </div>
+      <div class="dash-chart">
+        <div class="dash-chart-title">Error Rate (%) — 24h</div>
+        <svg id="error-chart" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="errGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#34d399" stop-opacity="0.2"/>
+              <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <text x="2" y="28" fill="rgba(255,255,255,0.15)" font-size="7">1.0%</text>
+          <text x="2" y="58" fill="rgba(255,255,255,0.15)" font-size="7">0.5%</text>
+          <text x="2" y="88" fill="rgba(255,255,255,0.15)" font-size="7">0.1%</text>
+          <!-- Spike at ~60% through for drama -->
+          <path d="M0,105 Q20,104 40,106 T80,104 T120,105 T160,103 T200,100 T220,40 T240,95 T280,104 T320,106 T360,105 T400,104 L400,120 L0,120Z" fill="url(#errGrad)"/>
+          <path d="M0,105 Q20,104 40,106 T80,104 T120,105 T160,103 T200,100 T220,40 T240,95 T280,104 T320,106 T360,105 T400,104" stroke="#34d399" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Spike annotation -->
+          <circle cx="220" cy="40" r="3" fill="#f87171"/>
+          <text x="225" y="38" fill="#f87171" font-size="7" font-weight="600">Spike — auto-recovered</text>
+          <circle cx="400" cy="104" r="3" fill="#34d399"/>
+        </svg>
+      </div>
+      <div class="dash-chart">
+        <div class="dash-chart-title">CPU Utilization (%) — 24h</div>
+        <svg viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <text x="2" y="28" fill="rgba(255,255,255,0.15)" font-size="7">80%</text>
+          <text x="2" y="58" fill="rgba(255,255,255,0.15)" font-size="7">50%</text>
+          <text x="2" y="88" fill="rgba(255,255,255,0.15)" font-size="7">20%</text>
+          <path d="M0,65 Q20,62 40,68 T80,55 T120,60 T160,50 T200,52 T240,48 T280,55 T320,45 T360,50 T400,47 L400,120 L0,120Z" fill="url(#cpuGrad)"/>
+          <path d="M0,65 Q20,62 40,68 T80,55 T120,60 T160,50 T200,52 T240,48 T280,55 T320,45 T360,50 T400,47" stroke="#a78bfa" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="400" cy="47" r="3" fill="#a78bfa"/>
+        </svg>
+      </div>
+      <div class="dash-chart">
+        <div class="dash-chart-title">Throughput (req/s) — 24h</div>
+        <svg viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="rpsGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="30" x2="400" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="400" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <line x1="0" y1="90" x2="400" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+          <text x="2" y="28" fill="rgba(255,255,255,0.15)" font-size="7">2K</text>
+          <text x="2" y="58" fill="rgba(255,255,255,0.15)" font-size="7">1K</text>
+          <text x="2" y="88" fill="rgba(255,255,255,0.15)" font-size="7">500</text>
+          <path d="M0,80 Q20,78 40,75 T80,70 T120,65 T160,55 T200,50 T240,45 T280,42 T320,38 T360,35 T400,32 L400,120 L0,120Z" fill="url(#rpsGrad)"/>
+          <path d="M0,80 Q20,78 40,75 T80,70 T120,65 T160,55 T200,50 T240,45 T280,42 T320,38 T360,35 T400,32" stroke="#22d3ee" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <circle cx="400" cy="32" r="3" fill="#22d3ee"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ADRs ══════════ -->
+<section id="adrs" class="alt-bg">
+  <div class="tag reveal" style="color:var(--purple)">Decision Making</div>
+  <h2 class="reveal">Architecture Decision Records</h2>
+  <p class="sub reveal">How I evaluate trade-offs and make infrastructure decisions — documented for transparency.</p>
+
+  <div class="adr-list reveal">
+    <div class="adr-card">
+      <div class="adr-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>ADR-001: Use ECS Fargate over EKS for Microservices</h3>
+        <div class="adr-meta">
+          <span class="adr-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Accepted</span>
+          <span class="adr-date">2025-09-15</span>
+        </div>
+        <svg class="adr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="adr-body">
+        <div class="adr-content">
+          <h4>Context</h4>
+          <p>Team of 4 engineers needs to deploy 8 containerized microservices. Must choose between ECS Fargate (serverless containers) and EKS (managed Kubernetes).</p>
+          <h4>Options Considered</h4>
+          <ul>
+            <li class="chosen">ECS Fargate — serverless, no cluster management, pay-per-task</li>
+            <li>EKS — full Kubernetes, powerful but requires dedicated ops expertise</li>
+            <li>ECS on EC2 — cheaper compute but requires capacity planning</li>
+          </ul>
+          <h4>Decision</h4>
+          <p>ECS Fargate. For a small team, the operational overhead of EKS (upgrades, node groups, networking plugins) outweighs its flexibility. Fargate eliminates capacity planning and reduces on-call burden.</p>
+          <h4>Consequences</h4>
+          <ul>
+            <li>No cluster management — team focuses on application code</li>
+            <li>~20% higher per-task cost vs EC2, offset by reduced ops hours</li>
+            <li>Limited to ECS ecosystem; migration to EKS possible later if needed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>ADR-002: Adopt Terraform over CloudFormation for IaC</h3>
+        <div class="adr-meta">
+          <span class="adr-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Accepted</span>
+          <span class="adr-date">2025-08-20</span>
+        </div>
+        <svg class="adr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="adr-body">
+        <div class="adr-content">
+          <h4>Context</h4>
+          <p>Infrastructure spans AWS primarily, with some Cloudflare DNS and GitHub Actions. Need a consistent IaC tool that handles multi-provider resources.</p>
+          <h4>Options Considered</h4>
+          <ul>
+            <li class="chosen">Terraform — multi-provider, large ecosystem, state management</li>
+            <li>CloudFormation — AWS-native, no state file to manage, but AWS-only</li>
+            <li>Pulumi — code-first IaC, but smaller community and learning curve for team</li>
+          </ul>
+          <h4>Decision</h4>
+          <p>Terraform with S3 + DynamoDB backend for state. HCL is declarative and team-friendly. The multi-provider support means one tool for AWS, Cloudflare, and GitHub resources.</p>
+          <h4>Consequences</h4>
+          <ul>
+            <li>State file requires careful management (remote backend, locking)</li>
+            <li>Team needs Terraform training — mitigated with modules and code review</li>
+            <li>Unified workflow for all infrastructure, not just AWS</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>ADR-003: Implement Blue-Green over Canary Deployments</h3>
+        <div class="adr-meta">
+          <span class="adr-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Accepted</span>
+          <span class="adr-date">2025-10-05</span>
+        </div>
+        <svg class="adr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="adr-body">
+        <div class="adr-content">
+          <h4>Context</h4>
+          <p>Production deployments occasionally cause regressions. Need a zero-downtime strategy with instant rollback capability. Running on ECS Fargate behind ALB.</p>
+          <h4>Options Considered</h4>
+          <ul>
+            <li class="chosen">Blue-Green — ALB target group swap, instant full cutover and rollback</li>
+            <li>Canary — gradual traffic shift (1% → 5% → 25% → 100%), requires metrics-based automation</li>
+            <li>Rolling — in-place updates, simpler but slower rollback</li>
+          </ul>
+          <h4>Decision</h4>
+          <p>Blue-Green via CodeDeploy + ALB. Rollback is a single target-group switch (under 30s). Canary would be ideal but requires more sophisticated monitoring and automated rollback triggers that our current observability stack doesn't support yet.</p>
+          <h4>Consequences</h4>
+          <ul>
+            <li>Double the task count during deployments (brief cost increase)</li>
+            <li>Instant rollback — critical for customer-facing services</li>
+            <li>Can evolve to canary later once monitoring matures</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="adr-card">
+      <div class="adr-header" onclick="this.parentElement.classList.toggle('open')">
+        <h3>ADR-004: PostgreSQL on RDS over DynamoDB for Primary Datastore</h3>
+        <div class="adr-meta">
+          <span class="adr-badge" style="background:rgba(74,158,255,0.1);color:var(--blue)">Superseded</span>
+          <span class="adr-date">2025-07-10</span>
+        </div>
+        <svg class="adr-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="adr-body">
+        <div class="adr-content">
+          <h4>Context</h4>
+          <p>Application has complex relational data (orders, users, inventory) with joins and transactions. Evaluating managed database options on AWS.</p>
+          <h4>Options Considered</h4>
+          <ul>
+            <li class="chosen">RDS PostgreSQL — relational, Multi-AZ, mature ecosystem</li>
+            <li>DynamoDB — serverless NoSQL, single-digit ms latency, but forces denormalized design</li>
+            <li>Aurora Serverless v2 — auto-scaling, but higher cost at steady-state</li>
+          </ul>
+          <h4>Decision</h4>
+          <p>RDS PostgreSQL Multi-AZ (db.r6g.large). Relational model fits the domain. Read replicas handle reporting queries. Superseded by ADR-007 which migrates hot-path queries to DynamoDB while keeping PostgreSQL as source of truth.</p>
+          <h4>Consequences</h4>
+          <ul>
+            <li>Predictable costs with reserved instances</li>
+            <li>Need to manage connection pooling (PgBouncer) at scale</li>
+            <li>Backup/restore well-understood; PITR available</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════ CONTACT ══════════ -->
 <section id="contact">
   <div class="tag reveal" style="color:var(--cyan)">Get in touch</div>
@@ -987,6 +1355,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     },{threshold:0.08});
     els.forEach(el=>obs.observe(el));
   }else{els.forEach(el=>el.classList.add('visible'))}
+
+  /* Dashboard live number animation */
+  const dashEls={uptime:document.getElementById('dash-uptime'),latency:document.getElementById('dash-latency'),rps:document.getElementById('dash-rps'),errors:document.getElementById('dash-errors')};
+  if(dashEls.uptime){
+    setInterval(()=>{
+      const bases={uptime:[99.95,99.99],latency:[38,52],rps:[1.0,1.4],errors:[0.01,0.04]};
+      const r=(min,max)=>(Math.random()*(max-min)+min);
+      dashEls.uptime.textContent=r(...bases.uptime).toFixed(2)+'%';
+      dashEls.latency.textContent=Math.round(r(...bases.latency))+'ms';
+      dashEls.rps.textContent=r(...bases.rps).toFixed(1)+'K';
+      dashEls.errors.textContent=r(...bases.errors).toFixed(2)+'%';
+    },3000);
+  }
 
   /* Click-to-highlight: click a node to highlight its connections */
   document.querySelectorAll('.diagram svg').forEach(svg=>{

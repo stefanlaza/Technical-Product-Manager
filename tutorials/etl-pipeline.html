@@ -1,0 +1,350 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>ETL Pipeline Setup Guide — Stefan Laza</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#050507;color:#f0f0f5;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:3rem 2rem 5rem}
+a{color:#34d399;text-decoration:none}.back{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:#6e6e80;margin-bottom:2.5rem;transition:color .2s}.back:hover{color:#f0f0f5}
+h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
+.subtitle{color:#6e6e80;font-size:1rem;margin-bottom:3rem}
+h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .5rem;color:#34d399}
+p,li{font-size:.88rem;color:#c0c0c8;margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:1rem}
+pre{background:#0d0d14;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0 1.5rem;font-size:.78rem;line-height:1.6}
+code{font-family:'SF Mono',Consolas,monospace}
+pre code{color:#c0c0c8}
+.kw{color:#a78bfa}.str{color:#34d399}.cm{color:#555}.fn{color:#4a9eff}.num{color:#fb923c}.op{color:#6e6e80}
+.note{background:rgba(74,158,255,0.06);border-left:3px solid #4a9eff;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+.warn{background:rgba(248,113,113,0.06);border-left:3px solid #f87171;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+footer{text-align:center;padding:3rem 0;font-size:.7rem;color:#6e6e80;border-top:1px solid rgba(255,255,255,0.06);margin-top:3rem}
+</style></head><body><div class="wrap">
+<a href="../index.html#etl" class="back">← Back to Portfolio</a>
+<h1>ETL Pipeline Setup Guide</h1>
+<p class="subtitle">Extract from APIs, databases, and files → S3 staging → AWS Glue transforms → Redshift loading</p>
+
+<h2>1. Prerequisites</h2>
+<pre><code><span class="cm"># Install AWS CLI</span>
+curl <span class="str">"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"</span> -o awscliv2.zip
+unzip awscliv2.zip && sudo ./aws/install
+aws configure  <span class="cm"># Set access key, secret, region</span>
+
+<span class="cm"># Install Terraform</span>
+wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
+unzip terraform_1.7.0_linux_amd64.zip && sudo mv terraform /usr/local/bin/
+
+<span class="cm"># Python dependencies</span>
+pip install boto3 psycopg2-binary requests paramiko jsonschema</code></pre>
+
+<h2>2. S3 Bucket Setup</h2>
+<h3>terraform/s3.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"raw_data"</span> {
+  bucket = <span class="str">"mycompany-raw-data"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_versioning"</span> <span class="str">"raw_versioning"</span> {
+  bucket = aws_s3_bucket.raw_data.id
+  versioning_configuration { status = <span class="str">"Enabled"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_lifecycle_configuration"</span> <span class="str">"raw_lifecycle"</span> {
+  bucket = aws_s3_bucket.raw_data.id
+  rule {
+    id     = <span class="str">"archive-old"</span>
+    status = <span class="str">"Enabled"</span>
+    transition {
+      days          = <span class="num">90</span>
+      storage_class = <span class="str">"GLACIER"</span>
+    }
+    expiration { days = <span class="num">365</span> }
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"processed"</span> {
+  bucket = <span class="str">"mycompany-processed-data"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"quarantine"</span> {
+  bucket = <span class="str">"mycompany-quarantine"</span>
+}</code></pre>
+
+<h2>3. Data Extraction Scripts</h2>
+<h3>extract/api_extractor.py — Pull from REST APIs</h3>
+<pre><code><span class="kw">import</span> requests, boto3, json
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> time <span class="kw">import</span> sleep
+
+s3 = boto3.client(<span class="str">'s3'</span>)
+BUCKET = <span class="str">'mycompany-raw-data'</span>
+TODAY = datetime.now().strftime(<span class="str">'%Y/%m/%d'</span>)
+
+ENDPOINTS = [
+    {<span class="str">'name'</span>: <span class="str">'users'</span>,    <span class="str">'url'</span>: <span class="str">'https://api.example.com/v1/users'</span>},
+    {<span class="str">'name'</span>: <span class="str">'orders'</span>,   <span class="str">'url'</span>: <span class="str">'https://api.example.com/v1/orders'</span>},
+    {<span class="str">'name'</span>: <span class="str">'products'</span>, <span class="str">'url'</span>: <span class="str">'https://api.example.com/v1/products'</span>},
+]
+
+<span class="kw">def</span> <span class="fn">extract_api</span>(endpoint):
+    all_data = []
+    page = <span class="num">1</span>
+    <span class="kw">while True</span>:
+        <span class="kw">for</span> attempt <span class="kw">in</span> range(<span class="num">3</span>):  <span class="cm"># retry logic</span>
+            <span class="kw">try</span>:
+                resp = requests.get(
+                    endpoint[<span class="str">'url'</span>],
+                    params={<span class="str">'page'</span>: page, <span class="str">'per_page'</span>: <span class="num">100</span>},
+                    timeout=<span class="num">30</span>
+                )
+                resp.raise_for_status()
+                <span class="kw">break</span>
+            <span class="kw">except</span> requests.RequestException:
+                sleep(<span class="num">2</span> ** attempt)
+        data = resp.json()
+        <span class="kw">if not</span> data[<span class="str">'results'</span>]: <span class="kw">break</span>
+        all_data.extend(data[<span class="str">'results'</span>])
+        page += <span class="num">1</span>
+
+    key = <span class="str">f"api/<span class="op">{</span>TODAY<span class="op">}</span>/<span class="op">{</span>endpoint['name']<span class="op">}</span>.json"</span>
+    s3.put_object(Bucket=BUCKET, Key=key, Body=json.dumps(all_data))
+    <span class="kw">print</span>(<span class="str">f"Uploaded <span class="op">{</span>len(all_data)<span class="op">}</span> records to <span class="op">{</span>key<span class="op">}</span>"</span>)
+
+<span class="kw">for</span> ep <span class="kw">in</span> ENDPOINTS:
+    extract_api(ep)</code></pre>
+
+<h3>extract/db_extractor.py — Incremental PostgreSQL Extraction</h3>
+<pre><code><span class="kw">import</span> psycopg2, boto3, csv, io
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+s3 = boto3.client(<span class="str">'s3'</span>)
+TODAY = datetime.now().strftime(<span class="str">'%Y/%m/%d'</span>)
+
+conn = psycopg2.connect(
+    host=<span class="str">"source-db.example.com"</span>, dbname=<span class="str">"production"</span>,
+    user=<span class="str">"etl_reader"</span>, password=<span class="str">"from-secrets-manager"</span>
+)
+
+<span class="cm"># Get last extraction timestamp from SSM Parameter Store</span>
+ssm = boto3.client(<span class="str">'ssm'</span>)
+last_run = ssm.get_parameter(Name=<span class="str">'/etl/last_extract_ts'</span>)[<span class="str">'Parameter'</span>][<span class="str">'Value'</span>]
+
+<span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+    cur.execute(<span class="str">"""
+        SELECT id, name, email, updated_at
+        FROM users WHERE updated_at > %s
+        ORDER BY updated_at
+    """</span>, (last_run,))
+    rows = cur.fetchall()
+
+<span class="cm"># Write to CSV in memory and upload</span>
+buf = io.StringIO()
+writer = csv.writer(buf)
+writer.writerow([<span class="str">'id'</span>, <span class="str">'name'</span>, <span class="str">'email'</span>, <span class="str">'updated_at'</span>])
+writer.writerows(rows)
+
+s3.put_object(
+    Bucket=<span class="str">'mycompany-raw-data'</span>,
+    Key=<span class="str">f"db/<span class="op">{</span>TODAY<span class="op">}</span>/users.csv"</span>,
+    Body=buf.getvalue()
+)
+
+<span class="cm"># Update watermark</span>
+ssm.put_parameter(Name=<span class="str">'/etl/last_extract_ts'</span>,
+    Value=datetime.now().isoformat(), Overwrite=<span class="kw">True</span>)
+<span class="kw">print</span>(<span class="str">f"Extracted <span class="op">{</span>len(rows)<span class="op">}</span> rows"</span>)</code></pre>
+
+<h2>4. Schema Validation</h2>
+<h3>validate/schema_check.py</h3>
+<pre><code><span class="kw">import</span> json, boto3
+<span class="kw">from</span> jsonschema <span class="kw">import</span> validate, ValidationError
+
+USER_SCHEMA = {
+    <span class="str">"type"</span>: <span class="str">"object"</span>,
+    <span class="str">"required"</span>: [<span class="str">"id"</span>, <span class="str">"name"</span>, <span class="str">"email"</span>],
+    <span class="str">"properties"</span>: {
+        <span class="str">"id"</span>:    {<span class="str">"type"</span>: <span class="str">"integer"</span>},
+        <span class="str">"name"</span>:  {<span class="str">"type"</span>: <span class="str">"string"</span>, <span class="str">"minLength"</span>: <span class="num">1</span>},
+        <span class="str">"email"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>, <span class="str">"format"</span>: <span class="str">"email"</span>},
+    }
+}
+
+<span class="kw">def</span> <span class="fn">validate_records</span>(records, schema):
+    valid, invalid = [], []
+    <span class="kw">for</span> r <span class="kw">in</span> records:
+        <span class="kw">try</span>:
+            validate(instance=r, schema=schema)
+            valid.append(r)
+        <span class="kw">except</span> ValidationError:
+            invalid.append(r)
+    <span class="kw">return</span> valid, invalid
+
+<span class="cm"># Upload invalid records to quarantine bucket</span>
+s3 = boto3.client(<span class="str">'s3'</span>)
+<span class="kw">if</span> invalid:
+    s3.put_object(Bucket=<span class="str">'mycompany-quarantine'</span>,
+        Key=<span class="str">f"users/<span class="op">{</span>TODAY<span class="op">}</span>/rejected.json"</span>,
+        Body=json.dumps(invalid))</code></pre>
+
+<h2>5. AWS Glue Job</h2>
+<h3>terraform/glue.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_glue_catalog_database"</span> <span class="str">"etl_db"</span> {
+  name = <span class="str">"etl_catalog"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_glue_job"</span> <span class="str">"transform"</span> {
+  name     = <span class="str">"daily-transform"</span>
+  role_arn = aws_iam_role.glue_role.arn
+
+  command {
+    script_location = <span class="str">"s3://mycompany-glue-scripts/transform.py"</span>
+    python_version  = <span class="str">"3"</span>
+  }
+
+  default_arguments = {
+    <span class="str">"--job-bookmark-option"</span> = <span class="str">"job-bookmark-enable"</span>
+    <span class="str">"--TempDir"</span>             = <span class="str">"s3://mycompany-glue-temp/"</span>
+    <span class="str">"--source_bucket"</span>       = <span class="str">"mycompany-raw-data"</span>
+    <span class="str">"--dest_bucket"</span>         = <span class="str">"mycompany-processed-data"</span>
+  }
+
+  max_retries       = <span class="num">1</span>
+  timeout           = <span class="num">60</span>
+  number_of_workers = <span class="num">4</span>
+  worker_type       = <span class="str">"G.1X"</span>
+}</code></pre>
+
+<h3>glue/transform.py — PySpark Glue Script</h3>
+<pre><code><span class="kw">import</span> sys
+<span class="kw">from</span> awsglue.transforms <span class="kw">import</span> *
+<span class="kw">from</span> awsglue.utils <span class="kw">import</span> getResolvedOptions
+<span class="kw">from</span> pyspark.context <span class="kw">import</span> SparkContext
+<span class="kw">from</span> awsglue.context <span class="kw">import</span> GlueContext
+<span class="kw">from</span> awsglue.job <span class="kw">import</span> Job
+<span class="kw">from</span> pyspark.sql.functions <span class="kw">import</span> col, sha2, concat_ws, count
+
+args = getResolvedOptions(sys.argv, [<span class="str">'JOB_NAME'</span>, <span class="str">'source_bucket'</span>, <span class="str">'dest_bucket'</span>])
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args[<span class="str">'JOB_NAME'</span>], args)
+
+<span class="cm"># 1. Read raw data from S3</span>
+df = spark.read.json(<span class="str">f"s3://<span class="op">{</span>args['source_bucket']<span class="op">}</span>/api/*/*.json"</span>)
+
+<span class="cm"># 2. Clean: drop nulls, cast types</span>
+df_clean = df.dropna(subset=[<span class="str">"id"</span>, <span class="str">"email"</span>]) \
+    .withColumn(<span class="str">"id"</span>, col(<span class="str">"id"</span>).cast(<span class="str">"long"</span>))
+
+<span class="cm"># 3. Deduplicate using hash</span>
+df_dedup = df_clean.withColumn(
+    <span class="str">"row_hash"</span>, sha2(concat_ws(<span class="str">"||"</span>, *df_clean.columns), <span class="num">256</span>)
+).dropDuplicates([<span class="str">"row_hash"</span>]).drop(<span class="str">"row_hash"</span>)
+
+<span class="cm"># 4. Aggregate: daily counts per user</span>
+df_agg = df_dedup.groupBy(<span class="str">"user_id"</span>).agg(count(<span class="str">"*"</span>).alias(<span class="str">"daily_count"</span>))
+
+<span class="cm"># 5. Write to processed bucket as Parquet</span>
+df_dedup.write.mode(<span class="str">"overwrite"</span>).parquet(
+    <span class="str">f"s3://<span class="op">{</span>args['dest_bucket']<span class="op">}</span>/cleaned/"</span>
+)
+df_agg.write.mode(<span class="str">"overwrite"</span>).parquet(
+    <span class="str">f"s3://<span class="op">{</span>args['dest_bucket']<span class="op">}</span>/aggregated/"</span>
+)
+job.commit()</code></pre>
+
+<h2>6. Loading to Redshift</h2>
+<h3>load/redshift_copy.py</h3>
+<pre><code><span class="kw">import</span> psycopg2
+
+conn = psycopg2.connect(
+    host=<span class="str">"my-cluster.xxxxx.redshift.amazonaws.com"</span>,
+    dbname=<span class="str">"warehouse"</span>, user=<span class="str">"etl_loader"</span>,
+    password=<span class="str">"from-secrets-manager"</span>, port=<span class="num">5439</span>
+)
+
+<span class="kw">with</span> conn.cursor() <span class="kw">as</span> cur:
+    cur.execute(<span class="str">"""
+        COPY users_staging
+        FROM 's3://mycompany-processed-data/cleaned/'
+        IAM_ROLE 'arn:aws:iam::123456789:role/RedshiftS3ReadRole'
+        FORMAT AS PARQUET;
+    """</span>)
+
+    <span class="cm"># Merge into final table (upsert)</span>
+    cur.execute(<span class="str">"""
+        BEGIN TRANSACTION;
+        DELETE FROM users WHERE id IN (SELECT id FROM users_staging);
+        INSERT INTO users SELECT * FROM users_staging;
+        TRUNCATE users_staging;
+        COMMIT;
+    """</span>)
+
+    <span class="cm"># Verify row count</span>
+    cur.execute(<span class="str">"SELECT COUNT(*) FROM users"</span>)
+    <span class="kw">print</span>(<span class="str">f"Total rows in users: <span class="op">{</span>cur.fetchone()[0]<span class="op">}</span>"</span>)
+
+conn.close()</code></pre>
+
+<h2>7. Scheduling with EventBridge</h2>
+<h3>terraform/schedule.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_cloudwatch_event_rule"</span> <span class="str">"daily_etl"</span> {
+  name                = <span class="str">"daily-etl-trigger"</span>
+  schedule_expression = <span class="str">"cron(0 3 * * ? *)"</span>  <span class="cm"># 3 AM UTC daily</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_event_target"</span> <span class="str">"trigger_glue"</span> {
+  rule     = aws_cloudwatch_event_rule.daily_etl.name
+  arn      = aws_glue_job.transform.arn
+  role_arn = aws_iam_role.eventbridge_glue.arn
+}</code></pre>
+
+<h2>8. CloudWatch Monitoring & SNS Alerts</h2>
+<h3>terraform/monitoring.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_sns_topic"</span> <span class="str">"etl_alerts"</span> {
+  name = <span class="str">"etl-failure-alerts"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_sns_topic_subscription"</span> <span class="str">"email"</span> {
+  topic_arn = aws_sns_topic.etl_alerts.arn
+  protocol  = <span class="str">"email"</span>
+  endpoint  = <span class="str">"ops-team@company.com"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"glue_failure"</span> {
+  alarm_name          = <span class="str">"glue-job-failure"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">1</span>
+  metric_name         = <span class="str">"glue.driver.aggregate.numFailedTasks"</span>
+  namespace           = <span class="str">"Glue"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Sum"</span>
+  threshold           = <span class="num">0</span>
+  alarm_actions       = [aws_sns_topic.etl_alerts.arn]
+  dimensions = { JobName = aws_glue_job.transform.name }
+}</code></pre>
+
+<h2>9. Testing</h2>
+<pre><code><span class="cm"># Generate sample test data</span>
+python -c <span class="str">"
+import json
+data = [{'id': i, 'name': f'User {i}', 'email': f'user{i}@test.com'}
+        for i in range(100)]
+with open('test_data.json', 'w') as f:
+    json.dump(data, f)
+"</span>
+
+<span class="cm"># Upload test data</span>
+aws s3 cp test_data.json s3://mycompany-raw-data/api/2026/01/01/users.json
+
+<span class="cm"># Run Glue job manually</span>
+aws glue start-job-run --job-name daily-transform
+
+<span class="cm"># Check job status</span>
+aws glue get-job-runs --job-name daily-transform --max-items <span class="num">1</span>
+
+<span class="cm"># Verify output in S3</span>
+aws s3 ls s3://mycompany-processed-data/cleaned/ --recursive</code></pre>
+
+<div class="note">Always test with a small dataset first. Use Glue job bookmarks to avoid reprocessing data on subsequent runs.</div>
+
+<footer>Stefan Laza — DevOps Engineer — 2026</footer>
+</div></body></html>

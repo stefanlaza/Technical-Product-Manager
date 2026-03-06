@@ -1,0 +1,868 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Java Monolith to EC2 Deployment Guide — Stefan Laza</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#050507;color:#f0f0f5;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:3rem 2rem 5rem}
+a{color:#34d399;text-decoration:none}.back{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:#6e6e80;margin-bottom:2.5rem;transition:color .2s}.back:hover{color:#f0f0f5}
+h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
+.subtitle{color:#6e6e80;font-size:1rem;margin-bottom:3rem}
+h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .5rem;color:#34d399}
+p,li{font-size:.88rem;color:#c0c0c8;margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:1rem}
+pre{background:#0d0d14;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0 1.5rem;font-size:.78rem;line-height:1.6}
+code{font-family:'SF Mono',Consolas,monospace}
+pre code{color:#c0c0c8}
+.kw{color:#a78bfa}.str{color:#34d399}.cm{color:#555}.fn{color:#4a9eff}.num{color:#fb923c}.op{color:#6e6e80}
+.note{background:rgba(74,158,255,0.06);border-left:3px solid #4a9eff;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+.warn{background:rgba(248,113,113,0.06);border-left:3px solid #f87171;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+footer{text-align:center;padding:3rem 0;font-size:.7rem;color:#6e6e80;border-top:1px solid rgba(255,255,255,0.06);margin-top:3rem}
+</style></head><body><div class="wrap">
+<a href="../index.html#monolith" class="back">&larr; Back to Portfolio</a>
+<h1>Java Monolith to EC2 Deployment Guide</h1>
+<p class="subtitle">Spring Boot WAR &rarr; Jenkins CI &rarr; S3 Artifact &rarr; Ansible rolling deploy &rarr; 4&times; EC2 Tomcat behind ALB</p>
+
+<h2>1. Prerequisites</h2>
+<pre><code><span class="cm"># Install JDK 17</span>
+sudo apt install -y openjdk-17-jdk
+
+<span class="cm"># Install Maven</span>
+sudo apt install -y maven
+
+<span class="cm"># Install Ansible</span>
+sudo apt-add-repository --yes ppa:ansible/ansible
+sudo apt update && sudo apt install -y ansible
+
+<span class="cm"># Install AWS CLI</span>
+curl <span class="str">"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"</span> -o awscliv2.zip
+unzip awscliv2.zip && sudo ./aws/install
+
+<span class="cm"># Install Terraform</span>
+wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
+unzip terraform_1.7.0_linux_amd64.zip && sudo mv terraform /usr/local/bin/</code></pre>
+
+<h2>2. Spring Boot WAR Packaging</h2>
+<h3>pom.xml</h3>
+<pre><code><span class="op">&lt;</span><span class="kw">project</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">modelVersion</span><span class="op">&gt;</span>4.0.0<span class="op">&lt;/</span><span class="kw">modelVersion</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">parent</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-parent<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>3.2.1<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="kw">parent</span><span class="op">&gt;</span>
+
+  <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>com.app<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>monolith-app<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>1.0.0<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">packaging</span><span class="op">&gt;</span>war<span class="op">&lt;/</span><span class="kw">packaging</span><span class="op">&gt;</span>
+
+  <span class="op">&lt;</span><span class="kw">dependencies</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-web<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-data-jpa<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-actuator<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-tomcat<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>provided<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.postgresql<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>postgresql<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>runtime<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-test<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>test<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="kw">dependencies</span><span class="op">&gt;</span>
+
+  <span class="op">&lt;</span><span class="kw">profiles</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">profile</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">id</span><span class="op">&gt;</span>prod<span class="op">&lt;/</span><span class="kw">id</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">properties</span><span class="op">&gt;</span>
+        <span class="op">&lt;</span><span class="kw">spring.profiles.active</span><span class="op">&gt;</span>prod<span class="op">&lt;/</span><span class="kw">spring.profiles.active</span><span class="op">&gt;</span>
+      <span class="op">&lt;/</span><span class="kw">properties</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">profile</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="kw">profiles</span><span class="op">&gt;</span>
+<span class="op">&lt;/</span><span class="kw">project</span><span class="op">&gt;</span></code></pre>
+
+<h3>src/main/java/com/app/ServletInitializer.java</h3>
+<pre><code><span class="kw">package</span> com.app;
+
+<span class="kw">import</span> org.springframework.boot.builder.SpringApplicationBuilder;
+<span class="kw">import</span> org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+
+<span class="kw">public class</span> <span class="fn">ServletInitializer</span> <span class="kw">extends</span> SpringBootServletInitializer {
+    <span class="op">@Override</span>
+    <span class="kw">protected</span> SpringApplicationBuilder <span class="fn">configure</span>(SpringApplicationBuilder builder) {
+        <span class="kw">return</span> builder.sources(Application.<span class="kw">class</span>);
+    }
+}</code></pre>
+
+<h3>src/main/resources/application-prod.yml</h3>
+<pre><code><span class="kw">spring</span>:
+  <span class="kw">datasource</span>:
+    <span class="kw">jndi-name</span>: java:comp/env/jdbc/AppDB
+  <span class="kw">jpa</span>:
+    <span class="kw">hibernate</span>:
+      <span class="kw">ddl-auto</span>: validate
+    <span class="kw">properties</span>:
+      <span class="kw">hibernate.dialect</span>: org.hibernate.dialect.PostgreSQLDialect
+
+<span class="kw">management</span>:
+  <span class="kw">endpoints</span>:
+    <span class="kw">web.exposure.include</span>: health,info,metrics
+  <span class="kw">endpoint</span>:
+    <span class="kw">health.show-details</span>: when-authorized
+
+<span class="kw">server</span>:
+  <span class="kw">servlet</span>:
+    <span class="kw">context-path</span>: /app</code></pre>
+
+<h2>3. Jenkins Pipeline</h2>
+<h3>Jenkinsfile</h3>
+<pre><code><span class="kw">pipeline</span> {
+  <span class="kw">agent</span> any
+
+  <span class="kw">environment</span> {
+    S3_BUCKET   = <span class="str">'mycompany-artifacts'</span>
+    AWS_REGION  = <span class="str">'us-east-1'</span>
+    SONAR_TOKEN = credentials(<span class="str">'sonarqube-token'</span>)
+    ANSIBLE_KEY = credentials(<span class="str">'ec2-ssh-key'</span>)
+  }
+
+  <span class="kw">parameters</span> {
+    choice(name: <span class="str">'ENVIRONMENT'</span>, choices: [<span class="str">'staging'</span>, <span class="str">'prod'</span>])
+    booleanParam(name: <span class="str">'SKIP_TESTS'</span>, defaultValue: <span class="kw">false</span>)
+  }
+
+  <span class="kw">stages</span> {
+    <span class="kw">stage</span>(<span class="str">'Checkout'</span>) {
+      <span class="kw">steps</span> { checkout scm }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Build'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">'mvn clean package -P prod -DskipTests=${params.SKIP_TESTS} -B'</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Unit Tests'</span>) {
+      <span class="kw">when</span> { expression { !params.SKIP_TESTS } }
+      <span class="kw">steps</span> {
+        sh <span class="str">'mvn test -B'</span>
+      }
+      <span class="kw">post</span> {
+        always {
+          junit <span class="str">'target/surefire-reports/*.xml'</span>
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Integration Tests'</span>) {
+      <span class="kw">when</span> { expression { !params.SKIP_TESTS } }
+      <span class="kw">steps</span> {
+        sh <span class="str">'mvn verify -P integration -B'</span>
+      }
+      <span class="kw">post</span> {
+        always {
+          junit <span class="str">'target/failsafe-reports/*.xml'</span>
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'SonarQube'</span>) {
+      <span class="kw">steps</span> {
+        withSonarQubeEnv(<span class="str">'sonarqube'</span>) {
+          sh <span class="str">'mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN'</span>
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Upload to S3'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">"""
+          WAR_FILE=target/monolith-app-1.0.0.war
+          S3_KEY=monolith/${params.ENVIRONMENT}/${env.BUILD_NUMBER}/app.war
+
+          aws s3 cp \$WAR_FILE s3://${S3_BUCKET}/\$S3_KEY \
+            --region ${AWS_REGION}
+
+          echo "Uploaded to s3://${S3_BUCKET}/\$S3_KEY"
+          echo "\$S3_KEY" > artifact-key.txt
+        """</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Deploy via Ansible'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">"""
+          ansible-playbook ansible/deploy.yml \
+            -i ansible/inventory/${params.ENVIRONMENT} \
+            --private-key=$ANSIBLE_KEY \
+            -e "s3_bucket=${S3_BUCKET}" \
+            -e "s3_key=\$(cat artifact-key.txt)" \
+            -e "build_number=${env.BUILD_NUMBER}" \
+            -e "environment=${params.ENVIRONMENT}"
+        """</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Smoke Test'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">"""
+          sleep 30
+          ALB_DNS=\$(aws elbv2 describe-load-balancers \
+            --names monolith-alb \
+            --query 'LoadBalancers[0].DNSName' \
+            --output text --region ${AWS_REGION})
+          curl -sf http://\$ALB_DNS/app/actuator/health
+          echo "Smoke test passed!"
+        """</span>
+      }
+    }
+  }
+
+  <span class="kw">post</span> {
+    failure {
+      slackSend channel: <span class="str">'#deployments'</span>,
+        color: <span class="str">'danger'</span>,
+        message: <span class="str">"FAILED: monolith deploy #${env.BUILD_NUMBER} to ${params.ENVIRONMENT}"</span>
+    }
+    success {
+      slackSend channel: <span class="str">'#deployments'</span>,
+        color: <span class="str">'good'</span>,
+        message: <span class="str">"Deployed monolith #${env.BUILD_NUMBER} to ${params.ENVIRONMENT}"</span>
+    }
+  }
+}</code></pre>
+
+<h2>4. S3 Artifact Store</h2>
+<h3>terraform/s3.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"artifacts"</span> {
+  bucket = <span class="str">"mycompany-artifacts"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_versioning"</span> <span class="str">"artifacts_v"</span> {
+  bucket = aws_s3_bucket.artifacts.id
+  versioning_configuration { status = <span class="str">"Enabled"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_lifecycle_configuration"</span> <span class="str">"cleanup"</span> {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    id     = <span class="str">"expire-old-artifacts"</span>
+    status = <span class="str">"Enabled"</span>
+    filter { prefix = <span class="str">"monolith/"</span> }
+    expiration { days = <span class="num">30</span> }
+    noncurrent_version_expiration { noncurrent_days = <span class="num">7</span> }
+  }
+}</code></pre>
+
+<h2>5. EC2 Infrastructure (Terraform)</h2>
+<h3>terraform/vpc.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_vpc"</span> <span class="str">"main"</span> {
+  cidr_block           = <span class="str">"10.0.0.0/16"</span>
+  enable_dns_support   = <span class="kw">true</span>
+  enable_dns_hostnames = <span class="kw">true</span>
+  tags = { Name = <span class="str">"monolith-vpc"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_subnet"</span> <span class="str">"public"</span> {
+  count             = <span class="num">2</span>
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(<span class="str">"10.0.0.0/16"</span>, <span class="num">8</span>, count.index)
+  availability_zone = data.aws_availability_zones.az.names[count.index]
+  map_public_ip_on_launch = <span class="kw">true</span>
+  tags = { Name = <span class="str">"public-${count.index}"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_subnet"</span> <span class="str">"private"</span> {
+  count             = <span class="num">2</span>
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(<span class="str">"10.0.0.0/16"</span>, <span class="num">8</span>, count.index + <span class="num">10</span>)
+  availability_zone = data.aws_availability_zones.az.names[count.index]
+  tags = { Name = <span class="str">"private-${count.index}"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_internet_gateway"</span> <span class="str">"igw"</span> {
+  vpc_id = aws_vpc.main.id
+}
+
+<span class="kw">resource</span> <span class="str">"aws_nat_gateway"</span> <span class="str">"nat"</span> {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[<span class="num">0</span>].id
+}
+
+<span class="kw">resource</span> <span class="str">"aws_eip"</span> <span class="str">"nat"</span> { domain = <span class="str">"vpc"</span> }
+
+<span class="kw">data</span> <span class="str">"aws_availability_zones"</span> <span class="str">"az"</span> { state = <span class="str">"available"</span> }</code></pre>
+
+<h3>terraform/alb.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_lb"</span> <span class="str">"alb"</span> {
+  name               = <span class="str">"monolith-alb"</span>
+  internal           = <span class="kw">false</span>
+  load_balancer_type = <span class="str">"application"</span>
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = aws_subnet.public[*].id
+}
+
+<span class="kw">resource</span> <span class="str">"aws_lb_target_group"</span> <span class="str">"app"</span> {
+  name     = <span class="str">"monolith-tg"</span>
+  port     = <span class="num">8080</span>
+  protocol = <span class="str">"HTTP"</span>
+  vpc_id   = aws_vpc.main.id
+
+  health_check {
+    path                = <span class="str">"/app/actuator/health"</span>
+    port                = <span class="str">"8080"</span>
+    healthy_threshold   = <span class="num">2</span>
+    unhealthy_threshold = <span class="num">3</span>
+    interval            = <span class="num">30</span>
+    timeout             = <span class="num">10</span>
+  }
+
+  stickiness {
+    type            = <span class="str">"lb_cookie"</span>
+    cookie_duration = <span class="num">86400</span>
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_lb_listener"</span> <span class="str">"http"</span> {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = <span class="num">80</span>
+  protocol          = <span class="str">"HTTP"</span>
+  default_action {
+    type             = <span class="str">"forward"</span>
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}</code></pre>
+
+<h3>terraform/ec2.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_launch_template"</span> <span class="str">"tomcat"</span> {
+  name_prefix   = <span class="str">"monolith-"</span>
+  image_id      = data.aws_ami.amazon_linux.id
+  instance_type = <span class="str">"t3.medium"</span>
+  key_name      = aws_key_pair.deploy.key_name
+
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
+
+  user_data = base64encode(&lt;&lt;-<span class="str">USERDATA</span>
+#!/bin/bash
+set -e
+
+<span class="cm"># Install JDK 17</span>
+yum install -y java-17-amazon-corretto-headless
+
+<span class="cm"># Install Tomcat 10</span>
+useradd -r -s /sbin/nologin tomcat
+cd /opt
+wget https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.18/bin/apache-tomcat-10.1.18.tar.gz
+tar xzf apache-tomcat-10.1.18.tar.gz
+mv apache-tomcat-10.1.18 tomcat
+chown -R tomcat:tomcat /opt/tomcat
+
+<span class="cm"># Systemd service</span>
+cat &gt; /etc/systemd/system/tomcat.service &lt;&lt;'EOF'
+[Unit]
+Description=Apache Tomcat 10
+After=network.target
+
+[Service]
+Type=forking
+User=tomcat
+Group=tomcat
+Environment=JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+Environment="JAVA_OPTS=-Xms512m -Xmx1536m -XX:+UseG1GC"
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+<span class="cm"># Install CloudWatch agent</span>
+yum install -y amazon-cloudwatch-agent
+
+systemctl daemon-reload
+systemctl enable tomcat
+systemctl start tomcat
+  <span class="str">USERDATA</span>)
+}
+
+<span class="kw">resource</span> <span class="str">"aws_instance"</span> <span class="str">"tomcat"</span> {
+  count     = <span class="num">4</span>
+  subnet_id = aws_subnet.private[count.index % <span class="num">2</span>].id
+
+  launch_template {
+    id      = aws_launch_template.tomcat.id
+    version = <span class="str">"$Latest"</span>
+  }
+
+  tags = { Name = <span class="str">"tomcat-${count.index + 1}"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_lb_target_group_attachment"</span> <span class="str">"app"</span> {
+  count            = <span class="num">4</span>
+  target_group_arn = aws_lb_target_group.app.arn
+  target_id        = aws_instance.tomcat[count.index].id
+  port             = <span class="num">8080</span>
+}
+
+<span class="kw">data</span> <span class="str">"aws_ami"</span> <span class="str">"amazon_linux"</span> {
+  most_recent = <span class="kw">true</span>
+  owners      = [<span class="str">"amazon"</span>]
+  filter {
+    name   = <span class="str">"name"</span>
+    values = [<span class="str">"al2023-ami-*-x86_64"</span>]
+  }
+}</code></pre>
+
+<h3>terraform/security_groups.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"alb_sg"</span> {
+  name   = <span class="str">"monolith-alb-sg"</span>
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = <span class="num">80</span>
+    to_port     = <span class="num">80</span>
+    protocol    = <span class="str">"tcp"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+  ingress {
+    from_port   = <span class="num">443</span>
+    to_port     = <span class="num">443</span>
+    protocol    = <span class="str">"tcp"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+  egress {
+    from_port   = <span class="num">0</span>
+    to_port     = <span class="num">0</span>
+    protocol    = <span class="str">"-1"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"ec2_sg"</span> {
+  name   = <span class="str">"monolith-ec2-sg"</span>
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description     = <span class="str">"Tomcat from ALB"</span>
+    from_port       = <span class="num">8080</span>
+    to_port         = <span class="num">8080</span>
+    protocol        = <span class="str">"tcp"</span>
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+  ingress {
+    description     = <span class="str">"SSH from bastion"</span>
+    from_port       = <span class="num">22</span>
+    to_port         = <span class="num">22</span>
+    protocol        = <span class="str">"tcp"</span>
+    security_groups = [aws_security_group.bastion_sg.id]
+  }
+  egress {
+    from_port   = <span class="num">0</span>
+    to_port     = <span class="num">0</span>
+    protocol    = <span class="str">"-1"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"bastion_sg"</span> {
+  name   = <span class="str">"monolith-bastion-sg"</span>
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = <span class="num">22</span>
+    to_port     = <span class="num">22</span>
+    protocol    = <span class="str">"tcp"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]  <span class="cm"># Restrict to your IP in production</span>
+  }
+  egress {
+    from_port   = <span class="num">0</span>
+    to_port     = <span class="num">0</span>
+    protocol    = <span class="str">"-1"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"rds_sg"</span> {
+  name   = <span class="str">"monolith-rds-sg"</span>
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description     = <span class="str">"PostgreSQL from EC2"</span>
+    from_port       = <span class="num">5432</span>
+    to_port         = <span class="num">5432</span>
+    protocol        = <span class="str">"tcp"</span>
+    security_groups = [aws_security_group.ec2_sg.id]
+  }
+}</code></pre>
+
+<h2>6. Tomcat JNDI Configuration</h2>
+<h3>ansible/templates/context.xml.j2</h3>
+<pre><code><span class="op">&lt;?</span>xml version=<span class="str">"1.0"</span> encoding=<span class="str">"UTF-8"</span><span class="op">?&gt;</span>
+<span class="op">&lt;</span><span class="kw">Context</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">Resource</span>
+    name=<span class="str">"jdbc/AppDB"</span>
+    auth=<span class="str">"Container"</span>
+    type=<span class="str">"javax.sql.DataSource"</span>
+    driverClassName=<span class="str">"org.postgresql.Driver"</span>
+    url=<span class="str">"jdbc:postgresql://{{ rds_endpoint }}:5432/{{ db_name }}"</span>
+    username=<span class="str">"{{ db_user }}"</span>
+    password=<span class="str">"{{ db_pass }}"</span>
+    maxTotal=<span class="str">"50"</span>
+    maxIdle=<span class="str">"10"</span>
+    minIdle=<span class="str">"5"</span>
+    maxWaitMillis=<span class="str">"10000"</span>
+    validationQuery=<span class="str">"SELECT 1"</span>
+    testOnBorrow=<span class="str">"true"</span>
+    testWhileIdle=<span class="str">"true"</span>
+    timeBetweenEvictionRunsMillis=<span class="str">"30000"</span>
+    removeAbandonedOnBorrow=<span class="str">"true"</span>
+    removeAbandonedTimeout=<span class="str">"60"</span>
+  <span class="op">/&gt;</span>
+<span class="op">&lt;/</span><span class="kw">Context</span><span class="op">&gt;</span></code></pre>
+
+<div class="note">The PostgreSQL JDBC driver JAR must be placed in <code>/opt/tomcat/lib/</code>. The Ansible playbook handles this automatically.</div>
+
+<h2>7. Ansible Rolling Deploy Playbook</h2>
+<h3>ansible/ansible.cfg</h3>
+<pre><code>[defaults]
+inventory = inventory/prod
+remote_user = ec2-user
+private_key_file = ~/.ssh/ec2-deploy.pem
+host_key_checking = False
+timeout = 30
+retries = 3
+
+[privilege_escalation]
+become = True
+become_method = sudo</code></pre>
+
+<h3>ansible/inventory/prod</h3>
+<pre><code>[tomcat_servers]
+tomcat-1 ansible_host=10.0.10.11
+tomcat-2 ansible_host=10.0.10.12
+tomcat-3 ansible_host=10.0.11.13
+tomcat-4 ansible_host=10.0.11.14
+
+[tomcat_servers:vars]
+rds_endpoint=monolith-db.xxxx.us-east-1.rds.amazonaws.com
+db_name=appdb
+db_user=app_user
+db_pass=secret-db-pass
+target_group_arn=arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/monolith-tg/abc123</code></pre>
+
+<h3>ansible/deploy.yml</h3>
+<pre><code>---
+- <span class="kw">name</span>: Rolling deploy monolith to Tomcat
+  <span class="kw">hosts</span>: tomcat_servers
+  <span class="kw">serial</span>: <span class="num">1</span>
+  <span class="kw">max_fail_percentage</span>: <span class="num">0</span>
+  <span class="kw">vars</span>:
+    <span class="kw">tomcat_home</span>: /opt/tomcat
+    <span class="kw">app_name</span>: app
+    <span class="kw">aws_region</span>: us-east-1
+
+  <span class="kw">pre_tasks</span>:
+    - <span class="kw">name</span>: Deregister instance from ALB target group
+      <span class="fn">shell</span>: |
+        aws elbv2 deregister-targets \
+          --target-group-arn {{ target_group_arn }} \
+          --targets Id={{ ansible_host }} \
+          --region {{ aws_region }}
+      <span class="kw">delegate_to</span>: localhost
+      <span class="kw">become</span>: <span class="kw">false</span>
+
+    - <span class="kw">name</span>: Wait for connections to drain (30s)
+      <span class="fn">pause</span>:
+        <span class="kw">seconds</span>: <span class="num">30</span>
+
+  <span class="kw">tasks</span>:
+    - <span class="kw">name</span>: Stop Tomcat
+      <span class="fn">systemd</span>:
+        <span class="kw">name</span>: tomcat
+        <span class="kw">state</span>: stopped
+
+    - <span class="kw">name</span>: Download WAR from S3
+      <span class="fn">shell</span>: |
+        aws s3 cp s3://{{ s3_bucket }}/{{ s3_key }} \
+          /tmp/{{ app_name }}.war \
+          --region {{ aws_region }}
+
+    - <span class="kw">name</span>: Remove old deployment
+      <span class="fn">file</span>:
+        <span class="kw">path</span>: <span class="str">"{{ item }}"</span>
+        <span class="kw">state</span>: absent
+      <span class="kw">loop</span>:
+        - <span class="str">"{{ tomcat_home }}/webapps/{{ app_name }}.war"</span>
+        - <span class="str">"{{ tomcat_home }}/webapps/{{ app_name }}"</span>
+
+    - <span class="kw">name</span>: Deploy new WAR
+      <span class="fn">copy</span>:
+        <span class="kw">src</span>: <span class="str">"/tmp/{{ app_name }}.war"</span>
+        <span class="kw">dest</span>: <span class="str">"{{ tomcat_home }}/webapps/{{ app_name }}.war"</span>
+        <span class="kw">owner</span>: tomcat
+        <span class="kw">group</span>: tomcat
+        <span class="kw">remote_src</span>: <span class="kw">yes</span>
+
+    - <span class="kw">name</span>: Deploy context.xml with JNDI
+      <span class="fn">template</span>:
+        <span class="kw">src</span>: templates/context.xml.j2
+        <span class="kw">dest</span>: <span class="str">"{{ tomcat_home }}/conf/context.xml"</span>
+        <span class="kw">owner</span>: tomcat
+        <span class="kw">group</span>: tomcat
+
+    - <span class="kw">name</span>: Ensure PostgreSQL JDBC driver exists
+      <span class="fn">get_url</span>:
+        <span class="kw">url</span>: https://jdbc.postgresql.org/download/postgresql-42.7.1.jar
+        <span class="kw">dest</span>: <span class="str">"{{ tomcat_home }}/lib/postgresql-42.7.1.jar"</span>
+        <span class="kw">owner</span>: tomcat
+        <span class="kw">group</span>: tomcat
+
+    - <span class="kw">name</span>: Start Tomcat
+      <span class="fn">systemd</span>:
+        <span class="kw">name</span>: tomcat
+        <span class="kw">state</span>: started
+
+    - <span class="kw">name</span>: Wait for health check to pass
+      <span class="fn">uri</span>:
+        <span class="kw">url</span>: <span class="str">"http://localhost:8080/{{ app_name }}/actuator/health"</span>
+        <span class="kw">status_code</span>: <span class="num">200</span>
+      <span class="kw">register</span>: health
+      <span class="kw">retries</span>: <span class="num">20</span>
+      <span class="kw">delay</span>: <span class="num">5</span>
+      <span class="kw">until</span>: health.status == <span class="num">200</span>
+
+  <span class="kw">post_tasks</span>:
+    - <span class="kw">name</span>: Register instance back to ALB
+      <span class="fn">shell</span>: |
+        aws elbv2 register-targets \
+          --target-group-arn {{ target_group_arn }} \
+          --targets Id={{ ansible_host }} \
+          --region {{ aws_region }}
+      <span class="kw">delegate_to</span>: localhost
+      <span class="kw">become</span>: <span class="kw">false</span>
+
+    - <span class="kw">name</span>: Wait for ALB health check to pass
+      <span class="fn">shell</span>: |
+        <span class="kw">for</span> i <span class="kw">in</span> $(seq 1 30); <span class="kw">do</span>
+          STATUS=$(aws elbv2 describe-target-health \
+            --target-group-arn {{ target_group_arn }} \
+            --targets Id={{ ansible_host }} \
+            --query 'TargetHealthDescriptions[0].TargetHealth.State' \
+            --output text --region {{ aws_region }})
+          [ "$STATUS" = "healthy" ] && exit 0
+          sleep 10
+        <span class="kw">done</span>
+        exit 1
+      <span class="kw">delegate_to</span>: localhost
+      <span class="kw">become</span>: <span class="kw">false</span>
+
+  <span class="kw">handlers</span>:
+    - <span class="kw">name</span>: rollback deployment
+      <span class="fn">shell</span>: |
+        <span class="cm"># Re-register to ALB even on failure</span>
+        aws elbv2 register-targets \
+          --target-group-arn {{ target_group_arn }} \
+          --targets Id={{ ansible_host }} \
+          --region {{ aws_region }}
+      <span class="kw">delegate_to</span>: localhost
+      <span class="kw">become</span>: <span class="kw">false</span></code></pre>
+
+<div class="warn">The playbook uses <code>serial: 1</code> — only one server at a time is deployed. This means 75% capacity is always available. For faster deploys, use <code>serial: "25%"</code>.</div>
+
+<h2>8. RDS PostgreSQL</h2>
+<h3>terraform/rds.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_db_subnet_group"</span> <span class="str">"main"</span> {
+  name       = <span class="str">"monolith-db-subnet"</span>
+  subnet_ids = aws_subnet.private[*].id
+}
+
+<span class="kw">resource</span> <span class="str">"aws_db_parameter_group"</span> <span class="str">"pg16"</span> {
+  name   = <span class="str">"monolith-pg16"</span>
+  family = <span class="str">"postgres16"</span>
+
+  parameter {
+    name  = <span class="str">"shared_buffers"</span>
+    value = <span class="str">"{DBInstanceClassMemory/4}"</span>  <span class="cm"># 25% of RAM</span>
+  }
+  parameter {
+    name  = <span class="str">"max_connections"</span>
+    value = <span class="str">"200"</span>
+  }
+  parameter {
+    name  = <span class="str">"log_min_duration_statement"</span>
+    value = <span class="str">"1000"</span>  <span class="cm"># Log queries &gt; 1s</span>
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_db_instance"</span> <span class="str">"postgres"</span> {
+  identifier     = <span class="str">"monolith-db"</span>
+  engine         = <span class="str">"postgres"</span>
+  engine_version = <span class="str">"16.1"</span>
+  instance_class = <span class="str">"db.r6g.large"</span>
+
+  allocated_storage     = <span class="num">100</span>
+  max_allocated_storage = <span class="num">500</span>
+  storage_encrypted     = <span class="kw">true</span>
+
+  db_name  = <span class="str">"appdb"</span>
+  username = <span class="str">"app_user"</span>
+  password = var.db_password
+
+  multi_az               = <span class="kw">true</span>
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+  parameter_group_name   = aws_db_parameter_group.pg16.name
+
+  backup_retention_period = <span class="num">7</span>
+  backup_window           = <span class="str">"03:00-04:00"</span>
+  maintenance_window      = <span class="str">"sun:04:00-sun:05:00"</span>
+
+  deletion_protection = <span class="kw">true</span>
+  skip_final_snapshot = <span class="kw">false</span>
+  final_snapshot_identifier = <span class="str">"monolith-db-final"</span>
+}</code></pre>
+
+<h2>9. CloudWatch Monitoring</h2>
+<h3>terraform/monitoring.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_sns_topic"</span> <span class="str">"alerts"</span> {
+  name = <span class="str">"monolith-alerts"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_sns_topic_subscription"</span> <span class="str">"email"</span> {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = <span class="str">"email"</span>
+  endpoint  = <span class="str">"devops@example.com"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"high_cpu"</span> {
+  count               = <span class="num">4</span>
+  alarm_name          = <span class="str">"tomcat-${count.index + 1}-high-cpu"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">2</span>
+  metric_name         = <span class="str">"CPUUtilization"</span>
+  namespace           = <span class="str">"AWS/EC2"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Average"</span>
+  threshold           = <span class="num">80</span>
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    InstanceId = aws_instance.tomcat[count.index].id
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"unhealthy_hosts"</span> {
+  alarm_name          = <span class="str">"monolith-unhealthy-hosts"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">1</span>
+  metric_name         = <span class="str">"UnHealthyHostCount"</span>
+  namespace           = <span class="str">"AWS/ApplicationELB"</span>
+  period              = <span class="num">60</span>
+  statistic           = <span class="str">"Maximum"</span>
+  threshold           = <span class="num">0</span>
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    TargetGroup  = aws_lb_target_group.app.arn_suffix
+    LoadBalancer = aws_lb.alb.arn_suffix
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"alb_5xx"</span> {
+  alarm_name          = <span class="str">"monolith-5xx-errors"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">2</span>
+  metric_name         = <span class="str">"HTTPCode_Target_5XX_Count"</span>
+  namespace           = <span class="str">"AWS/ApplicationELB"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Sum"</span>
+  threshold           = <span class="num">10</span>
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    LoadBalancer = aws_lb.alb.arn_suffix
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"rds_connections"</span> {
+  alarm_name          = <span class="str">"monolith-rds-connections"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">2</span>
+  metric_name         = <span class="str">"DatabaseConnections"</span>
+  namespace           = <span class="str">"AWS/RDS"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Average"</span>
+  threshold           = <span class="num">150</span>
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.postgres.id
+  }
+}</code></pre>
+
+<h2>10. Deploy &amp; Test</h2>
+<pre><code><span class="cm"># Deploy infrastructure</span>
+cd terraform/
+terraform init
+terraform plan -out=plan.tfplan
+terraform apply plan.tfplan
+
+<span class="cm"># Build and upload WAR</span>
+mvn clean package -P prod -B
+aws s3 cp target/monolith-app-1.0.0.war \
+  s3://mycompany-artifacts/monolith/prod/manual-1/app.war
+
+<span class="cm"># Run Ansible deploy</span>
+ansible-playbook ansible/deploy.yml \
+  -i ansible/inventory/prod \
+  -e <span class="str">"s3_bucket=mycompany-artifacts"</span> \
+  -e <span class="str">"s3_key=monolith/prod/manual-1/app.war"</span> \
+  -e <span class="str">"build_number=manual-1"</span>
+
+<span class="cm"># Verify through ALB</span>
+ALB_DNS=$(aws elbv2 describe-load-balancers --names monolith-alb \
+  --query <span class="str">'LoadBalancers[0].DNSName'</span> --output text)
+curl -sf http://$ALB_DNS/app/actuator/health
+
+<span class="cm"># Check target health</span>
+aws elbv2 describe-target-health \
+  --target-group-arn &lt;target-group-arn&gt;
+
+<span class="cm"># Rollback — deploy a previous version</span>
+ansible-playbook ansible/deploy.yml \
+  -i ansible/inventory/prod \
+  -e <span class="str">"s3_bucket=mycompany-artifacts"</span> \
+  -e <span class="str">"s3_key=monolith/prod/42/app.war"</span> \
+  -e <span class="str">"build_number=rollback-to-42"</span>
+
+<span class="cm"># SSH to server via bastion</span>
+ssh -J ec2-user@bastion-public-ip ec2-user@10.0.10.11
+
+<span class="cm"># Check Tomcat logs</span>
+tail -f /opt/tomcat/logs/catalina.out</code></pre>
+
+<div class="warn">Always test deployments in staging first. The rolling deploy ensures zero-downtime — if any server fails health checks, the playbook stops and remaining servers stay on the old version.</div>
+
+<footer>Stefan Laza — DevOps Engineer</footer>
+</div></body></html>

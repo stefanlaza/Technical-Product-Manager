@@ -1,0 +1,867 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Batch Job Pipeline Setup Guide — Stefan Laza</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#050507;color:#f0f0f5;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:3rem 2rem 5rem}
+a{color:#34d399;text-decoration:none}.back{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:#6e6e80;margin-bottom:2.5rem;transition:color .2s}.back:hover{color:#f0f0f5}
+h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
+.subtitle{color:#6e6e80;font-size:1rem;margin-bottom:3rem}
+h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .5rem;color:#34d399}
+p,li{font-size:.88rem;color:#c0c0c8;margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:1rem}
+pre{background:#0d0d14;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0 1.5rem;font-size:.78rem;line-height:1.6}
+code{font-family:'SF Mono',Consolas,monospace}
+pre code{color:#c0c0c8}
+.kw{color:#a78bfa}.str{color:#34d399}.cm{color:#555}.fn{color:#4a9eff}.num{color:#fb923c}.op{color:#6e6e80}
+.note{background:rgba(74,158,255,0.06);border-left:3px solid #4a9eff;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+.warn{background:rgba(248,113,113,0.06);border-left:3px solid #f87171;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+footer{text-align:center;padding:3rem 0;font-size:.7rem;color:#6e6e80;border-top:1px solid rgba(255,255,255,0.06);margin-top:3rem}
+</style></head><body><div class="wrap">
+<a href="../index.html#batch" class="back">&larr; Back to Portfolio</a>
+<h1>Batch Job Pipeline Setup Guide</h1>
+<p class="subtitle">EventBridge cron &rarr; Step Functions &rarr; Lambda validation &rarr; AWS Batch Fargate &rarr; S3 + DynamoDB</p>
+
+<h2>1. Prerequisites</h2>
+<pre><code><span class="cm"># Install AWS CLI</span>
+curl <span class="str">"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"</span> -o awscliv2.zip
+unzip awscliv2.zip && sudo ./aws/install
+aws configure
+
+<span class="cm"># Install Terraform</span>
+wget https://releases.hashicorp.com/terraform/1.7.0/terraform_1.7.0_linux_amd64.zip
+unzip terraform_1.7.0_linux_amd64.zip && sudo mv terraform /usr/local/bin/
+
+<span class="cm"># Install Docker</span>
+sudo apt-get update && sudo apt-get install -y docker.io
+sudo usermod -aG docker $USER
+
+<span class="cm"># Python dependencies for Lambda &amp; job scripts</span>
+pip install boto3 awslambdaric jsonschema</code></pre>
+
+<h2>2. S3 Buckets for Input &amp; Output</h2>
+<h3>terraform/s3.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"batch_input"</span> {
+  bucket = <span class="str">"mycompany-batch-input"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_versioning"</span> <span class="str">"input_versioning"</span> {
+  bucket = aws_s3_bucket.batch_input.id
+  versioning_configuration { status = <span class="str">"Enabled"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"batch_output"</span> {
+  bucket = <span class="str">"mycompany-batch-output"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_lifecycle_configuration"</span> <span class="str">"output_lifecycle"</span> {
+  bucket = aws_s3_bucket.batch_output.id
+  rule {
+    id     = <span class="str">"archive-old-results"</span>
+    status = <span class="str">"Enabled"</span>
+    transition {
+      days          = <span class="num">60</span>
+      storage_class = <span class="str">"GLACIER"</span>
+    }
+    expiration { days = <span class="num">365</span> }
+  }
+}</code></pre>
+
+<h2>3. DynamoDB Job Tracking Table</h2>
+<h3>terraform/dynamodb.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_dynamodb_table"</span> <span class="str">"job_tracker"</span> {
+  name         = <span class="str">"batch-job-tracker"</span>
+  billing_mode = <span class="str">"PAY_PER_REQUEST"</span>
+  hash_key     = <span class="str">"job_id"</span>
+  range_key    = <span class="str">"run_date"</span>
+
+  attribute {
+    name = <span class="str">"job_id"</span>
+    type = <span class="str">"S"</span>
+  }
+  attribute {
+    name = <span class="str">"run_date"</span>
+    type = <span class="str">"S"</span>
+  }
+  attribute {
+    name = <span class="str">"status"</span>
+    type = <span class="str">"S"</span>
+  }
+
+  global_secondary_index {
+    name            = <span class="str">"status-index"</span>
+    hash_key        = <span class="str">"status"</span>
+    range_key       = <span class="str">"run_date"</span>
+    projection_type = <span class="str">"ALL"</span>
+  }
+
+  point_in_time_recovery { enabled = <span class="kw">true</span> }
+  tags = { Environment = <span class="str">"production"</span> }
+}</code></pre>
+
+<h2>4. Lambda Validation Function</h2>
+<h3>lambda/validate_job/handler.py</h3>
+<pre><code><span class="kw">import</span> json, boto3, os
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+dynamodb = boto3.resource(<span class="str">'dynamodb'</span>)
+table = dynamodb.Table(os.environ[<span class="str">'JOB_TABLE'</span>])
+
+<span class="kw">def</span> <span class="fn">handler</span>(event, context):
+    job_id   = event.get(<span class="str">'job_id'</span>)
+    run_date = event.get(<span class="str">'run_date'</span>, datetime.now().strftime(<span class="str">'%Y-%m-%d'</span>))
+
+    <span class="cm"># Check for duplicate run</span>
+    existing = table.get_item(Key={
+        <span class="str">'job_id'</span>: job_id,
+        <span class="str">'run_date'</span>: run_date
+    })
+    <span class="kw">if</span> <span class="str">'Item'</span> <span class="kw">in</span> existing <span class="kw">and</span> existing[<span class="str">'Item'</span>][<span class="str">'status'</span>] == <span class="str">'SUCCEEDED'</span>:
+        <span class="kw">return</span> {
+            <span class="str">'proceed'</span>: <span class="kw">False</span>,
+            <span class="str">'reason'</span>: <span class="str">f'Job {job_id} already succeeded for {run_date}'</span>
+        }
+
+    <span class="cm"># Validate input files exist in S3</span>
+    s3 = boto3.client(<span class="str">'s3'</span>)
+    bucket = os.environ[<span class="str">'INPUT_BUCKET'</span>]
+    prefix = <span class="str">f'jobs/{job_id}/{run_date}/'</span>
+    objects = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
+
+    <span class="kw">if</span> objects.get(<span class="str">'KeyCount'</span>, <span class="num">0</span>) == <span class="num">0</span>:
+        <span class="kw">return</span> {
+            <span class="str">'proceed'</span>: <span class="kw">False</span>,
+            <span class="str">'reason'</span>: <span class="str">f'No input files found at s3://{bucket}/{prefix}'</span>
+        }
+
+    <span class="cm"># Record job start in DynamoDB</span>
+    table.put_item(Item={
+        <span class="str">'job_id'</span>: job_id,
+        <span class="str">'run_date'</span>: run_date,
+        <span class="str">'status'</span>: <span class="str">'RUNNING'</span>,
+        <span class="str">'started_at'</span>: datetime.now().isoformat(),
+        <span class="str">'input_files'</span>: objects[<span class="str">'KeyCount'</span>]
+    })
+
+    <span class="kw">return</span> {
+        <span class="str">'proceed'</span>: <span class="kw">True</span>,
+        <span class="str">'job_id'</span>: job_id,
+        <span class="str">'run_date'</span>: run_date,
+        <span class="str">'input_count'</span>: objects[<span class="str">'KeyCount'</span>]
+    }</code></pre>
+
+<h3>terraform/lambda.tf</h3>
+<pre><code><span class="kw">data</span> <span class="str">"archive_file"</span> <span class="str">"validate_zip"</span> {
+  type        = <span class="str">"zip"</span>
+  source_dir  = <span class="str">"../lambda/validate_job"</span>
+  output_path = <span class="str">"../build/validate_job.zip"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_lambda_function"</span> <span class="str">"validate_job"</span> {
+  function_name    = <span class="str">"batch-validate-job"</span>
+  handler          = <span class="str">"handler.handler"</span>
+  runtime          = <span class="str">"python3.12"</span>
+  timeout          = <span class="num">30</span>
+  memory_size      = <span class="num">128</span>
+  filename         = data.archive_file.validate_zip.output_path
+  source_code_hash = data.archive_file.validate_zip.output_base64sha256
+  role             = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      JOB_TABLE    = aws_dynamodb_table.job_tracker.name
+      INPUT_BUCKET = aws_s3_bucket.batch_input.id
+    }
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"lambda_role"</span> {
+  name = <span class="str">"batch-lambda-validate-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"lambda.amazonaws.com"</span> }
+    }]
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"lambda_policy"</span> {
+  name = <span class="str">"batch-lambda-policy"</span>
+  role = aws_iam_role.lambda_role.id
+  policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = [<span class="str">"dynamodb:GetItem"</span>, <span class="str">"dynamodb:PutItem"</span>, <span class="str">"dynamodb:UpdateItem"</span>]
+        Resource = aws_dynamodb_table.job_tracker.arn
+      },
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = [<span class="str">"s3:ListBucket"</span>, <span class="str">"s3:GetObject"</span>]
+        Resource = [
+          aws_s3_bucket.batch_input.arn,
+          <span class="str">"${aws_s3_bucket.batch_input.arn}/*"</span>
+        ]
+      },
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = [<span class="str">"logs:CreateLogGroup"</span>, <span class="str">"logs:CreateLogStream"</span>, <span class="str">"logs:PutLogEvents"</span>]
+        Resource = <span class="str">"arn:aws:logs:*:*:*"</span>
+      }
+    ]
+  })
+}</code></pre>
+
+<h2>5. AWS Batch — Fargate Compute Environment</h2>
+<h3>terraform/batch.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_batch_compute_environment"</span> <span class="str">"fargate"</span> {
+  compute_environment_name = <span class="str">"batch-fargate-env"</span>
+  type                     = <span class="str">"MANAGED"</span>
+  state                    = <span class="str">"ENABLED"</span>
+  service_role             = aws_iam_role.batch_service_role.arn
+
+  compute_resources {
+    type      = <span class="str">"FARGATE"</span>
+    max_vcpus = <span class="num">16</span>
+
+    subnets         = var.private_subnet_ids
+    security_groups = [aws_security_group.batch_sg.id]
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_batch_job_queue"</span> <span class="str">"main"</span> {
+  name     = <span class="str">"batch-main-queue"</span>
+  state    = <span class="str">"ENABLED"</span>
+  priority = <span class="num">1</span>
+
+  compute_environment_order {
+    order               = <span class="num">1</span>
+    compute_environment = aws_batch_compute_environment.fargate.arn
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_batch_job_definition"</span> <span class="str">"processor"</span> {
+  name = <span class="str">"batch-data-processor"</span>
+  type = <span class="str">"container"</span>
+  platform_capabilities = [<span class="str">"FARGATE"</span>]
+
+  container_properties = <span class="fn">jsonencode</span>({
+    image   = <span class="str">"${aws_ecr_repository.batch_job.repository_url}:latest"</span>
+    command = [<span class="str">"python"</span>, <span class="str">"process.py"</span>]
+
+    resourceRequirements = [
+      { type = <span class="str">"VCPU"</span>,   value = <span class="str">"2"</span> },
+      { type = <span class="str">"MEMORY"</span>, value = <span class="str">"4096"</span> }
+    ]
+
+    environment = [
+      { name = <span class="str">"INPUT_BUCKET"</span>,  value = aws_s3_bucket.batch_input.id },
+      { name = <span class="str">"OUTPUT_BUCKET"</span>, value = aws_s3_bucket.batch_output.id },
+      { name = <span class="str">"JOB_TABLE"</span>,     value = aws_dynamodb_table.job_tracker.name }
+    ]
+
+    executionRoleArn = aws_iam_role.batch_exec_role.arn
+    jobRoleArn       = aws_iam_role.batch_job_role.arn
+
+    networkConfiguration = {
+      assignPublicIp = <span class="str">"DISABLED"</span>
+    }
+
+    logConfiguration = {
+      logDriver = <span class="str">"awslogs"</span>
+      options = {
+        <span class="str">"awslogs-group"</span>         = aws_cloudwatch_log_group.batch_logs.name
+        <span class="str">"awslogs-region"</span>        = var.region
+        <span class="str">"awslogs-stream-prefix"</span> = <span class="str">"batch"</span>
+      }
+    }
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_ecr_repository"</span> <span class="str">"batch_job"</span> {
+  name                 = <span class="str">"batch-data-processor"</span>
+  image_tag_mutability = <span class="str">"MUTABLE"</span>
+  image_scanning_configuration { scan_on_push = <span class="kw">true</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_log_group"</span> <span class="str">"batch_logs"</span> {
+  name              = <span class="str">"/aws/batch/data-processor"</span>
+  retention_in_days = <span class="num">30</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"batch_sg"</span> {
+  name   = <span class="str">"batch-fargate-sg"</span>
+  vpc_id = var.vpc_id
+
+  egress {
+    from_port   = <span class="num">0</span>
+    to_port     = <span class="num">0</span>
+    protocol    = <span class="str">"-1"</span>
+    cidr_blocks = [<span class="str">"0.0.0.0/0"</span>]
+  }
+}</code></pre>
+
+<h2>6. Batch Job Docker Image</h2>
+<h3>docker/Dockerfile</h3>
+<pre><code><span class="kw">FROM</span> python:3.12-slim
+
+<span class="kw">WORKDIR</span> /app
+
+<span class="kw">COPY</span> requirements.txt .
+<span class="kw">RUN</span> pip install --no-cache-dir -r requirements.txt
+
+<span class="kw">COPY</span> process.py .
+
+<span class="kw">USER</span> nobody
+<span class="kw">ENTRYPOINT</span> [<span class="str">"python"</span>, <span class="str">"process.py"</span>]</code></pre>
+
+<h3>docker/requirements.txt</h3>
+<pre><code>boto3==1.34.0
+pandas==2.1.4
+pyarrow==14.0.1</code></pre>
+
+<h3>docker/process.py</h3>
+<pre><code><span class="kw">import</span> os, json, sys, boto3, pandas <span class="kw">as</span> pd
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+<span class="kw">from</span> io <span class="kw">import</span> BytesIO
+
+s3       = boto3.client(<span class="str">'s3'</span>)
+dynamodb = boto3.resource(<span class="str">'dynamodb'</span>)
+table    = dynamodb.Table(os.environ[<span class="str">'JOB_TABLE'</span>])
+
+INPUT_BUCKET  = os.environ[<span class="str">'INPUT_BUCKET'</span>]
+OUTPUT_BUCKET = os.environ[<span class="str">'OUTPUT_BUCKET'</span>]
+
+<span class="kw">def</span> <span class="fn">get_job_params</span>():
+    <span class="cm">"""Read job parameters from environment (set by Step Functions)."""</span>
+    <span class="kw">return</span> {
+        <span class="str">'job_id'</span>:   os.environ.get(<span class="str">'JOB_ID'</span>, <span class="str">'unknown'</span>),
+        <span class="str">'run_date'</span>: os.environ.get(<span class="str">'RUN_DATE'</span>, datetime.now().strftime(<span class="str">'%Y-%m-%d'</span>)),
+    }
+
+<span class="kw">def</span> <span class="fn">download_inputs</span>(job_id, run_date):
+    <span class="cm">"""Download all input files from S3 prefix."""</span>
+    prefix = <span class="str">f'jobs/{job_id}/{run_date}/'</span>
+    response = s3.list_objects_v2(Bucket=INPUT_BUCKET, Prefix=prefix)
+
+    frames = []
+    <span class="kw">for</span> obj <span class="kw">in</span> response.get(<span class="str">'Contents'</span>, []):
+        key = obj[<span class="str">'Key'</span>]
+        <span class="kw">if</span> key.endswith(<span class="str">'.csv'</span>):
+            body = s3.get_object(Bucket=INPUT_BUCKET, Key=key)[<span class="str">'Body'</span>]
+            frames.append(pd.read_csv(body))
+            <span class="fn">print</span>(<span class="str">f'Loaded {key} ({len(frames[-1])} rows)'</span>)
+    <span class="kw">return</span> pd.concat(frames, ignore_index=<span class="kw">True</span>) <span class="kw">if</span> frames <span class="kw">else</span> pd.DataFrame()
+
+<span class="kw">def</span> <span class="fn">process_data</span>(df):
+    <span class="cm">"""Core processing: dedup, clean, aggregate."""</span>
+    <span class="fn">print</span>(<span class="str">f'Processing {len(df)} rows...'</span>)
+
+    <span class="cm"># Remove duplicates</span>
+    df = df.drop_duplicates()
+
+    <span class="cm"># Drop rows with null key fields</span>
+    df = df.dropna(subset=[<span class="str">'id'</span>])
+
+    <span class="cm"># Standardize timestamps</span>
+    <span class="kw">if</span> <span class="str">'timestamp'</span> <span class="kw">in</span> df.columns:
+        df[<span class="str">'timestamp'</span>] = pd.to_datetime(df[<span class="str">'timestamp'</span>], utc=<span class="kw">True</span>)
+
+    <span class="cm"># Aggregate by category</span>
+    <span class="kw">if</span> <span class="str">'category'</span> <span class="kw">in</span> df.columns <span class="kw">and</span> <span class="str">'amount'</span> <span class="kw">in</span> df.columns:
+        summary = df.groupby(<span class="str">'category'</span>).agg(
+            total=(<span class="str">'amount'</span>, <span class="str">'sum'</span>),
+            count=(<span class="str">'amount'</span>, <span class="str">'count'</span>),
+            avg=(<span class="str">'amount'</span>, <span class="str">'mean'</span>)
+        ).reset_index()
+        <span class="kw">return</span> df, summary
+
+    <span class="kw">return</span> df, <span class="kw">None</span>
+
+<span class="kw">def</span> <span class="fn">upload_results</span>(job_id, run_date, df, summary):
+    <span class="cm">"""Write results to S3 as Parquet."""</span>
+    out_prefix = <span class="str">f'results/{job_id}/{run_date}'</span>
+
+    <span class="cm"># Main processed data</span>
+    buf = BytesIO()
+    df.to_parquet(buf, index=<span class="kw">False</span>)
+    s3.put_object(Bucket=OUTPUT_BUCKET, Key=<span class="str">f'{out_prefix}/data.parquet'</span>, Body=buf.getvalue())
+    <span class="fn">print</span>(<span class="str">f'Uploaded {len(df)} rows to s3://{OUTPUT_BUCKET}/{out_prefix}/data.parquet'</span>)
+
+    <span class="cm"># Summary if available</span>
+    <span class="kw">if</span> summary <span class="kw">is not None</span>:
+        buf = BytesIO()
+        summary.to_parquet(buf, index=<span class="kw">False</span>)
+        s3.put_object(Bucket=OUTPUT_BUCKET, Key=<span class="str">f'{out_prefix}/summary.parquet'</span>, Body=buf.getvalue())
+
+<span class="kw">def</span> <span class="fn">update_status</span>(job_id, run_date, status, details=<span class="kw">None</span>):
+    <span class="cm">"""Update DynamoDB job status."""</span>
+    update_expr = <span class="str">'SET #s = :s, updated_at = :t'</span>
+    expr_values = {<span class="str">':s'</span>: status, <span class="str">':t'</span>: datetime.now().isoformat()}
+    <span class="kw">if</span> details:
+        update_expr += <span class="str">', details = :d'</span>
+        expr_values[<span class="str">':d'</span>] = details
+    table.update_item(
+        Key={<span class="str">'job_id'</span>: job_id, <span class="str">'run_date'</span>: run_date},
+        UpdateExpression=update_expr,
+        ExpressionAttributeNames={<span class="str">'#s'</span>: <span class="str">'status'</span>},
+        ExpressionAttributeValues=expr_values,
+    )
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    params = get_job_params()
+    job_id, run_date = params[<span class="str">'job_id'</span>], params[<span class="str">'run_date'</span>]
+
+    <span class="kw">try</span>:
+        df = download_inputs(job_id, run_date)
+        <span class="kw">if</span> df.empty:
+            update_status(job_id, run_date, <span class="str">'FAILED'</span>, <span class="str">'No input data found'</span>)
+            sys.exit(<span class="num">1</span>)
+
+        processed, summary = process_data(df)
+        upload_results(job_id, run_date, processed, summary)
+        update_status(job_id, run_date, <span class="str">'SUCCEEDED'</span>, <span class="str">f'{len(processed)} rows processed'</span>)
+        <span class="fn">print</span>(<span class="str">'Job completed successfully'</span>)
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        update_status(job_id, run_date, <span class="str">'FAILED'</span>, str(e))
+        <span class="fn">print</span>(<span class="str">f'Job failed: {e}'</span>, file=sys.stderr)
+        sys.exit(<span class="num">1</span>)</code></pre>
+
+<div class="note">Build and push the image to ECR:<br><code>aws ecr get-login-password | docker login --username AWS --password-stdin &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com</code><br><code>docker build -t batch-data-processor docker/</code><br><code>docker tag batch-data-processor:latest &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/batch-data-processor:latest</code><br><code>docker push &lt;account&gt;.dkr.ecr.&lt;region&gt;.amazonaws.com/batch-data-processor:latest</code></div>
+
+<h2>7. Step Functions State Machine</h2>
+<h3>terraform/step_functions.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_sfn_state_machine"</span> <span class="str">"batch_pipeline"</span> {
+  name     = <span class="str">"batch-data-pipeline"</span>
+  role_arn = aws_iam_role.sfn_role.arn
+
+  definition = <span class="fn">jsonencode</span>({
+    Comment = <span class="str">"Batch data processing pipeline"</span>
+    StartAt = <span class="str">"ValidateInput"</span>
+    States = {
+      ValidateInput = {
+        Type     = <span class="str">"Task"</span>
+        Resource = aws_lambda_function.validate_job.arn
+        Next     = <span class="str">"CheckValidation"</span>
+        Retry = [{
+          ErrorEquals     = [<span class="str">"States.TaskFailed"</span>]
+          IntervalSeconds = <span class="num">5</span>
+          MaxAttempts     = <span class="num">2</span>
+          BackoffRate     = <span class="num">2.0</span>
+        }]
+        Catch = [{
+          ErrorEquals = [<span class="str">"States.ALL"</span>]
+          Next        = <span class="str">"NotifyFailure"</span>
+          ResultPath  = <span class="str">"$.error"</span>
+        }]
+      }
+
+      CheckValidation = {
+        Type = <span class="str">"Choice"</span>
+        Choices = [{
+          Variable     = <span class="str">"$.proceed"</span>
+          BooleanEquals = <span class="kw">true</span>
+          Next         = <span class="str">"SubmitBatchJob"</span>
+        }]
+        Default = <span class="str">"SkipNotification"</span>
+      }
+
+      SubmitBatchJob = {
+        Type     = <span class="str">"Task"</span>
+        Resource = <span class="str">"arn:aws:states:::batch:submitJob.sync"</span>
+        Parameters = {
+          JobName        = <span class="str">"data-processor"</span>
+          JobDefinition  = aws_batch_job_definition.processor.arn
+          JobQueue       = aws_batch_job_queue.main.arn
+          ContainerOverrides = {
+            Environment = [
+              { Name = <span class="str">"JOB_ID"</span>,   <span class="str">"Value.$"</span> = <span class="str">"$.job_id"</span> },
+              { Name = <span class="str">"RUN_DATE"</span>, <span class="str">"Value.$"</span> = <span class="str">"$.run_date"</span> }
+            ]
+          }
+        }
+        Next = <span class="str">"NotifySuccess"</span>
+        Retry = [{
+          ErrorEquals     = [<span class="str">"States.TaskFailed"</span>]
+          IntervalSeconds = <span class="num">30</span>
+          MaxAttempts     = <span class="num">2</span>
+          BackoffRate     = <span class="num">2.0</span>
+        }]
+        Catch = [{
+          ErrorEquals = [<span class="str">"States.ALL"</span>]
+          Next        = <span class="str">"NotifyFailure"</span>
+          ResultPath  = <span class="str">"$.error"</span>
+        }]
+      }
+
+      NotifySuccess = {
+        Type     = <span class="str">"Task"</span>
+        Resource = <span class="str">"arn:aws:states:::sns:publish"</span>
+        Parameters = {
+          TopicArn = aws_sns_topic.batch_alerts.arn
+          Subject  = <span class="str">"Batch Job Succeeded"</span>
+          <span class="str">"Message.$"</span> = <span class="str">"States.Format('Job {} completed for {}', $.job_id, $.run_date)"</span>
+        }
+        End = <span class="kw">true</span>
+      }
+
+      NotifyFailure = {
+        Type     = <span class="str">"Task"</span>
+        Resource = <span class="str">"arn:aws:states:::sns:publish"</span>
+        Parameters = {
+          TopicArn = aws_sns_topic.batch_alerts.arn
+          Subject  = <span class="str">"Batch Job FAILED"</span>
+          <span class="str">"Message.$"</span> = <span class="str">"States.Format('Job failed: {}', $.error)"</span>
+        }
+        Next = <span class="str">"FailPipeline"</span>
+      }
+
+      FailPipeline = {
+        Type  = <span class="str">"Fail"</span>
+        Cause = <span class="str">"Batch job pipeline failed"</span>
+      }
+
+      SkipNotification = {
+        Type     = <span class="str">"Task"</span>
+        Resource = <span class="str">"arn:aws:states:::sns:publish"</span>
+        Parameters = {
+          TopicArn = aws_sns_topic.batch_alerts.arn
+          Subject  = <span class="str">"Batch Job Skipped"</span>
+          <span class="str">"Message.$"</span> = <span class="str">"States.Format('Skipped: {}', $.reason)"</span>
+        }
+        End = <span class="kw">true</span>
+      }
+    }
+  })
+}</code></pre>
+
+<h2>8. EventBridge Cron Schedule</h2>
+<h3>terraform/eventbridge.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_cloudwatch_event_rule"</span> <span class="str">"batch_schedule"</span> {
+  name                = <span class="str">"batch-pipeline-daily"</span>
+  description         = <span class="str">"Trigger batch pipeline at 2 AM UTC daily"</span>
+  schedule_expression = <span class="str">"cron(0 2 * * ? *)"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_event_target"</span> <span class="str">"trigger_sfn"</span> {
+  rule     = aws_cloudwatch_event_rule.batch_schedule.name
+  arn      = aws_sfn_state_machine.batch_pipeline.arn
+  role_arn = aws_iam_role.eventbridge_role.arn
+
+  input = <span class="fn">jsonencode</span>({
+    job_id   = <span class="str">"daily-aggregation"</span>
+    run_date = <span class="str">"&lt;aws.scheduler.execution-id&gt;"</span>
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"eventbridge_role"</span> {
+  name = <span class="str">"batch-eventbridge-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"events.amazonaws.com"</span> }
+    }]
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"eventbridge_sfn"</span> {
+  name = <span class="str">"allow-start-sfn"</span>
+  role = aws_iam_role.eventbridge_role.id
+  policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Effect   = <span class="str">"Allow"</span>
+      Action   = <span class="str">"states:StartExecution"</span>
+      Resource = aws_sfn_state_machine.batch_pipeline.arn
+    }]
+  })
+}</code></pre>
+
+<div class="note">You can also add additional schedules for weekly or monthly jobs by creating more <code>aws_cloudwatch_event_rule</code> resources with different cron expressions and input payloads.</div>
+
+<h2>9. SNS Notifications &amp; SQS Dead Letter Queue</h2>
+<h3>terraform/notifications.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_sns_topic"</span> <span class="str">"batch_alerts"</span> {
+  name = <span class="str">"batch-pipeline-alerts"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_sns_topic_subscription"</span> <span class="str">"email"</span> {
+  topic_arn = aws_sns_topic.batch_alerts.arn
+  protocol  = <span class="str">"email"</span>
+  endpoint  = <span class="str">"devops@example.com"</span>
+}
+
+<span class="cm"># Dead letter queue for failed EventBridge deliveries</span>
+<span class="kw">resource</span> <span class="str">"aws_sqs_queue"</span> <span class="str">"batch_dlq"</span> {
+  name                      = <span class="str">"batch-pipeline-dlq"</span>
+  message_retention_seconds = <span class="num">1209600</span>  <span class="cm"># 14 days</span>
+  receive_wait_time_seconds = <span class="num">20</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_sqs_queue_policy"</span> <span class="str">"dlq_policy"</span> {
+  queue_url = aws_sqs_queue.batch_dlq.id
+  policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"events.amazonaws.com"</span> }
+      Action    = <span class="str">"sqs:SendMessage"</span>
+      Resource  = aws_sqs_queue.batch_dlq.arn
+    }]
+  })
+}</code></pre>
+
+<h2>10. IAM Roles for Step Functions &amp; Batch</h2>
+<h3>terraform/iam.tf</h3>
+<pre><code><span class="cm"># Step Functions execution role</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"sfn_role"</span> {
+  name = <span class="str">"batch-sfn-execution-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"states.amazonaws.com"</span> }
+    }]
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"sfn_policy"</span> {
+  name = <span class="str">"sfn-batch-policy"</span>
+  role = aws_iam_role.sfn_role.id
+  policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = <span class="str">"lambda:InvokeFunction"</span>
+        Resource = aws_lambda_function.validate_job.arn
+      },
+      {
+        Effect = <span class="str">"Allow"</span>
+        Action = [
+          <span class="str">"batch:SubmitJob"</span>,
+          <span class="str">"batch:DescribeJobs"</span>,
+          <span class="str">"batch:TerminateJob"</span>
+        ]
+        Resource = <span class="str">"*"</span>
+      },
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = <span class="str">"sns:Publish"</span>
+        Resource = aws_sns_topic.batch_alerts.arn
+      },
+      {
+        Effect = <span class="str">"Allow"</span>
+        Action = [
+          <span class="str">"events:PutTargets"</span>,
+          <span class="str">"events:PutRule"</span>,
+          <span class="str">"events:DescribeRule"</span>
+        ]
+        Resource = <span class="str">"*"</span>
+      }
+    ]
+  })
+}
+
+<span class="cm"># Batch service role</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"batch_service_role"</span> {
+  name = <span class="str">"batch-service-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"batch.amazonaws.com"</span> }
+    }]
+  })
+  managed_policy_arns = [<span class="str">"arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"</span>]
+}
+
+<span class="cm"># Batch execution role (for Fargate to pull images)</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"batch_exec_role"</span> {
+  name = <span class="str">"batch-execution-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"ecs-tasks.amazonaws.com"</span> }
+    }]
+  })
+  managed_policy_arns = [<span class="str">"arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"</span>]
+}
+
+<span class="cm"># Batch job role (for container to access S3/DynamoDB)</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"batch_job_role"</span> {
+  name = <span class="str">"batch-job-role"</span>
+  assume_role_policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [{
+      Action    = <span class="str">"sts:AssumeRole"</span>
+      Effect    = <span class="str">"Allow"</span>
+      Principal = { Service = <span class="str">"ecs-tasks.amazonaws.com"</span> }
+    }]
+  })
+}
+
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"batch_job_policy"</span> {
+  name = <span class="str">"batch-job-s3-dynamo"</span>
+  role = aws_iam_role.batch_job_role.id
+  policy = <span class="fn">jsonencode</span>({
+    Version = <span class="str">"2012-10-17"</span>
+    Statement = [
+      {
+        Effect = <span class="str">"Allow"</span>
+        Action = [<span class="str">"s3:GetObject"</span>, <span class="str">"s3:ListBucket"</span>]
+        Resource = [
+          aws_s3_bucket.batch_input.arn,
+          <span class="str">"${aws_s3_bucket.batch_input.arn}/*"</span>
+        ]
+      },
+      {
+        Effect = <span class="str">"Allow"</span>
+        Action = [<span class="str">"s3:PutObject"</span>]
+        Resource = <span class="str">"${aws_s3_bucket.batch_output.arn}/*"</span>
+      },
+      {
+        Effect   = <span class="str">"Allow"</span>
+        Action   = [<span class="str">"dynamodb:UpdateItem"</span>, <span class="str">"dynamodb:PutItem"</span>]
+        Resource = aws_dynamodb_table.job_tracker.arn
+      }
+    ]
+  })
+}</code></pre>
+
+<h2>11. CloudWatch Monitoring &amp; Alarms</h2>
+<h3>terraform/monitoring.tf</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"dlq_depth"</span> {
+  alarm_name          = <span class="str">"batch-dlq-messages"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">1</span>
+  metric_name         = <span class="str">"ApproximateNumberOfMessagesVisible"</span>
+  namespace           = <span class="str">"AWS/SQS"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Sum"</span>
+  threshold           = <span class="num">0</span>
+  alarm_description   = <span class="str">"DLQ has messages — events are failing"</span>
+  alarm_actions       = [aws_sns_topic.batch_alerts.arn]
+
+  dimensions = {
+    QueueName = aws_sqs_queue.batch_dlq.name
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"sfn_failures"</span> {
+  alarm_name          = <span class="str">"batch-sfn-failures"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">1</span>
+  metric_name         = <span class="str">"ExecutionsFailed"</span>
+  namespace           = <span class="str">"AWS/States"</span>
+  period              = <span class="num">300</span>
+  statistic           = <span class="str">"Sum"</span>
+  threshold           = <span class="num">0</span>
+  alarm_description   = <span class="str">"Step Functions execution failed"</span>
+  alarm_actions       = [aws_sns_topic.batch_alerts.arn]
+
+  dimensions = {
+    StateMachineArn = aws_sfn_state_machine.batch_pipeline.arn
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"job_duration"</span> {
+  alarm_name          = <span class="str">"batch-job-duration"</span>
+  comparison_operator = <span class="str">"GreaterThanThreshold"</span>
+  evaluation_periods  = <span class="num">1</span>
+  metric_name         = <span class="str">"ExecutionTime"</span>
+  namespace           = <span class="str">"AWS/States"</span>
+  period              = <span class="num">3600</span>
+  statistic           = <span class="str">"Maximum"</span>
+  threshold           = <span class="num">7200</span>  <span class="cm"># 2 hours</span>
+  alarm_description   = <span class="str">"Pipeline running longer than 2 hours"</span>
+  alarm_actions       = [aws_sns_topic.batch_alerts.arn]
+
+  dimensions = {
+    StateMachineArn = aws_sfn_state_machine.batch_pipeline.arn
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_dashboard"</span> <span class="str">"batch"</span> {
+  dashboard_name = <span class="str">"batch-pipeline"</span>
+  dashboard_body = <span class="fn">jsonencode</span>({
+    widgets = [
+      {
+        type   = <span class="str">"metric"</span>
+        x = <span class="num">0</span>; y = <span class="num">0</span>; width = <span class="num">12</span>; height = <span class="num">6</span>
+        properties = {
+          metrics = [
+            [<span class="str">"AWS/States"</span>, <span class="str">"ExecutionsSucceeded"</span>, <span class="str">"StateMachineArn"</span>, aws_sfn_state_machine.batch_pipeline.arn],
+            [<span class="str">"AWS/States"</span>, <span class="str">"ExecutionsFailed"</span>, <span class="str">"StateMachineArn"</span>, aws_sfn_state_machine.batch_pipeline.arn]
+          ]
+          period = <span class="num">86400</span>
+          title  = <span class="str">"Pipeline Executions (Daily)"</span>
+        }
+      },
+      {
+        type   = <span class="str">"metric"</span>
+        x = <span class="num">12</span>; y = <span class="num">0</span>; width = <span class="num">12</span>; height = <span class="num">6</span>
+        properties = {
+          metrics = [
+            [<span class="str">"AWS/SQS"</span>, <span class="str">"ApproximateNumberOfMessagesVisible"</span>, <span class="str">"QueueName"</span>, aws_sqs_queue.batch_dlq.name]
+          ]
+          period = <span class="num">300</span>
+          title  = <span class="str">"DLQ Depth"</span>
+        }
+      }
+    ]
+  })
+}</code></pre>
+
+<h2>12. Deploy &amp; Test</h2>
+<pre><code><span class="cm"># Initialize and deploy infrastructure</span>
+cd terraform/
+terraform init
+terraform plan -out=plan.tfplan
+terraform apply plan.tfplan
+
+<span class="cm"># Build and push Docker image</span>
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin <span class="num">123456789012</span>.dkr.ecr.us-east-1.amazonaws.com
+docker build -t batch-data-processor docker/
+docker tag batch-data-processor:latest <span class="num">123456789012</span>.dkr.ecr.us-east-1.amazonaws.com/batch-data-processor:latest
+docker push <span class="num">123456789012</span>.dkr.ecr.us-east-1.amazonaws.com/batch-data-processor:latest
+
+<span class="cm"># Upload test data</span>
+aws s3 cp test-data.csv s3://mycompany-batch-input/jobs/daily-aggregation/2024-01-15/data.csv
+
+<span class="cm"># Trigger manually</span>
+aws stepfunctions start-execution \
+  --state-machine-arn arn:aws:states:us-east-1:<span class="num">123456789012</span>:stateMachine:batch-data-pipeline \
+  --input <span class="str">'{"job_id":"daily-aggregation","run_date":"2024-01-15"}'</span>
+
+<span class="cm"># Monitor execution</span>
+aws stepfunctions list-executions \
+  --state-machine-arn arn:aws:states:us-east-1:<span class="num">123456789012</span>:stateMachine:batch-data-pipeline \
+  --max-results <span class="num">5</span>
+
+<span class="cm"># Check job status in DynamoDB</span>
+aws dynamodb get-item \
+  --table-name batch-job-tracker \
+  --key <span class="str">'{"job_id":{"S":"daily-aggregation"},"run_date":{"S":"2024-01-15"}}'</span>
+
+<span class="cm"># Check output</span>
+aws s3 ls s3://mycompany-batch-output/results/daily-aggregation/2024-01-15/
+
+<span class="cm"># View Batch job logs</span>
+aws logs tail /aws/batch/data-processor --follow</code></pre>
+
+<div class="warn">Always test with a small dataset first. If the Batch job fails, check CloudWatch Logs at <code>/aws/batch/data-processor</code> for container stdout/stderr.</div>
+
+<footer>Stefan Laza — DevOps Engineer</footer>
+</div></body></html>

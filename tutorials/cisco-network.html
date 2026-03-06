@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cisco 3-Tier Enterprise Campus Network — Tutorial</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050507;--surface:#0a0a10;--card:#111118;
+  --border:rgba(255,255,255,0.06);--text:#f0f0f5;--muted:#6e6e80;
+  --indigo:#818cf8;--cyan:#22d3ee;--red:#f87171;--green:#34d399;--orange:#fb923c;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* BACK LINK */
+.back-link{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:1rem 2rem;background:rgba(5,5,7,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.back-link a{color:var(--muted);text-decoration:none;font-size:0.82rem;font-weight:500;transition:color 0.2s;display:inline-flex;align-items:center;gap:0.4rem}
+.back-link a:hover{color:var(--text)}
+
+/* LAYOUT */
+.tutorial-wrapper{max-width:860px;margin:0 auto;padding:6rem 2rem 4rem}
+
+/* HERO */
+.tutorial-hero{text-align:center;padding:3rem 0 4rem;border-bottom:1px solid var(--border);margin-bottom:3rem}
+.tutorial-hero .badge{display:inline-block;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;padding:0.35rem 1rem;border-radius:100px;border:1px solid rgba(129,140,248,0.25);color:var(--indigo);margin-bottom:1.5rem}
+.tutorial-hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:700;letter-spacing:-0.04em;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#888 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:1rem}
+.tutorial-hero p{font-size:1rem;color:var(--muted);max-width:600px;margin:0 auto}
+
+/* TOC */
+.toc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:3rem}
+.toc h2{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:1.2rem}
+.toc ol{list-style:none;counter-reset:toc-counter;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.4rem 2rem}
+.toc ol li{counter-increment:toc-counter}
+.toc ol li a{color:var(--text);text-decoration:none;font-size:0.88rem;font-weight:500;display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0;transition:color 0.2s}
+.toc ol li a::before{content:counter(toc-counter,decimal-leading-zero);font-size:0.7rem;font-weight:700;color:var(--indigo);min-width:1.6rem}
+.toc ol li a:hover{color:var(--indigo)}
+
+/* SECTIONS */
+.section{margin-bottom:3.5rem;padding-bottom:3.5rem;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.section-label{display:inline-flex;align-items:center;gap:0.5rem;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem}
+.section h2{font-size:clamp(1.4rem,3vw,1.9rem);font-weight:700;letter-spacing:-0.03em;line-height:1.2;margin-bottom:0.6rem}
+.section h3{font-size:1.1rem;font-weight:600;letter-spacing:-0.01em;margin-top:2rem;margin-bottom:0.6rem;color:var(--text)}
+.section > p, .section > ul, .section > ol{font-size:0.92rem;color:var(--muted);margin-bottom:1rem}
+.section ul, .section ol{padding-left:1.4rem}
+.section li{margin-bottom:0.35rem;font-size:0.92rem;color:var(--muted)}
+.section li code{color:var(--cyan);font-size:0.84rem}
+.section strong{color:var(--text);font-weight:600}
+
+/* INFO CARDS */
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0}
+.info-card.warning{border-color:rgba(251,146,60,0.2)}
+.info-card.warning .info-card-title{color:var(--orange)}
+.info-card.tip{border-color:rgba(34,211,238,0.2)}
+.info-card.tip .info-card-title{color:var(--cyan)}
+.info-card.danger{border-color:rgba(248,113,113,0.2)}
+.info-card.danger .info-card-title{color:var(--red)}
+.info-card-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.6rem}
+.info-card p{font-size:0.85rem;color:var(--muted);line-height:1.6}
+
+/* EQUIPMENT TABLE */
+.equip-table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.85rem}
+.equip-table th{text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.7rem 1rem;border-bottom:1px solid var(--border);background:var(--surface)}
+.equip-table td{padding:0.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text)}
+.equip-table tr:hover td{background:var(--card)}
+.equip-table .model{color:var(--cyan);font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:0.82rem}
+.equip-table .qty{color:var(--indigo);font-weight:600;text-align:center}
+
+/* CODE BLOCKS */
+pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.3rem 1.5rem;margin:1rem 0 1.5rem;overflow-x:auto;position:relative;font-size:0;line-height:0}
+pre .code-label{display:block;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding-bottom:0.8rem;margin-bottom:0.8rem;border-bottom:1px solid var(--border);line-height:1}
+pre code{font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:0.82rem;line-height:1.65;color:#c8c8d0;display:block;overflow-x:auto}
+pre code .comment{color:#555566;font-style:italic}
+pre code .keyword{color:var(--indigo)}
+pre code .value{color:var(--green)}
+pre code .interface{color:var(--cyan)}
+pre code .important{color:var(--orange)}
+
+/* TOPOLOGY DIAGRAM (ASCII-STYLE) */
+.topology{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem;margin:1.5rem 0;text-align:center;overflow-x:auto}
+.topology pre{background:transparent;border:none;padding:0;margin:0;text-align:left;display:inline-block}
+.topology pre code{font-size:0.75rem;line-height:1.5;color:var(--muted)}
+.topology-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--indigo);margin-bottom:1rem}
+
+/* VLAN TABLE */
+.vlan-table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:0.85rem}
+.vlan-table th{text-align:left;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.7rem 1rem;border-bottom:1px solid var(--border);background:var(--surface)}
+.vlan-table td{padding:0.65rem 1rem;border-bottom:1px solid var(--border);color:var(--text)}
+.vlan-table .vlan-id{color:var(--indigo);font-weight:700;font-family:'SF Mono',SFMono-Regular,Consolas,monospace}
+.vlan-table .subnet{color:var(--cyan);font-family:'SF Mono',SFMono-Regular,Consolas,monospace;font-size:0.82rem}
+
+/* FOOTER */
+.tutorial-footer{text-align:center;padding:3rem 0 1rem;border-top:1px solid var(--border);margin-top:2rem}
+.tutorial-footer p{font-size:0.72rem;color:var(--muted)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .back-link{padding:0.8rem 1rem}
+  .tutorial-wrapper{padding:5rem 1rem 2rem}
+  .toc ol{grid-template-columns:1fr}
+  pre{padding:1rem;border-radius:8px}
+  pre code{font-size:0.75rem}
+  .equip-table,.vlan-table{font-size:0.78rem}
+  .equip-table th,.equip-table td,.vlan-table th,.vlan-table td{padding:0.5rem 0.6rem}
+}
+</style>
+</head>
+<body>
+
+<!-- BACK NAVIGATION -->
+<div class="back-link">
+  <a href="../index.html#cisco">&larr; Back to Portfolio</a>
+</div>
+
+<div class="tutorial-wrapper">
+
+<!-- HERO -->
+<div class="tutorial-hero">
+  <div class="badge">Networking Tutorial</div>
+  <h1>Cisco 3-Tier Enterprise<br>Campus Network</h1>
+  <p>A production-ready deployment guide covering edge firewalls, collapsed core, distribution, access layers, wireless, and security hardening with real Cisco IOS/IOS-XE configurations.</p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<nav class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#prerequisites">Prerequisites &amp; Equipment</a></li>
+    <li><a href="#edge">Edge Layer &mdash; ASA Firewalls</a></li>
+    <li><a href="#core">Core Layer &mdash; Catalyst 9500</a></li>
+    <li><a href="#distribution">Distribution Layer &mdash; Catalyst 9300</a></li>
+    <li><a href="#access">Access Layer &mdash; VLAN Configuration</a></li>
+    <li><a href="#wireless">Wireless &mdash; WLC &amp; RADIUS</a></li>
+    <li><a href="#monitoring">Monitoring &mdash; SNMP, Syslog, NTP</a></li>
+    <li><a href="#hardening">Security Hardening</a></li>
+  </ol>
+</nav>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 1: PREREQUISITES -->
+<!-- ================================================================== -->
+<div class="section" id="prerequisites">
+  <div class="section-label" style="color:var(--indigo)">Section 01</div>
+  <h2>Prerequisites &amp; Equipment</h2>
+  <p>This guide builds a three-tier campus network serving approximately 500 users across a single building with server room, DMZ, workstation floors, VoIP, and wireless. The topology follows Cisco's validated design for enterprise campus architectures.</p>
+
+  <h3>Equipment List</h3>
+  <table class="equip-table">
+    <thead>
+      <tr><th>Role</th><th>Model</th><th style="text-align:center">Qty</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Edge Firewall</strong></td><td class="model">Cisco ASA 5525-X</td><td class="qty">2</td><td>Active/Standby failover pair</td></tr>
+      <tr><td><strong>Core Switch</strong></td><td class="model">Catalyst 9500-48Y4C</td><td class="qty">2</td><td>L3 routing, redundant pair</td></tr>
+      <tr><td><strong>Distribution Switch</strong></td><td class="model">Catalyst 9300-48T</td><td class="qty">3</td><td>One per floor / zone</td></tr>
+      <tr><td><strong>Wireless Controller</strong></td><td class="model">Catalyst 9800-40</td><td class="qty">1</td><td>HA-capable, manages all APs</td></tr>
+      <tr><td><strong>Access Points</strong></td><td class="model">Catalyst 9120AXI</td><td class="qty">24</td><td>Wi-Fi 6, FlexConnect</td></tr>
+      <tr><td><strong>RADIUS Server</strong></td><td class="model">Cisco ISE 3.x VM</td><td class="qty">1</td><td>802.1X, TACACS+ authentication</td></tr>
+      <tr><td><strong>NTP/Syslog Server</strong></td><td class="model">Linux VM (Ubuntu)</td><td class="qty">1</td><td>rsyslog + chrony</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cabling Plan</h3>
+  <ul>
+    <li><strong>ASA to Core:</strong> 1G SFP copper per ASA to each core switch (4 links total &mdash; inside + outside per unit)</li>
+    <li><strong>Core-to-Core:</strong> 2x 25G SFP28 DAC in LACP Port-Channel (Po1)</li>
+    <li><strong>Core to Distribution:</strong> 2x 10G SFP+ per distribution switch (one uplink to each core) using 802.1Q trunks</li>
+    <li><strong>Distribution to Access:</strong> 1G Cat6A copper to access-layer ports, PoE+ for APs and phones</li>
+    <li><strong>ASA Failover:</strong> Dedicated GigabitEthernet crossover cable on GigabitEthernet0/3</li>
+    <li><strong>Management:</strong> Out-of-band console via USB/serial to all devices on VLAN 50</li>
+  </ul>
+
+  <h3>IP Addressing Scheme</h3>
+  <table class="vlan-table">
+    <thead>
+      <tr><th>VLAN</th><th>Name</th><th>Subnet</th><th>Gateway</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="vlan-id">10</td><td>Servers</td><td class="subnet">10.10.10.0/24</td><td class="subnet">10.10.10.1</td><td>Static IPs, server farm</td></tr>
+      <tr><td class="vlan-id">20</td><td>DMZ</td><td class="subnet">10.10.20.0/24</td><td class="subnet">10.10.20.1</td><td>Public-facing services</td></tr>
+      <tr><td class="vlan-id">30</td><td>Workstations</td><td class="subnet">10.10.30.0/24</td><td class="subnet">10.10.30.1</td><td>DHCP, user endpoints</td></tr>
+      <tr><td class="vlan-id">40</td><td>VoIP</td><td class="subnet">10.10.40.0/24</td><td class="subnet">10.10.40.1</td><td>IP phones, QoS priority</td></tr>
+      <tr><td class="vlan-id">50</td><td>Management</td><td class="subnet">10.10.50.0/24</td><td class="subnet">10.10.50.1</td><td>SSH-only, device mgmt</td></tr>
+      <tr><td class="vlan-id">99</td><td>Native</td><td class="subnet">10.10.99.0/24</td><td class="subnet">&mdash;</td><td>Native VLAN (unused)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Logical Topology</h3>
+  <div class="topology">
+    <div class="topology-title">Campus Network Topology</div>
+    <pre><code>                        +----- INTERNET -----+
+                        |                     |
+                   [ ISP Router ]        [ ISP Router ]
+                        |                     |
+                   Gi0/0|                     |Gi0/0
+               +--------+--------+   +--------+--------+
+               |  ASA-PRIMARY    |---|  ASA-SECONDARY   |
+               |  (Active)       |f/o|  (Standby)       |
+               +--------+--------+   +--------+--------+
+                   Gi0/1|inside              Gi0/1|inside
+                        |                         |
+            +-----------+-----------+-------------+
+            |                       |
+       +----+----+            +----+----+
+       | CORE-SW1|===LACP====| CORE-SW2|    Catalyst 9500 Pair
+       | (Root)  | Po1 (50G) | (Backup)|    OSPF Area 0
+       +----+----+            +----+----+    Inter-VLAN SVIs
+            |  \                /  |
+       10G  |   \  10G   10G  /   | 10G
+            |    \          /     |
+       +----+----+ +----+----+ +----+----+
+       | DIST-SW1| | DIST-SW2| | DIST-SW3|  Catalyst 9300
+       | Floor 1 | | Floor 2 | | Floor 3 |  802.1Q Trunks
+       +----+----+ +----+----+ +----+----+  DHCP Relay
+            |           |           |
+        ----+----   ----+----   ----+----
+        | Access|   | Access|   | Access|   VLAN 10-50
+        | Ports |   | Ports |   | Ports |   PoE+ for APs
+        ---------   ---------   ---------   and Phones
+           |           |           |
+     [APs][Phones]  [PCs][APs]  [Servers]
+                                   |
+                        +----------+----------+
+                        |   WLC 9800-40       |
+                        |   (VLAN 50 Mgmt)    |
+                        +---------------------+</code></pre>
+  </div>
+
+  <div class="info-card warning">
+    <div class="info-card-title">Before You Begin</div>
+    <p>Ensure all switches are running IOS-XE 17.6.x or later. ASA firewalls should be on ASA OS 9.16+. Back up all running configurations before making changes. Use a console cable for initial configuration to avoid lockouts.</p>
+  </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 2: EDGE LAYER -->
+<!-- ================================================================== -->
+<div class="section" id="edge">
+  <div class="section-label" style="color:var(--red)">Section 02</div>
+  <h2>Edge Layer &mdash; ASA 5525-X Firewall</h2>
+  <p>The edge layer provides perimeter security with an Active/Standby failover pair. The primary ASA handles all traffic while the secondary monitors and takes over if the primary fails. Both units share a virtual IP on each interface.</p>
+
+  <h3>2.1 &mdash; Base Interface Configuration (Primary ASA)</h3>
+  <p>Configure the physical interfaces first. The outside interface connects to the ISP, the inside interface connects to the core switch, and the DMZ interface serves public-facing servers.</p>
+
+<pre><span class="code-label">ASA-PRIMARY &mdash; Interface Configuration</span><code><span class="comment">! Enter configuration mode</span>
+<span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> ASA-PRIMARY
+
+<span class="comment">! Outside interface — connects to ISP</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/0</span>
+ <span class="keyword">nameif</span> outside
+ <span class="keyword">security-level</span> <span class="value">0</span>
+ <span class="keyword">ip address</span> <span class="value">203.0.113.2 255.255.255.252</span> <span class="keyword">standby</span> <span class="value">203.0.113.3</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Inside interface — connects to Core-SW1</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/1</span>
+ <span class="keyword">nameif</span> inside
+ <span class="keyword">security-level</span> <span class="value">100</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.1.1 255.255.255.252</span> <span class="keyword">standby</span> <span class="value">10.10.1.2</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! DMZ interface — for public-facing servers</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/2</span>
+ <span class="keyword">nameif</span> dmz
+ <span class="keyword">security-level</span> <span class="value">50</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.20.1 255.255.255.0</span> <span class="keyword">standby</span> <span class="value">10.10.20.2</span>
+ <span class="keyword">no shutdown</span></code></pre>
+
+  <h3>2.2 &mdash; Active/Standby Failover Configuration</h3>
+  <p>The failover link uses a dedicated interface (Gi0/3) for heartbeat and state synchronization. The stateful failover link ensures active TCP sessions survive a failover event.</p>
+
+<pre><span class="code-label">ASA-PRIMARY &mdash; Failover Configuration</span><code><span class="comment">! Dedicated failover link (crossover cable between ASA pair)</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/3</span>
+ <span class="keyword">description</span> FAILOVER-LINK
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Enable failover</span>
+<span class="keyword">failover</span>
+<span class="keyword">failover lan unit</span> <span class="value">primary</span>
+<span class="keyword">failover lan interface</span> FAILOVER <span class="interface">GigabitEthernet0/3</span>
+<span class="keyword">failover polltime unit</span> <span class="value">1</span> <span class="keyword">holdtime</span> <span class="value">5</span>
+<span class="keyword">failover polltime interface</span> <span class="value">3</span> <span class="keyword">holdtime</span> <span class="value">25</span>
+<span class="keyword">failover key</span> <span class="important">F@il0v3rK3y!</span>
+<span class="keyword">failover replication http</span>
+<span class="keyword">failover link</span> STATEFUL <span class="interface">GigabitEthernet0/3</span>
+<span class="keyword">failover interface ip</span> FAILOVER <span class="value">10.10.200.1 255.255.255.252</span> <span class="keyword">standby</span> <span class="value">10.10.200.2</span>
+<span class="keyword">failover interface ip</span> STATEFUL <span class="value">10.10.200.1 255.255.255.252</span> <span class="keyword">standby</span> <span class="value">10.10.200.2</span></code></pre>
+
+<pre><span class="code-label">ASA-SECONDARY &mdash; Failover Configuration</span><code><span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> ASA-SECONDARY
+
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/3</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">failover</span>
+<span class="keyword">failover lan unit</span> <span class="value">secondary</span>
+<span class="keyword">failover lan interface</span> FAILOVER <span class="interface">GigabitEthernet0/3</span>
+<span class="keyword">failover key</span> <span class="important">F@il0v3rK3y!</span>
+<span class="keyword">failover interface ip</span> FAILOVER <span class="value">10.10.200.1 255.255.255.252</span> <span class="keyword">standby</span> <span class="value">10.10.200.2</span>
+
+<span class="comment">! After enabling, the secondary will sync config from the primary</span></code></pre>
+
+  <div class="info-card tip">
+    <div class="info-card-title">Failover Verification</div>
+    <p>Run <code>show failover</code> on both units. The primary should show "This host: Primary - Active" and the secondary should show "Other host: Secondary - Standby Ready". Use <code>failover active</code> to manually trigger failover for testing.</p>
+  </div>
+
+  <h3>2.3 &mdash; NAT Rules</h3>
+  <p>Configure dynamic PAT for internal users and static NAT for DMZ servers that need to be reachable from the internet.</p>
+
+<pre><span class="code-label">ASA-PRIMARY &mdash; NAT Configuration</span><code><span class="comment">! Dynamic PAT — all inside hosts share the outside interface IP</span>
+<span class="keyword">object network</span> OBJ-INSIDE-NETWORK
+ <span class="keyword">subnet</span> <span class="value">10.10.0.0 255.255.0.0</span>
+ <span class="keyword">nat</span> (inside,outside) <span class="keyword">dynamic</span> interface
+
+<span class="comment">! Static NAT — expose DMZ web server to the internet</span>
+<span class="keyword">object network</span> OBJ-DMZ-WEBSERVER
+ <span class="keyword">host</span> <span class="value">10.10.20.10</span>
+ <span class="keyword">nat</span> (dmz,outside) <span class="keyword">static</span> <span class="value">203.0.113.10</span>
+
+<span class="comment">! Static NAT — expose DMZ mail server</span>
+<span class="keyword">object network</span> OBJ-DMZ-MAILSERVER
+ <span class="keyword">host</span> <span class="value">10.10.20.11</span>
+ <span class="keyword">nat</span> (dmz,outside) <span class="keyword">static</span> <span class="value">203.0.113.11</span>
+
+<span class="comment">! NAT exemption for VPN traffic (no translation for site-to-site)</span>
+<span class="keyword">object network</span> OBJ-LOCAL-LAN
+ <span class="keyword">subnet</span> <span class="value">10.10.0.0 255.255.0.0</span>
+<span class="keyword">object network</span> OBJ-REMOTE-LAN
+ <span class="keyword">subnet</span> <span class="value">192.168.0.0 255.255.0.0</span>
+
+<span class="keyword">nat</span> (inside,outside) <span class="keyword">source static</span> OBJ-LOCAL-LAN OBJ-LOCAL-LAN <span class="keyword">destination static</span> OBJ-REMOTE-LAN OBJ-REMOTE-LAN <span class="keyword">no-proxy-arp route-lookup</span></code></pre>
+
+  <h3>2.4 &mdash; Access Control Lists</h3>
+
+<pre><span class="code-label">ASA-PRIMARY &mdash; ACL Configuration</span><code><span class="comment">! Permit inbound HTTPS and SMTP to DMZ servers only</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit tcp</span> any <span class="keyword">host</span> <span class="value">203.0.113.10</span> <span class="keyword">eq</span> <span class="value">443</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit tcp</span> any <span class="keyword">host</span> <span class="value">203.0.113.10</span> <span class="keyword">eq</span> <span class="value">80</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit tcp</span> any <span class="keyword">host</span> <span class="value">203.0.113.11</span> <span class="keyword">eq</span> <span class="value">25</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit tcp</span> any <span class="keyword">host</span> <span class="value">203.0.113.11</span> <span class="keyword">eq</span> <span class="value">587</span>
+
+<span class="comment">! Permit ICMP for diagnostics (rate-limited by MPF later)</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit icmp</span> any any <span class="keyword">echo-reply</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit icmp</span> any any <span class="keyword">unreachable</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended permit icmp</span> any any <span class="keyword">time-exceeded</span>
+
+<span class="comment">! Deny everything else (implicit, but explicit for logging)</span>
+<span class="keyword">access-list</span> OUTSIDE-IN <span class="keyword">extended deny ip</span> any any <span class="keyword">log</span>
+
+<span class="comment">! Apply ACL to outside interface</span>
+<span class="keyword">access-group</span> OUTSIDE-IN <span class="keyword">in interface</span> outside
+
+<span class="comment">! Restrict DMZ — DMZ cannot initiate to inside</span>
+<span class="keyword">access-list</span> DMZ-IN <span class="keyword">extended deny ip</span> <span class="value">10.10.20.0 255.255.255.0</span> <span class="value">10.10.10.0 255.255.255.0</span> <span class="keyword">log</span>
+<span class="keyword">access-list</span> DMZ-IN <span class="keyword">extended deny ip</span> <span class="value">10.10.20.0 255.255.255.0</span> <span class="value">10.10.30.0 255.255.255.0</span> <span class="keyword">log</span>
+<span class="keyword">access-list</span> DMZ-IN <span class="keyword">extended permit ip</span> <span class="value">10.10.20.0 255.255.255.0</span> any
+<span class="keyword">access-group</span> DMZ-IN <span class="keyword">in interface</span> dmz</code></pre>
+
+  <h3>2.5 &mdash; Site-to-Site VPN (IKEv2)</h3>
+  <p>Configure an IKEv2 tunnel to a remote branch office at 198.51.100.1. This uses AES-256 encryption with SHA-512 integrity and DH Group 21 for strong security.</p>
+
+<pre><span class="code-label">ASA-PRIMARY &mdash; IKEv2 Site-to-Site VPN</span><code><span class="comment">! IKEv2 Policy — define encryption parameters</span>
+<span class="keyword">crypto ikev2 policy</span> <span class="value">10</span>
+ <span class="keyword">encryption</span> aes-256
+ <span class="keyword">integrity</span> sha512
+ <span class="keyword">group</span> 21
+ <span class="keyword">prf</span> sha512
+ <span class="keyword">lifetime seconds</span> <span class="value">86400</span>
+
+<span class="comment">! Enable IKEv2 on the outside interface</span>
+<span class="keyword">crypto ikev2 enable</span> outside
+
+<span class="comment">! IPsec proposal — ESP encryption and integrity</span>
+<span class="keyword">crypto ipsec ikev2 ipsec-proposal</span> AES256-SHA512
+ <span class="keyword">protocol esp encryption</span> aes-256
+ <span class="keyword">protocol esp integrity</span> sha-512
+
+<span class="comment">! Tunnel group for the remote peer</span>
+<span class="keyword">tunnel-group</span> <span class="value">198.51.100.1</span> <span class="keyword">type</span> ipsec-l2l
+<span class="keyword">tunnel-group</span> <span class="value">198.51.100.1</span> <span class="keyword">ipsec-attributes</span>
+ <span class="keyword">ikev2 remote-authentication pre-shared-key</span> <span class="important">S1t3-t0-S1t3-K3y!</span>
+ <span class="keyword">ikev2 local-authentication pre-shared-key</span> <span class="important">S1t3-t0-S1t3-K3y!</span>
+
+<span class="comment">! Crypto ACL — define interesting traffic for the tunnel</span>
+<span class="keyword">access-list</span> VPN-TRAFFIC <span class="keyword">extended permit ip</span> <span class="value">10.10.0.0 255.255.0.0</span> <span class="value">192.168.0.0 255.255.0.0</span>
+
+<span class="comment">! Crypto map — tie it all together</span>
+<span class="keyword">crypto map</span> OUTSIDE-MAP <span class="value">10</span> <span class="keyword">match address</span> VPN-TRAFFIC
+<span class="keyword">crypto map</span> OUTSIDE-MAP <span class="value">10</span> <span class="keyword">set peer</span> <span class="value">198.51.100.1</span>
+<span class="keyword">crypto map</span> OUTSIDE-MAP <span class="value">10</span> <span class="keyword">set ikev2 ipsec-proposal</span> AES256-SHA512
+<span class="keyword">crypto map</span> OUTSIDE-MAP <span class="value">10</span> <span class="keyword">set security-association lifetime seconds</span> <span class="value">28800</span>
+<span class="keyword">crypto map</span> OUTSIDE-MAP <span class="keyword">interface</span> outside
+
+<span class="comment">! Default route to ISP</span>
+<span class="keyword">route</span> outside <span class="value">0.0.0.0 0.0.0.0 203.0.113.1</span> <span class="value">1</span>
+
+<span class="comment">! Static route for internal networks via core switch</span>
+<span class="keyword">route</span> inside <span class="value">10.10.0.0 255.255.0.0 10.10.1.3</span> <span class="value">1</span></code></pre>
+
+  <div class="info-card tip">
+    <div class="info-card-title">VPN Verification</div>
+    <p>Use <code>show crypto ikev2 sa</code> to verify Phase 1 and <code>show crypto ipsec sa</code> to verify Phase 2. Check encaps/decaps counters increment when traffic flows. Use <code>packet-tracer input inside tcp 10.10.30.100 12345 192.168.1.100 443</code> to simulate traffic through the tunnel.</p>
+  </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 3: CORE LAYER -->
+<!-- ================================================================== -->
+<div class="section" id="core">
+  <div class="section-label" style="color:var(--cyan)">Section 03</div>
+  <h2>Core Layer &mdash; Catalyst 9500</h2>
+  <p>The core layer runs OSPF for dynamic routing, provides inter-VLAN routing via SVIs, and uses LACP EtherChannel between the two core switches for high bandwidth and redundancy. CORE-SW1 is the primary spanning-tree root for all VLANs.</p>
+
+  <h3>3.1 &mdash; VLAN Database &amp; Trunk to ASA</h3>
+
+<pre><span class="code-label">CORE-SW1 &mdash; Base Configuration</span><code><span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> CORE-SW1
+
+<span class="comment">! Create all VLANs</span>
+<span class="keyword">vlan</span> <span class="value">10</span>
+ <span class="keyword">name</span> SERVERS
+<span class="keyword">vlan</span> <span class="value">20</span>
+ <span class="keyword">name</span> DMZ
+<span class="keyword">vlan</span> <span class="value">30</span>
+ <span class="keyword">name</span> WORKSTATIONS
+<span class="keyword">vlan</span> <span class="value">40</span>
+ <span class="keyword">name</span> VOIP
+<span class="keyword">vlan</span> <span class="value">50</span>
+ <span class="keyword">name</span> MANAGEMENT
+<span class="keyword">vlan</span> <span class="value">99</span>
+ <span class="keyword">name</span> NATIVE-UNUSED
+
+<span class="comment">! Routed uplink to ASA inside interface</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet1/0/1</span>
+ <span class="keyword">description</span> UPLINK-TO-ASA-PRIMARY-INSIDE
+ <span class="keyword">no switchport</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.1.3 255.255.255.252</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">no shutdown</span></code></pre>
+
+  <h3>3.2 &mdash; LACP EtherChannel Between Core Switches</h3>
+  <p>Bundle two 25G interfaces between the core switches using LACP for 50Gbps aggregate bandwidth and link-level redundancy.</p>
+
+<pre><span class="code-label">CORE-SW1 &mdash; EtherChannel (LACP)</span><code><span class="comment">! Port-channel between core switches — 2x 25G SFP28</span>
+<span class="keyword">interface range</span> <span class="interface">TwentyFiveGigE1/0/1 - 2</span>
+ <span class="keyword">description</span> CORE-TO-CORE-LACP
+ <span class="keyword">no switchport</span>
+ <span class="keyword">channel-group</span> <span class="value">1</span> <span class="keyword">mode</span> active
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">interface</span> <span class="interface">Port-channel1</span>
+ <span class="keyword">description</span> CORE-SW1-TO-CORE-SW2
+ <span class="keyword">no switchport</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.100.1 255.255.255.252</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">ip ospf network</span> point-to-point
+ <span class="keyword">no shutdown</span></code></pre>
+
+<pre><span class="code-label">CORE-SW2 &mdash; EtherChannel (LACP)</span><code><span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> CORE-SW2
+
+<span class="keyword">interface range</span> <span class="interface">TwentyFiveGigE1/0/1 - 2</span>
+ <span class="keyword">description</span> CORE-TO-CORE-LACP
+ <span class="keyword">no switchport</span>
+ <span class="keyword">channel-group</span> <span class="value">1</span> <span class="keyword">mode</span> active
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">interface</span> <span class="interface">Port-channel1</span>
+ <span class="keyword">description</span> CORE-SW2-TO-CORE-SW1
+ <span class="keyword">no switchport</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.100.2 255.255.255.252</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">ip ospf network</span> point-to-point
+ <span class="keyword">no shutdown</span></code></pre>
+
+  <h3>3.3 &mdash; OSPF Routing</h3>
+  <p>OSPF Area 0 connects the core switches, the ASA uplink, and all SVIs. Router-IDs are set manually for determinism.</p>
+
+<pre><span class="code-label">CORE-SW1 &mdash; OSPF Configuration</span><code><span class="keyword">ip routing</span>
+
+<span class="keyword">router ospf</span> <span class="value">1</span>
+ <span class="keyword">router-id</span> <span class="value">1.1.1.1</span>
+ <span class="keyword">auto-cost reference-bandwidth</span> <span class="value">100000</span>
+ <span class="keyword">passive-interface default</span>
+ <span class="keyword">no passive-interface</span> <span class="interface">Port-channel1</span>
+ <span class="keyword">no passive-interface</span> <span class="interface">GigabitEthernet1/0/1</span>
+ <span class="keyword">default-information originate</span>
+
+<span class="comment">! Default route pointing to ASA inside interface</span>
+<span class="keyword">ip route</span> <span class="value">0.0.0.0 0.0.0.0 10.10.1.1</span></code></pre>
+
+<pre><span class="code-label">CORE-SW2 &mdash; OSPF Configuration</span><code><span class="keyword">ip routing</span>
+
+<span class="keyword">router ospf</span> <span class="value">1</span>
+ <span class="keyword">router-id</span> <span class="value">2.2.2.2</span>
+ <span class="keyword">auto-cost reference-bandwidth</span> <span class="value">100000</span>
+ <span class="keyword">passive-interface default</span>
+ <span class="keyword">no passive-interface</span> <span class="interface">Port-channel1</span>
+ <span class="keyword">no passive-interface</span> <span class="interface">GigabitEthernet1/0/1</span></code></pre>
+
+  <h3>3.4 &mdash; Inter-VLAN Routing (SVIs)</h3>
+  <p>Create Switch Virtual Interfaces on CORE-SW1 for each VLAN. These serve as the default gateways. CORE-SW2 gets the same SVIs with HSRP for gateway redundancy.</p>
+
+<pre><span class="code-label">CORE-SW1 &mdash; SVIs with HSRP (Active)</span><code><span class="comment">! VLAN 10 — Servers</span>
+<span class="keyword">interface</span> <span class="interface">Vlan10</span>
+ <span class="keyword">description</span> SERVERS-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.10.2 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">10</span> <span class="keyword">ip</span> <span class="value">10.10.10.1</span>
+ <span class="keyword">standby</span> <span class="value">10</span> <span class="keyword">priority</span> <span class="value">110</span>
+ <span class="keyword">standby</span> <span class="value">10</span> <span class="keyword">preempt</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 20 — DMZ</span>
+<span class="keyword">interface</span> <span class="interface">Vlan20</span>
+ <span class="keyword">description</span> DMZ-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.20.3 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">20</span> <span class="keyword">ip</span> <span class="value">10.10.20.1</span>
+ <span class="keyword">standby</span> <span class="value">20</span> <span class="keyword">priority</span> <span class="value">110</span>
+ <span class="keyword">standby</span> <span class="value">20</span> <span class="keyword">preempt</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 30 — Workstations</span>
+<span class="keyword">interface</span> <span class="interface">Vlan30</span>
+ <span class="keyword">description</span> WORKSTATIONS-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.30.2 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">30</span> <span class="keyword">ip</span> <span class="value">10.10.30.1</span>
+ <span class="keyword">standby</span> <span class="value">30</span> <span class="keyword">priority</span> <span class="value">110</span>
+ <span class="keyword">standby</span> <span class="value">30</span> <span class="keyword">preempt</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 40 — VoIP</span>
+<span class="keyword">interface</span> <span class="interface">Vlan40</span>
+ <span class="keyword">description</span> VOIP-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.40.2 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">40</span> <span class="keyword">ip</span> <span class="value">10.10.40.1</span>
+ <span class="keyword">standby</span> <span class="value">40</span> <span class="keyword">priority</span> <span class="value">110</span>
+ <span class="keyword">standby</span> <span class="value">40</span> <span class="keyword">preempt</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 50 — Management</span>
+<span class="keyword">interface</span> <span class="interface">Vlan50</span>
+ <span class="keyword">description</span> MGMT-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.50.2 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">50</span> <span class="keyword">ip</span> <span class="value">10.10.50.1</span>
+ <span class="keyword">standby</span> <span class="value">50</span> <span class="keyword">priority</span> <span class="value">110</span>
+ <span class="keyword">standby</span> <span class="value">50</span> <span class="keyword">preempt</span>
+ <span class="keyword">no shutdown</span></code></pre>
+
+<pre><span class="code-label">CORE-SW2 &mdash; SVIs with HSRP (Standby)</span><code><span class="comment">! VLAN 10 — Servers (standby role, priority 100 default)</span>
+<span class="keyword">interface</span> <span class="interface">Vlan10</span>
+ <span class="keyword">description</span> SERVERS-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.10.3 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">10</span> <span class="keyword">ip</span> <span class="value">10.10.10.1</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 30 — Workstations</span>
+<span class="keyword">interface</span> <span class="interface">Vlan30</span>
+ <span class="keyword">description</span> WORKSTATIONS-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.30.3 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">30</span> <span class="keyword">ip</span> <span class="value">10.10.30.1</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 40 — VoIP</span>
+<span class="keyword">interface</span> <span class="interface">Vlan40</span>
+ <span class="keyword">description</span> VOIP-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.40.3 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">40</span> <span class="keyword">ip</span> <span class="value">10.10.40.1</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! VLAN 50 — Management</span>
+<span class="keyword">interface</span> <span class="interface">Vlan50</span>
+ <span class="keyword">description</span> MGMT-GATEWAY
+ <span class="keyword">ip address</span> <span class="value">10.10.50.3 255.255.255.0</span>
+ <span class="keyword">ip ospf</span> <span class="value">1</span> <span class="keyword">area</span> <span class="value">0</span>
+ <span class="keyword">standby version</span> <span class="value">2</span>
+ <span class="keyword">standby</span> <span class="value">50</span> <span class="keyword">ip</span> <span class="value">10.10.50.1</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Repeat pattern for VLAN 20 with same HSRP standby config</span></code></pre>
+
+  <h3>3.5 &mdash; Spanning-Tree Root Bridge</h3>
+
+<pre><span class="code-label">CORE-SW1 &mdash; Spanning-Tree (Primary Root)</span><code><span class="comment">! CORE-SW1 is primary root for all VLANs</span>
+<span class="keyword">spanning-tree mode</span> rapid-pvst
+<span class="keyword">spanning-tree vlan</span> <span class="value">10,20,30,40,50,99</span> <span class="keyword">root primary</span>
+
+<span class="comment">! Enable BPDU Guard globally for edge ports</span>
+<span class="keyword">spanning-tree portfast bpduguard default</span>
+
+<span class="comment">! Loopguard on all non-edge ports</span>
+<span class="keyword">spanning-tree loopguard default</span></code></pre>
+
+<pre><span class="code-label">CORE-SW2 &mdash; Spanning-Tree (Secondary Root)</span><code><span class="keyword">spanning-tree mode</span> rapid-pvst
+<span class="keyword">spanning-tree vlan</span> <span class="value">10,20,30,40,50,99</span> <span class="keyword">root secondary</span>
+<span class="keyword">spanning-tree portfast bpduguard default</span>
+<span class="keyword">spanning-tree loopguard default</span></code></pre>
+
+  <h3>3.6 &mdash; Trunk Ports to Distribution Switches</h3>
+
+<pre><span class="code-label">CORE-SW1 &mdash; Downlinks to Distribution</span><code><span class="comment">! 10G trunk to DIST-SW1 (Floor 1)</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/0/5</span>
+ <span class="keyword">description</span> TRUNK-TO-DIST-SW1
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">99</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">10,20,30,40,50</span>
+ <span class="keyword">spanning-tree guard root</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! 10G trunk to DIST-SW2 (Floor 2)</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/0/6</span>
+ <span class="keyword">description</span> TRUNK-TO-DIST-SW2
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">99</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">10,20,30,40,50</span>
+ <span class="keyword">spanning-tree guard root</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! 10G trunk to DIST-SW3 (Floor 3)</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/0/7</span>
+ <span class="keyword">description</span> TRUNK-TO-DIST-SW3
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">99</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">10,20,30,40,50</span>
+ <span class="keyword">spanning-tree guard root</span>
+ <span class="keyword">no shutdown</span></code></pre>
+
+  <div class="info-card tip">
+    <div class="info-card-title">OSPF Verification</div>
+    <p>Run <code>show ip ospf neighbor</code> on both core switches to verify adjacency. You should see the peer as FULL/- on the point-to-point link. Use <code>show ip route ospf</code> to verify all VLAN subnets appear in the routing table. Run <code>show etherchannel summary</code> to confirm Port-channel1 is SU (Layer 3, in use).</p>
+  </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 4: DISTRIBUTION LAYER -->
+<!-- ================================================================== -->
+<div class="section" id="distribution">
+  <div class="section-label" style="color:var(--green)">Section 04</div>
+  <h2>Distribution Layer &mdash; Catalyst 9300</h2>
+  <p>Distribution switches aggregate access-layer traffic and trunk it to the core. They handle DHCP relay, port-security enforcement, and VLAN pruning. Each distribution switch has dual 10G uplinks (one to each core switch) for redundancy.</p>
+
+  <h3>4.1 &mdash; Trunk Ports to Core</h3>
+
+<pre><span class="code-label">DIST-SW1 &mdash; Uplink Trunks to Core</span><code><span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> DIST-SW1
+
+<span class="comment">! 10G uplink to CORE-SW1</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/1/1</span>
+ <span class="keyword">description</span> UPLINK-TO-CORE-SW1
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">99</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">10,20,30,40,50</span>
+ <span class="keyword">switchport nonegotiate</span>
+ <span class="keyword">spanning-tree link-type</span> point-to-point
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! 10G uplink to CORE-SW2</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/1/2</span>
+ <span class="keyword">description</span> UPLINK-TO-CORE-SW2
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">99</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">10,20,30,40,50</span>
+ <span class="keyword">switchport nonegotiate</span>
+ <span class="keyword">spanning-tree link-type</span> point-to-point
+ <span class="keyword">no shutdown</span></code></pre>
+
+  <h3>4.2 &mdash; VLAN Configuration &amp; Access Ports</h3>
+
+<pre><span class="code-label">DIST-SW1 &mdash; VLANs and Access Ports</span><code><span class="comment">! Create VLANs on distribution switch</span>
+<span class="keyword">vlan</span> <span class="value">10</span>
+ <span class="keyword">name</span> SERVERS
+<span class="keyword">vlan</span> <span class="value">20</span>
+ <span class="keyword">name</span> DMZ
+<span class="keyword">vlan</span> <span class="value">30</span>
+ <span class="keyword">name</span> WORKSTATIONS
+<span class="keyword">vlan</span> <span class="value">40</span>
+ <span class="keyword">name</span> VOIP
+<span class="keyword">vlan</span> <span class="value">50</span>
+ <span class="keyword">name</span> MANAGEMENT
+<span class="keyword">vlan</span> <span class="value">99</span>
+ <span class="keyword">name</span> NATIVE-UNUSED
+
+<span class="comment">! Workstation access ports (Gi1/0/1 through Gi1/0/24)</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/1 - 24</span>
+ <span class="keyword">description</span> WORKSTATION-PORTS
+ <span class="keyword">switchport mode</span> access
+ <span class="keyword">switchport access vlan</span> <span class="value">30</span>
+ <span class="keyword">switchport voice vlan</span> <span class="value">40</span>
+ <span class="keyword">spanning-tree portfast</span>
+ <span class="keyword">spanning-tree bpduguard enable</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Server access ports (Gi1/0/25 through Gi1/0/36)</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/25 - 36</span>
+ <span class="keyword">description</span> SERVER-PORTS
+ <span class="keyword">switchport mode</span> access
+ <span class="keyword">switchport access vlan</span> <span class="value">10</span>
+ <span class="keyword">spanning-tree portfast</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! AP ports with PoE+ (Gi1/0/37 through Gi1/0/44)</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/37 - 44</span>
+ <span class="keyword">description</span> WIRELESS-AP-PORTS
+ <span class="keyword">switchport mode</span> trunk
+ <span class="keyword">switchport trunk native vlan</span> <span class="value">50</span>
+ <span class="keyword">switchport trunk allowed vlan</span> <span class="value">30,40,50</span>
+ <span class="keyword">spanning-tree portfast trunk</span>
+ <span class="keyword">power inline auto max</span> <span class="value">30000</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Management port for switch itself</span>
+<span class="keyword">interface</span> <span class="interface">Vlan50</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.50.11 255.255.255.0</span>
+ <span class="keyword">no shutdown</span>
+<span class="keyword">ip default-gateway</span> <span class="value">10.10.50.1</span></code></pre>
+
+  <h3>4.3 &mdash; DHCP Relay</h3>
+  <p>Distribution switches relay DHCP requests from workstation and VoIP VLANs to the centralized DHCP server (a domain controller or dedicated server on VLAN 10).</p>
+
+<pre><span class="code-label">DIST-SW1 &mdash; DHCP Relay (ip helper-address)</span><code><span class="comment">! The DHCP server lives at 10.10.10.5 on VLAN 10</span>
+<span class="comment">! Since SVIs are on the core switches, configure helpers there.</span>
+<span class="comment">! On CORE-SW1:</span>
+
+<span class="keyword">interface</span> <span class="interface">Vlan30</span>
+ <span class="keyword">ip helper-address</span> <span class="value">10.10.10.5</span>
+
+<span class="keyword">interface</span> <span class="interface">Vlan40</span>
+ <span class="keyword">ip helper-address</span> <span class="value">10.10.10.5</span>
+
+<span class="comment">! On CORE-SW2 (same helpers for redundancy):</span>
+
+<span class="keyword">interface</span> <span class="interface">Vlan30</span>
+ <span class="keyword">ip helper-address</span> <span class="value">10.10.10.5</span>
+
+<span class="keyword">interface</span> <span class="interface">Vlan40</span>
+ <span class="keyword">ip helper-address</span> <span class="value">10.10.10.5</span></code></pre>
+
+  <h3>4.4 &mdash; Port-Security</h3>
+
+<pre><span class="code-label">DIST-SW1 &mdash; Port-Security on Access Ports</span><code><span class="comment">! Apply to all workstation-facing ports</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/1 - 24</span>
+ <span class="keyword">switchport port-security</span>
+ <span class="keyword">switchport port-security maximum</span> <span class="value">3</span>
+ <span class="keyword">switchport port-security violation</span> restrict
+ <span class="keyword">switchport port-security aging time</span> <span class="value">120</span>
+ <span class="keyword">switchport port-security aging type</span> inactivity
+ <span class="keyword">switchport port-security mac-address</span> sticky
+
+<span class="comment">! Server ports — allow only 1 MAC</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/25 - 36</span>
+ <span class="keyword">switchport port-security</span>
+ <span class="keyword">switchport port-security maximum</span> <span class="value">1</span>
+ <span class="keyword">switchport port-security violation</span> shutdown
+ <span class="keyword">switchport port-security mac-address</span> sticky
+
+<span class="comment">! Auto-recovery from err-disabled state after 300 seconds</span>
+<span class="keyword">errdisable recovery cause</span> psecure-violation
+<span class="keyword">errdisable recovery interval</span> <span class="value">300</span></code></pre>
+
+  <div class="info-card warning">
+    <div class="info-card-title">Port-Security with VoIP</div>
+    <p>When configuring port-security on ports with a voice VLAN, set the maximum to at least 3 (1 for the PC, 1 for the phone, 1 for the phone's internal switch). Use <code>restrict</code> mode instead of <code>shutdown</code> to avoid taking down the port when a user plugs in a hub. The violation counter still increments and can trigger SNMP traps.</p>
+  </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 5: ACCESS LAYER (VLANS) -->
+<!-- ================================================================== -->
+<div class="section" id="access">
+  <div class="section-label" style="color:var(--orange)">Section 05</div>
+  <h2>Access Layer &mdash; VLAN Configuration</h2>
+  <p>Each VLAN serves a distinct purpose with its own security policy, QoS treatment, and access controls.</p>
+
+  <h3>5.1 &mdash; VLAN 10 (Servers) &mdash; Static IPs, Access Ports</h3>
+
+<pre><span class="code-label">Server VLAN Configuration</span><code><span class="comment">! Server ports are already assigned in DIST-SW config above.</span>
+<span class="comment">! Additional ACL on the core SVI to restrict access to servers.</span>
+
+<span class="comment">! On CORE-SW1:</span>
+<span class="keyword">ip access-list extended</span> ACL-PROTECT-SERVERS
+ <span class="keyword">remark</span> --- Allow workstations to reach servers on standard ports ---
+ <span class="keyword">permit tcp</span> <span class="value">10.10.30.0 0.0.0.255</span> <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">eq</span> <span class="value">443</span>
+ <span class="keyword">permit tcp</span> <span class="value">10.10.30.0 0.0.0.255</span> <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">eq</span> <span class="value">80</span>
+ <span class="keyword">permit tcp</span> <span class="value">10.10.30.0 0.0.0.255</span> <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">eq</span> <span class="value">445</span>
+ <span class="keyword">permit tcp</span> <span class="value">10.10.30.0 0.0.0.255</span> <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">eq</span> <span class="value">3389</span>
+ <span class="keyword">remark</span> --- Allow management subnet full access ---
+ <span class="keyword">permit ip</span> <span class="value">10.10.50.0 0.0.0.255</span> <span class="value">10.10.10.0 0.0.0.255</span>
+ <span class="keyword">remark</span> --- Allow ICMP for monitoring ---
+ <span class="keyword">permit icmp</span> any <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">echo</span>
+ <span class="keyword">permit icmp</span> any <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">echo-reply</span>
+ <span class="keyword">remark</span> --- Deny all other traffic to server VLAN ---
+ <span class="keyword">deny ip</span> any <span class="value">10.10.10.0 0.0.0.255</span> <span class="keyword">log</span>
+ <span class="keyword">permit ip</span> any any
+
+<span class="keyword">interface</span> <span class="interface">Vlan10</span>
+ <span class="keyword">ip access-group</span> ACL-PROTECT-SERVERS <span class="keyword">in</span></code></pre>
+
+  <h3>5.2 &mdash; VLAN 20 (DMZ) &mdash; Restricted ACL</h3>
+
+<pre><span class="code-label">DMZ VLAN Access Control</span><code><span class="comment">! Restrict DMZ servers — they can respond to outside but cannot</span>
+<span class="comment">! initiate connections to internal VLANs.</span>
+
+<span class="keyword">ip access-list extended</span> ACL-DMZ-RESTRICT
+ <span class="keyword">remark</span> --- Allow established return traffic ---
+ <span class="keyword">permit tcp</span> <span class="value">10.10.20.0 0.0.0.255</span> any <span class="keyword">established</span>
+ <span class="keyword">remark</span> --- Allow DMZ to reach DNS server ---
+ <span class="keyword">permit udp</span> <span class="value">10.10.20.0 0.0.0.255</span> <span class="keyword">host</span> <span class="value">10.10.10.5</span> <span class="keyword">eq</span> <span class="value">53</span>
+ <span class="keyword">permit tcp</span> <span class="value">10.10.20.0 0.0.0.255</span> <span class="keyword">host</span> <span class="value">10.10.10.5</span> <span class="keyword">eq</span> <span class="value">53</span>
+ <span class="keyword">remark</span> --- Allow NTP sync ---
+ <span class="keyword">permit udp</span> <span class="value">10.10.20.0 0.0.0.255</span> <span class="keyword">host</span> <span class="value">10.10.50.5</span> <span class="keyword">eq</span> <span class="value">123</span>
+ <span class="keyword">remark</span> --- Block all DMZ to internal ---
+ <span class="keyword">deny ip</span> <span class="value">10.10.20.0 0.0.0.255</span> <span class="value">10.10.0.0 0.0.255.255</span> <span class="keyword">log</span>
+ <span class="keyword">remark</span> --- Allow DMZ to internet ---
+ <span class="keyword">permit ip</span> <span class="value">10.10.20.0 0.0.0.255</span> any
+
+<span class="keyword">interface</span> <span class="interface">Vlan20</span>
+ <span class="keyword">ip access-group</span> ACL-DMZ-RESTRICT <span class="keyword">in</span></code></pre>
+
+  <h3>5.3 &mdash; VLAN 30 (Workstations) &mdash; DHCP &amp; 802.1X</h3>
+
+<pre><span class="code-label">Workstation VLAN &mdash; 802.1X Authentication</span><code><span class="comment">! Enable AAA for 802.1X on the distribution switch</span>
+<span class="keyword">aaa new-model</span>
+<span class="keyword">aaa authentication dot1x default group</span> radius
+<span class="keyword">aaa authorization network default group</span> radius
+<span class="keyword">aaa accounting dot1x default start-stop group</span> radius
+
+<span class="comment">! RADIUS server pointing to Cisco ISE</span>
+<span class="keyword">radius server</span> ISE-PRIMARY
+ <span class="keyword">address ipv4</span> <span class="value">10.10.50.10</span> <span class="keyword">auth-port</span> <span class="value">1812</span> <span class="keyword">acct-port</span> <span class="value">1813</span>
+ <span class="keyword">key</span> <span class="important">R@d1us-Sh@red-K3y!</span>
+
+<span class="comment">! Enable 802.1X globally</span>
+<span class="keyword">dot1x system-auth-control</span>
+
+<span class="comment">! Configure 802.1X on workstation ports</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/1 - 24</span>
+ <span class="keyword">authentication port-control</span> auto
+ <span class="keyword">authentication order</span> dot1x mab
+ <span class="keyword">authentication priority</span> dot1x mab
+ <span class="keyword">authentication host-mode</span> multi-domain
+ <span class="keyword">dot1x pae</span> authenticator
+ <span class="keyword">dot1x timeout tx-period</span> <span class="value">10</span>
+ <span class="keyword">mab</span>
+ <span class="keyword">authentication timer reauthenticate</span> <span class="value">3600</span>
+ <span class="keyword">authentication violation</span> restrict
+
+<span class="comment">! Guest VLAN for unauthenticated devices</span>
+ <span class="keyword">authentication event fail action authorize vlan</span> <span class="value">999</span>
+ <span class="keyword">authentication event no-response action authorize vlan</span> <span class="value">999</span></code></pre>
+
+  <div class="info-card tip">
+    <div class="info-card-title">802.1X Deployment Tip</div>
+    <p>Deploy 802.1X in monitor mode first using <code>authentication open</code> on each port. This lets all traffic through but still logs authentication attempts to ISE. Analyze the logs for 2-4 weeks, then create policy exceptions before switching to closed mode.</p>
+  </div>
+
+  <h3>5.4 &mdash; VLAN 40 (VoIP) &mdash; QoS &amp; Voice VLAN</h3>
+
+<pre><span class="code-label">VoIP VLAN &mdash; QoS Configuration</span><code><span class="comment">! Auto-QoS simplifies VoIP QoS marking and queuing.</span>
+<span class="comment">! Apply to ports connecting IP phones.</span>
+
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/1 - 24</span>
+ <span class="keyword">auto qos voip cisco-phone</span>
+
+<span class="comment">! The auto qos command generates a policy map. Verify with:</span>
+<span class="comment">!   show auto qos interface Gi1/0/1</span>
+
+<span class="comment">! Manual QoS policy if fine-grained control is needed:</span>
+<span class="keyword">class-map match-any</span> VOICE-TRAFFIC
+ <span class="keyword">match protocol</span> sip
+ <span class="keyword">match dscp</span> ef
+
+<span class="keyword">class-map match-any</span> VOICE-SIGNALING
+ <span class="keyword">match dscp</span> cs3
+ <span class="keyword">match protocol</span> skinny
+
+<span class="keyword">policy-map</span> QOS-VOIP-POLICY
+ <span class="keyword">class</span> VOICE-TRAFFIC
+  <span class="keyword">priority percent</span> <span class="value">30</span>
+  <span class="keyword">set dscp</span> ef
+ <span class="keyword">class</span> VOICE-SIGNALING
+  <span class="keyword">bandwidth percent</span> <span class="value">5</span>
+  <span class="keyword">set dscp</span> cs3
+ <span class="keyword">class</span> class-default
+  <span class="keyword">bandwidth remaining percent</span> <span class="value">100</span>
+  <span class="keyword">fair-queue</span>
+
+<span class="comment">! Apply policy outbound on uplinks toward core</span>
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/1/1</span>
+ <span class="keyword">service-policy output</span> QOS-VOIP-POLICY
+
+<span class="keyword">interface</span> <span class="interface">TenGigabitEthernet1/1/2</span>
+ <span class="keyword">service-policy output</span> QOS-VOIP-POLICY</code></pre>
+
+  <h3>5.5 &mdash; VLAN 50 (Management) &mdash; SSH Only, Restricted</h3>
+
+<pre><span class="code-label">Management VLAN &mdash; SSH Lockdown</span><code><span class="comment">! ACL to restrict management access to VLAN 50 only</span>
+<span class="keyword">ip access-list extended</span> ACL-MGMT-RESTRICT
+ <span class="keyword">permit ip</span> <span class="value">10.10.50.0 0.0.0.255</span> any
+ <span class="keyword">deny ip</span> any any <span class="keyword">log</span>
+
+<span class="comment">! VTY lines — SSH only from management VLAN</span>
+<span class="keyword">ip access-list standard</span> ACL-VTY-ACCESS
+ <span class="keyword">permit</span> <span class="value">10.10.50.0 0.0.0.255</span>
+ <span class="keyword">deny</span> any <span class="keyword">log</span>
+
+<span class="keyword">line vty</span> <span class="value">0 15</span>
+ <span class="keyword">access-class</span> ACL-VTY-ACCESS <span class="keyword">in</span>
+ <span class="keyword">transport input</span> ssh
+ <span class="keyword">transport output</span> none
+ <span class="keyword">exec-timeout</span> <span class="value">10 0</span>
+ <span class="keyword">login local</span>
+
+<span class="comment">! Disable HTTP/HTTPS server (use SSH only)</span>
+<span class="keyword">no ip http server</span>
+<span class="keyword">no ip http secure-server</span>
+
+<span class="comment">! Apply same VTY ACL on all switches and the ASA</span></code></pre>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 6: WIRELESS -->
+<!-- ================================================================== -->
+<div class="section" id="wireless">
+  <div class="section-label" style="color:var(--indigo)">Section 06</div>
+  <h2>Wireless &mdash; WLC 9800 Setup</h2>
+  <p>The Catalyst 9800 wireless controller manages all APs centrally. APs connect to trunk ports on the distribution switches and get their management IP from VLAN 50. Client traffic is bridged locally at the AP (FlexConnect) or tunneled through CAPWAP.</p>
+
+  <h3>6.1 &mdash; WLC Base Configuration</h3>
+
+<pre><span class="code-label">WLC 9800 &mdash; Initial Setup</span><code><span class="keyword">configure terminal</span>
+<span class="keyword">hostname</span> WLC-9800
+
+<span class="comment">! Management interface on VLAN 50</span>
+<span class="keyword">interface</span> <span class="interface">GigabitEthernet0/0/0</span>
+ <span class="keyword">description</span> MANAGEMENT-UPLINK
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">interface</span> <span class="interface">Vlan50</span>
+ <span class="keyword">ip address</span> <span class="value">10.10.50.20 255.255.255.0</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">ip default-gateway</span> <span class="value">10.10.50.1</span>
+
+<span class="comment">! Wireless management interface</span>
+<span class="keyword">wireless management interface</span> <span class="interface">Vlan50</span>
+
+<span class="comment">! Country code (required before enabling radios)</span>
+<span class="keyword">ap dot11 24ghz shutdown</span>
+<span class="keyword">ap dot11 5ghz shutdown</span>
+<span class="keyword">wireless country</span> <span class="value">US</span>
+<span class="keyword">no ap dot11 24ghz shutdown</span>
+<span class="keyword">no ap dot11 5ghz shutdown</span>
+
+<span class="comment">! RF profiles for optimal channel/power management</span>
+<span class="keyword">ap dot11 24ghz rrm channel-assignment mode</span> auto
+<span class="keyword">ap dot11 5ghz rrm channel-assignment mode</span> auto
+<span class="keyword">ap dot11 24ghz rrm txpower-control mode</span> auto
+<span class="keyword">ap dot11 5ghz rrm txpower-control mode</span> auto</code></pre>
+
+  <h3>6.2 &mdash; WLAN / SSID Configuration</h3>
+
+<pre><span class="code-label">WLC 9800 &mdash; Corporate SSID with WPA3-Enterprise</span><code><span class="comment">! WLAN profile for corporate users — WPA3 with 802.1X</span>
+<span class="keyword">wlan</span> CORP-WIFI <span class="value">1</span> CORP-WIFI
+ <span class="keyword">security wpa psk disabled</span>
+ <span class="keyword">security dot1x authentication-list</span> default
+ <span class="keyword">security wpa wpa3</span>
+ <span class="keyword">security wpa akm dot1x</span>
+ <span class="keyword">security pmf</span> mandatory
+ <span class="keyword">no security wpa wpa2</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! WLAN profile for guest access — WPA2-PSK, isolated</span>
+<span class="keyword">wlan</span> GUEST-WIFI <span class="value">2</span> GUEST-WIFI
+ <span class="keyword">security wpa akm psk</span>
+ <span class="keyword">security wpa psk set-key ascii 0</span> <span class="important">Gu3st-W1F1-2024!</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Policy profile — maps WLAN to VLAN</span>
+<span class="keyword">wireless profile policy</span> CORP-POLICY
+ <span class="keyword">vlan</span> <span class="value">30</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="keyword">wireless profile policy</span> GUEST-POLICY
+ <span class="keyword">vlan</span> <span class="value">999</span>
+ <span class="keyword">session-timeout</span> <span class="value">3600</span>
+ <span class="keyword">idle-timeout</span> <span class="value">600</span>
+ <span class="keyword">no shutdown</span>
+
+<span class="comment">! Policy tag — binds WLAN to policy profile</span>
+<span class="keyword">wireless tag policy</span> DEFAULT-PTAG
+ <span class="keyword">wlan</span> CORP-WIFI <span class="keyword">policy</span> CORP-POLICY
+ <span class="keyword">wlan</span> GUEST-WIFI <span class="keyword">policy</span> GUEST-POLICY</code></pre>
+
+  <h3>6.3 &mdash; RADIUS Authentication for Wireless</h3>
+
+<pre><span class="code-label">WLC 9800 &mdash; RADIUS for 802.1X</span><code><span class="comment">! AAA configuration on the WLC</span>
+<span class="keyword">aaa new-model</span>
+<span class="keyword">aaa authentication dot1x default group</span> radius
+<span class="keyword">aaa authorization network default group</span> radius
+<span class="keyword">aaa accounting identity default start-stop group</span> radius
+
+<span class="comment">! RADIUS server definition</span>
+<span class="keyword">radius server</span> ISE-PRIMARY
+ <span class="keyword">address ipv4</span> <span class="value">10.10.50.10</span> <span class="keyword">auth-port</span> <span class="value">1812</span> <span class="keyword">acct-port</span> <span class="value">1813</span>
+ <span class="keyword">key</span> <span class="important">R@d1us-WLC-K3y!</span>
+
+<span class="keyword">radius server</span> ISE-SECONDARY
+ <span class="keyword">address ipv4</span> <span class="value">10.10.50.11</span> <span class="keyword">auth-port</span> <span class="value">1812</span> <span class="keyword">acct-port</span> <span class="value">1813</span>
+ <span class="keyword">key</span> <span class="important">R@d1us-WLC-K3y!</span>
+
+<span class="comment">! Server group with failover</span>
+<span class="keyword">aaa group server radius</span> ISE-SERVERS
+ <span class="keyword">server name</span> ISE-PRIMARY
+ <span class="keyword">server name</span> ISE-SECONDARY
+ <span class="keyword">deadtime</span> <span class="value">5</span>
+
+<span class="comment">! CoA (Change of Authorization) for dynamic policy updates</span>
+<span class="keyword">aaa server radius dynamic-author</span>
+ <span class="keyword">client</span> <span class="value">10.10.50.10</span> <span class="keyword">server-key</span> <span class="important">R@d1us-WLC-K3y!</span>
+ <span class="keyword">client</span> <span class="value">10.10.50.11</span> <span class="keyword">server-key</span> <span class="important">R@d1us-WLC-K3y!</span></code></pre>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 7: MONITORING -->
+<!-- ================================================================== -->
+<div class="section" id="monitoring">
+  <div class="section-label" style="color:var(--cyan)">Section 07</div>
+  <h2>Monitoring &mdash; SNMP v3, Syslog, NTP</h2>
+  <p>All devices should report to a centralized monitoring stack. SNMPv3 provides encrypted polling, syslog captures events in real time, and NTP ensures all timestamps are synchronized for accurate correlation.</p>
+
+  <h3>7.1 &mdash; NTP Configuration</h3>
+  <p>Configure NTP first, as accurate time is critical for syslog, certificate validation, and troubleshooting. Use two external NTP sources plus peer the core switches together.</p>
+
+<pre><span class="code-label">All Devices &mdash; NTP Configuration</span><code><span class="comment">! NTP server configuration (apply to ALL devices)</span>
+<span class="keyword">ntp server</span> <span class="value">10.10.50.5</span> <span class="keyword">prefer</span>
+<span class="keyword">ntp server</span> <span class="value">132.163.97.1</span>
+<span class="keyword">ntp server</span> <span class="value">129.6.15.28</span>
+
+<span class="comment">! NTP authentication to prevent spoofing</span>
+<span class="keyword">ntp authenticate</span>
+<span class="keyword">ntp authentication-key</span> <span class="value">1</span> <span class="keyword">md5</span> <span class="important">NtP-@uth-K3y!</span>
+<span class="keyword">ntp trusted-key</span> <span class="value">1</span>
+
+<span class="comment">! Timezone (adjust to your location)</span>
+<span class="keyword">clock timezone</span> EST <span class="value">-5</span>
+<span class="keyword">clock summer-time</span> EDT <span class="keyword">recurring</span>
+
+<span class="comment">! Enable NTP logging</span>
+<span class="keyword">ntp logging</span>
+
+<span class="comment">! Core switches peer with each other for stratum resilience</span>
+<span class="comment">! On CORE-SW1:</span>
+<span class="keyword">ntp peer</span> <span class="value">10.10.100.2</span>
+<span class="comment">! On CORE-SW2:</span>
+<span class="keyword">ntp peer</span> <span class="value">10.10.100.1</span></code></pre>
+
+  <h3>7.2 &mdash; Syslog Configuration</h3>
+
+<pre><span class="code-label">All Devices &mdash; Syslog to Central Server</span><code><span class="comment">! Send logs to central syslog server on VLAN 50</span>
+<span class="keyword">logging host</span> <span class="value">10.10.50.5</span> <span class="keyword">transport udp port</span> <span class="value">514</span>
+<span class="keyword">logging trap</span> informational
+<span class="keyword">logging source-interface</span> <span class="interface">Vlan50</span>
+<span class="keyword">logging buffered</span> <span class="value">131072</span> informational
+<span class="keyword">logging console</span> critical
+
+<span class="comment">! Add timestamps with milliseconds for correlation</span>
+<span class="keyword">service timestamps log datetime msec localtime show-timezone</span>
+<span class="keyword">service timestamps debug datetime msec localtime show-timezone</span>
+
+<span class="comment">! Sequence numbers for ordered log analysis</span>
+<span class="keyword">service sequence-numbers</span>
+
+<span class="comment">! Log configuration changes</span>
+<span class="keyword">archive</span>
+ <span class="keyword">log config</span>
+  <span class="keyword">logging enable</span>
+  <span class="keyword">notify syslog contenttype</span> plaintext
+  <span class="keyword">hidekeys</span></code></pre>
+
+  <h3>7.3 &mdash; SNMPv3 Configuration</h3>
+  <p>SNMPv3 provides authentication and encryption, unlike SNMPv1/v2c which transmit community strings in cleartext. Configure a read-only user for monitoring and a read-write user for SNMP-based config management.</p>
+
+<pre><span class="code-label">All Devices &mdash; SNMPv3 Setup</span><code><span class="comment">! Remove any legacy SNMP v1/v2c communities</span>
+<span class="keyword">no snmp-server community</span> public
+<span class="keyword">no snmp-server community</span> private
+
+<span class="comment">! Define SNMPv3 group with authentication + encryption (authPriv)</span>
+<span class="keyword">snmp-server group</span> MONITORING-RO <span class="keyword">v3 priv</span>
+<span class="keyword">snmp-server group</span> MONITORING-RW <span class="keyword">v3 priv</span> <span class="keyword">write</span> v1default
+
+<span class="comment">! Create SNMPv3 users (auth=SHA-256, priv=AES-256)</span>
+<span class="keyword">snmp-server user</span> monitor-ro MONITORING-RO <span class="keyword">v3 auth sha-256</span> <span class="important">Snmp-@uth-R0!</span> <span class="keyword">priv aes 256</span> <span class="important">Snmp-Pr1v-R0!</span>
+<span class="keyword">snmp-server user</span> monitor-rw MONITORING-RW <span class="keyword">v3 auth sha-256</span> <span class="important">Snmp-@uth-RW!</span> <span class="keyword">priv aes 256</span> <span class="important">Snmp-Pr1v-RW!</span>
+
+<span class="comment">! SNMP trap destination</span>
+<span class="keyword">snmp-server host</span> <span class="value">10.10.50.5</span> <span class="keyword">version 3 priv</span> monitor-ro
+
+<span class="comment">! Enable useful traps</span>
+<span class="keyword">snmp-server enable traps</span> snmp authentication linkdown linkup coldstart
+<span class="keyword">snmp-server enable traps</span> config
+<span class="keyword">snmp-server enable traps</span> envmon fan shutdown supply temperature
+<span class="keyword">snmp-server enable traps</span> port-security
+<span class="keyword">snmp-server enable traps</span> hsrp
+<span class="keyword">snmp-server enable traps</span> ospf state-change
+
+<span class="comment">! SNMP source interface for consistency</span>
+<span class="keyword">snmp-server source-interface traps</span> <span class="interface">Vlan50</span>
+
+<span class="comment">! Contact and location (for NMS inventory)</span>
+<span class="keyword">snmp-server contact</span> netops@company.com
+<span class="keyword">snmp-server location</span> HQ-Building-1-MDF</code></pre>
+
+  <div class="info-card tip">
+    <div class="info-card-title">Monitoring Verification</div>
+    <p>Verify NTP with <code>show ntp status</code> and <code>show ntp associations</code>. The clock should show "synchronized" to your preferred source. Test SNMP with <code>snmpwalk -v3 -l authPriv -u monitor-ro -a SHA-256 -A 'Snmp-@uth-R0!' -x AES256 -X 'Snmp-Pr1v-R0!' 10.10.50.2 sysDescr</code> from your monitoring server. Verify syslog with <code>show logging</code> on each device.</p>
+  </div>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- SECTION 8: SECURITY HARDENING -->
+<!-- ================================================================== -->
+<div class="section" id="hardening">
+  <div class="section-label" style="color:var(--red)">Section 08</div>
+  <h2>Security Hardening</h2>
+  <p>Apply these hardening measures to every IOS/IOS-XE device in the network. These configurations follow Cisco's own security hardening guidelines and CIS benchmarks.</p>
+
+  <h3>8.1 &mdash; Disable Unused Services</h3>
+
+<pre><span class="code-label">All IOS-XE Devices &mdash; Service Hardening</span><code><span class="comment">! Disable unnecessary services that increase attack surface</span>
+<span class="keyword">no service pad</span>
+<span class="keyword">no service finger</span>
+<span class="keyword">no service udp-small-servers</span>
+<span class="keyword">no service tcp-small-servers</span>
+<span class="keyword">no ip bootp server</span>
+<span class="keyword">no ip finger</span>
+<span class="keyword">no ip source-route</span>
+<span class="keyword">no ip gratuitous-arps</span>
+
+<span class="comment">! Disable CDP on external-facing interfaces (use LLDP internally)</span>
+<span class="keyword">no cdp run</span>
+<span class="keyword">lldp run</span>
+
+<span class="comment">! Disable IP redirects, unreachables, and proxy ARP on all L3 interfaces</span>
+<span class="keyword">interface range</span> <span class="interface">Vlan10, Vlan20, Vlan30, Vlan40, Vlan50</span>
+ <span class="keyword">no ip redirects</span>
+ <span class="keyword">no ip unreachables</span>
+ <span class="keyword">no ip proxy-arp</span>
+
+<span class="comment">! Disable HTTP/HTTPS server (manage via SSH only)</span>
+<span class="keyword">no ip http server</span>
+<span class="keyword">no ip http secure-server</span>
+
+<span class="comment">! Disable smart install (known exploit vector)</span>
+<span class="keyword">no vstack</span></code></pre>
+
+  <h3>8.2 &mdash; SSH v2 Configuration</h3>
+
+<pre><span class="code-label">All Devices &mdash; SSH v2 Hardened Configuration</span><code><span class="comment">! Generate RSA key pair (4096-bit)</span>
+<span class="keyword">crypto key generate rsa modulus</span> <span class="value">4096</span> <span class="keyword">label</span> SSH-KEY
+
+<span class="comment">! Force SSH version 2 only</span>
+<span class="keyword">ip ssh version</span> <span class="value">2</span>
+<span class="keyword">ip ssh time-out</span> <span class="value">60</span>
+<span class="keyword">ip ssh authentication-retries</span> <span class="value">3</span>
+<span class="keyword">ip ssh source-interface</span> <span class="interface">Vlan50</span>
+
+<span class="comment">! Restrict SSH algorithms (IOS-XE 17.x)</span>
+<span class="keyword">ip ssh server algorithm encryption</span> aes256-ctr aes192-ctr aes128-ctr
+<span class="keyword">ip ssh server algorithm mac</span> hmac-sha2-256 hmac-sha2-512
+<span class="keyword">ip ssh server algorithm kex</span> diffie-hellman-group14-sha256 ecdh-sha2-nistp384 ecdh-sha2-nistp521
+
+<span class="comment">! Local user with privilege 15 (use TACACS+ in production)</span>
+<span class="keyword">username</span> netadmin <span class="keyword">privilege</span> <span class="value">15</span> <span class="keyword">algorithm-type scrypt secret</span> <span class="important">N3t@dm1n-P@ss!</span>
+
+<span class="comment">! VTY lines locked to SSH from management VLAN only</span>
+<span class="keyword">line vty</span> <span class="value">0 15</span>
+ <span class="keyword">transport input</span> ssh
+ <span class="keyword">transport output</span> none
+ <span class="keyword">access-class</span> ACL-VTY-ACCESS <span class="keyword">in</span>
+ <span class="keyword">exec-timeout</span> <span class="value">10 0</span>
+ <span class="keyword">login local</span>
+ <span class="keyword">logging synchronous</span>
+
+<span class="comment">! Console port hardening</span>
+<span class="keyword">line con</span> <span class="value">0</span>
+ <span class="keyword">exec-timeout</span> <span class="value">5 0</span>
+ <span class="keyword">login local</span>
+ <span class="keyword">logging synchronous</span>
+ <span class="keyword">transport output</span> none</code></pre>
+
+  <h3>8.3 &mdash; Login Banner</h3>
+
+<pre><span class="code-label">All Devices &mdash; Legal Banner</span><code><span class="keyword">banner motd ^</span>
+*************************************************************
+*                                                           *
+*    AUTHORIZED ACCESS ONLY                                 *
+*                                                           *
+*    This system is the property of [Company Name].         *
+*    Unauthorized access is prohibited and will be          *
+*    prosecuted to the fullest extent of the law.           *
+*                                                           *
+*    All sessions are monitored and logged.                 *
+*                                                           *
+*************************************************************
+<span class="keyword">^</span>
+
+<span class="keyword">banner login ^</span>
+*** Authorized personnel only. Disconnect immediately if ***
+*** you are not an authorized user. All access is logged. ***
+<span class="keyword">^</span></code></pre>
+
+  <h3>8.4 &mdash; AAA with TACACS+</h3>
+  <p>For production environments, use TACACS+ via Cisco ISE for centralized authentication, command authorization, and accounting.</p>
+
+<pre><span class="code-label">All Devices &mdash; AAA / TACACS+ Configuration</span><code><span class="keyword">aaa new-model</span>
+
+<span class="comment">! TACACS+ server definition</span>
+<span class="keyword">tacacs server</span> ISE-TACACS
+ <span class="keyword">address ipv4</span> <span class="value">10.10.50.10</span>
+ <span class="keyword">key</span> <span class="important">T@c@cs-Sh@red-K3y!</span>
+ <span class="keyword">single-connection</span>
+
+<span class="comment">! Authentication — try TACACS+ first, fallback to local</span>
+<span class="keyword">aaa authentication login default group</span> tacacs+ local
+<span class="keyword">aaa authentication enable default group</span> tacacs+ enable
+
+<span class="comment">! Authorization — TACACS+ authorizes each exec and command</span>
+<span class="keyword">aaa authorization exec default group</span> tacacs+ local
+<span class="keyword">aaa authorization commands</span> <span class="value">15</span> default group tacacs+ local
+
+<span class="comment">! Accounting — log all commands to TACACS+ server</span>
+<span class="keyword">aaa accounting exec default start-stop group</span> tacacs+
+<span class="keyword">aaa accounting commands</span> <span class="value">15</span> default start-stop group tacacs+
+
+<span class="comment">! Ensure local auth works if TACACS+ is unreachable</span>
+<span class="keyword">aaa accounting system default start-stop group</span> tacacs+</code></pre>
+
+  <h3>8.5 &mdash; Control Plane Policing (CoPP)</h3>
+
+<pre><span class="code-label">Core Switches &mdash; CoPP to Protect the CPU</span><code><span class="comment">! ACLs for CoPP classification</span>
+<span class="keyword">ip access-list extended</span> COPP-ACL-SSH
+ <span class="keyword">permit tcp</span> <span class="value">10.10.50.0 0.0.0.255</span> any <span class="keyword">eq</span> <span class="value">22</span>
+
+<span class="keyword">ip access-list extended</span> COPP-ACL-SNMP
+ <span class="keyword">permit udp</span> <span class="keyword">host</span> <span class="value">10.10.50.5</span> any <span class="keyword">eq</span> <span class="value">161</span>
+
+<span class="keyword">ip access-list extended</span> COPP-ACL-NTP
+ <span class="keyword">permit udp</span> any any <span class="keyword">eq</span> <span class="value">123</span>
+
+<span class="keyword">ip access-list extended</span> COPP-ACL-OSPF
+ <span class="keyword">permit ospf</span> any any
+
+<span class="comment">! Class maps for CoPP</span>
+<span class="keyword">class-map match-all</span> COPP-SSH
+ <span class="keyword">match access-group name</span> COPP-ACL-SSH
+<span class="keyword">class-map match-all</span> COPP-SNMP
+ <span class="keyword">match access-group name</span> COPP-ACL-SNMP
+<span class="keyword">class-map match-all</span> COPP-NTP
+ <span class="keyword">match access-group name</span> COPP-ACL-NTP
+<span class="keyword">class-map match-all</span> COPP-ROUTING
+ <span class="keyword">match access-group name</span> COPP-ACL-OSPF
+
+<span class="comment">! Policy map — rate-limit traffic to the control plane</span>
+<span class="keyword">policy-map</span> COPP-POLICY
+ <span class="keyword">class</span> COPP-ROUTING
+  <span class="keyword">police rate</span> <span class="value">500</span> <span class="keyword">pps</span>
+   <span class="keyword">conform-action</span> transmit
+   <span class="keyword">exceed-action</span> drop
+ <span class="keyword">class</span> COPP-SSH
+  <span class="keyword">police rate</span> <span class="value">200</span> <span class="keyword">pps</span>
+   <span class="keyword">conform-action</span> transmit
+   <span class="keyword">exceed-action</span> drop
+ <span class="keyword">class</span> COPP-SNMP
+  <span class="keyword">police rate</span> <span class="value">100</span> <span class="keyword">pps</span>
+   <span class="keyword">conform-action</span> transmit
+   <span class="keyword">exceed-action</span> drop
+ <span class="keyword">class</span> COPP-NTP
+  <span class="keyword">police rate</span> <span class="value">50</span> <span class="keyword">pps</span>
+   <span class="keyword">conform-action</span> transmit
+   <span class="keyword">exceed-action</span> drop
+ <span class="keyword">class</span> class-default
+  <span class="keyword">police rate</span> <span class="value">50</span> <span class="keyword">pps</span>
+   <span class="keyword">conform-action</span> transmit
+   <span class="keyword">exceed-action</span> drop
+
+<span class="comment">! Apply CoPP to the control plane</span>
+<span class="keyword">control-plane</span>
+ <span class="keyword">service-policy input</span> COPP-POLICY</code></pre>
+
+  <h3>8.6 &mdash; Additional Hardening</h3>
+
+<pre><span class="code-label">All Devices &mdash; Final Hardening Steps</span><code><span class="comment">! Encrypt all passwords in the running config</span>
+<span class="keyword">service password-encryption</span>
+
+<span class="comment">! Enable secret with scrypt hashing (IOS-XE 16.x+)</span>
+<span class="keyword">enable algorithm-type scrypt secret</span> <span class="important">3n@bl3-S3cr3t!</span>
+
+<span class="comment">! Disable password recovery (prevents physical access attacks)</span>
+<span class="comment">! WARNING: If you forget passwords, the device must be RMA'd or reflashed</span>
+<span class="comment">! no service password-recovery</span>
+
+<span class="comment">! TCP keepalives to detect dead sessions</span>
+<span class="keyword">service tcp-keepalives-in</span>
+<span class="keyword">service tcp-keepalives-out</span>
+
+<span class="comment">! Login enhancements — block brute-force attempts</span>
+<span class="keyword">login block-for</span> <span class="value">120</span> <span class="keyword">attempts</span> <span class="value">5</span> <span class="keyword">within</span> <span class="value">60</span>
+<span class="keyword">login on-failure log</span>
+<span class="keyword">login on-success log</span>
+
+<span class="comment">! Secure unused switch ports</span>
+<span class="keyword">interface range</span> <span class="interface">GigabitEthernet1/0/45 - 48</span>
+ <span class="keyword">description</span> UNUSED
+ <span class="keyword">switchport mode</span> access
+ <span class="keyword">switchport access vlan</span> <span class="value">999</span>
+ <span class="keyword">shutdown</span>
+
+<span class="comment">! Save configuration</span>
+<span class="keyword">end</span>
+<span class="keyword">write memory</span></code></pre>
+
+  <div class="info-card danger">
+    <div class="info-card-title">Critical Reminder</div>
+    <p>Always run <code>write memory</code> (or <code>copy running-config startup-config</code>) after completing configuration on each device. IOS configurations live in RAM until saved. A power loss without saving means all changes are lost. On the ASA, use <code>write memory</code> and verify with <code>show startup-config</code>.</p>
+  </div>
+
+  <div class="info-card tip">
+    <div class="info-card-title">Post-Deployment Checklist</div>
+    <p>After completing all configurations: (1) Verify OSPF adjacencies with <code>show ip ospf neighbor</code>. (2) Test failover by pulling cables from the primary ASA. (3) Verify HSRP with <code>show standby brief</code> on both core switches. (4) Test 802.1X by connecting a laptop to a workstation port. (5) Verify VPN tunnel with <code>show crypto ikev2 sa</code>. (6) Check SNMPv3 polling from your NMS. (7) Confirm NTP sync on all devices with <code>show ntp status</code>. (8) Run <code>show port-security</code> to verify MAC addresses are being learned.</p>
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="tutorial-footer">
+  <p>Cisco 3-Tier Enterprise Campus Network Tutorial &mdash; Stefan Laza</p>
+</div>
+
+</div><!-- end tutorial-wrapper -->
+
+</body>
+</html>

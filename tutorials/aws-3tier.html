@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS 3-Tier Architecture — Step-by-Step Tutorial</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050507;--surface:#0a0a10;--card:#111118;
+  --border:rgba(255,255,255,0.06);--text:#f0f0f5;--muted:#6e6e80;
+  --aws:#ff9900;--blue:#4a9eff;--purple:#a78bfa;--green:#34d399;
+  --red:#f87171;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1rem 2rem;background:rgba(5,5,7,0.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-back{color:var(--muted);text-decoration:none;font-size:0.82rem;font-weight:500;transition:color 0.2s;display:inline-flex;align-items:center;gap:0.4rem}
+.nav-back:hover{color:var(--text)}
+.nav-title{font-weight:600;font-size:0.82rem;color:var(--aws)}
+
+/* TOC sidebar */
+.layout{display:flex;max-width:1200px;margin:0 auto;padding:5rem 2rem 4rem}
+.toc{position:sticky;top:5rem;width:220px;flex-shrink:0;height:fit-content;padding-right:2rem;display:none}
+@media(min-width:1024px){.toc{display:block}}
+.toc a{display:block;font-size:0.72rem;color:var(--muted);text-decoration:none;padding:0.3rem 0;padding-left:0.8rem;border-left:1px solid var(--border);transition:color 0.2s,border-color 0.2s}
+.toc a:hover,.toc a.active{color:var(--text);border-left-color:var(--aws)}
+.toc-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:0.8rem;padding-left:0.8rem}
+
+/* MAIN CONTENT */
+.content{flex:1;min-width:0;max-width:800px}
+
+/* HERO */
+.hero{margin-bottom:3rem;padding-bottom:2rem;border-bottom:1px solid var(--border)}
+.hero-tag{font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--aws);margin-bottom:0.8rem}
+.hero h1{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;letter-spacing:-0.04em;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#888 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:0.8rem}
+.hero p{font-size:0.92rem;color:var(--muted);max-width:600px;line-height:1.6}
+.hero-meta{display:flex;gap:1.5rem;margin-top:1.2rem;flex-wrap:wrap}
+.hero-meta span{font-size:0.72rem;color:var(--muted);display:flex;align-items:center;gap:0.3rem}
+.hero-meta svg{width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:1.5}
+
+/* SECTIONS */
+.tutorial-section{margin-bottom:3.5rem}
+.section-number{font-size:0.62rem;font-weight:700;color:var(--aws);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.tutorial-section h2{font-size:1.4rem;font-weight:600;letter-spacing:-0.02em;margin-bottom:0.6rem;color:var(--text)}
+.tutorial-section h3{font-size:1.05rem;font-weight:600;letter-spacing:-0.01em;margin:1.8rem 0 0.6rem;color:var(--text)}
+.tutorial-section p{font-size:0.88rem;color:var(--muted);margin-bottom:1rem;line-height:1.7}
+.tutorial-section ul,.tutorial-section ol{margin:0.8rem 0 1.2rem 1.2rem;font-size:0.86rem;color:var(--muted)}
+.tutorial-section li{margin-bottom:0.4rem;line-height:1.6}
+.tutorial-section li code{background:rgba(255,153,0,0.08);color:var(--aws);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.78rem;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace}
+.tutorial-section p code{background:rgba(255,153,0,0.08);color:var(--aws);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.78rem;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace}
+
+/* CODE BLOCKS */
+.code-block{position:relative;margin:1.2rem 0 1.5rem;border-radius:12px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.code-header{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 1rem;background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border)}
+.code-lang{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)}
+.code-file{font-size:0.68rem;color:var(--muted);font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace}
+.code-copy{background:none;border:1px solid var(--border);color:var(--muted);font-size:0.65rem;padding:0.25rem 0.6rem;border-radius:6px;cursor:pointer;transition:all 0.2s;font-family:inherit}
+.code-copy:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+pre{padding:1.2rem;overflow-x:auto;font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:0.78rem;line-height:1.65;color:#c9d1d9;tab-size:2}
+pre::-webkit-scrollbar{height:6px}
+pre::-webkit-scrollbar-track{background:transparent}
+pre::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
+
+/* Syntax colors */
+.kw{color:#ff7b72}
+.str{color:#a5d6ff}
+.cmt{color:#484f58;font-style:italic}
+.fn{color:#d2a8ff}
+.num{color:#79c0ff}
+.var{color:#ffa657}
+.type{color:#ff9900}
+.attr{color:#7ee787}
+.op{color:#c9d1d9}
+.bool{color:#79c0ff}
+
+/* INFO BOXES */
+.info-box{margin:1.2rem 0;padding:1rem 1.2rem;border-radius:10px;border:1px solid;font-size:0.82rem;line-height:1.6}
+.info-box.tip{background:rgba(52,211,153,0.04);border-color:rgba(52,211,153,0.15);color:var(--green)}
+.info-box.warning{background:rgba(248,113,113,0.04);border-color:rgba(248,113,113,0.15);color:var(--red)}
+.info-box.note{background:rgba(74,158,255,0.04);border-color:rgba(74,158,255,0.15);color:var(--blue)}
+.info-box strong{display:block;margin-bottom:0.3rem;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em}
+.info-box p{color:inherit;margin:0;font-size:inherit}
+
+/* COST TABLE */
+.cost-table{width:100%;border-collapse:collapse;margin:1rem 0 1.5rem;font-size:0.82rem}
+.cost-table th{text-align:left;padding:0.6rem 1rem;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--card)}
+.cost-table td{padding:0.6rem 1rem;border-bottom:1px solid var(--border);color:var(--muted)}
+.cost-table td:first-child{color:var(--text);font-weight:500}
+.cost-table td:last-child{color:var(--green);font-weight:600;text-align:right}
+.cost-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* ARCHITECTURE OVERVIEW */
+.arch-flow{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin:1rem 0 1.5rem}
+.arch-node{padding:0.4rem 0.8rem;border-radius:8px;font-size:0.72rem;font-weight:600;border:1px solid}
+.arch-arrow{color:var(--muted);font-size:0.7rem}
+
+/* SG TABLE */
+.sg-table{width:100%;border-collapse:collapse;margin:1rem 0 1.5rem;font-size:0.78rem}
+.sg-table th{text-align:left;padding:0.5rem 0.8rem;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--card)}
+.sg-table td{padding:0.5rem 0.8rem;border-bottom:1px solid var(--border);color:var(--muted);font-family:'SF Mono',SFMono-Regular,Consolas,'Liberation Mono',Menlo,monospace;font-size:0.72rem}
+
+/* FOOTER */
+footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);border-top:1px solid var(--border);margin-top:2rem}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  nav{padding:0.8rem 1rem}
+  .layout{padding:4.5rem 1rem 3rem;flex-direction:column}
+  .content{max-width:100%}
+  pre{font-size:0.7rem;padding:0.8rem}
+  .tutorial-section h2{font-size:1.2rem}
+  .arch-flow{gap:0.3rem}
+  .sg-table{font-size:0.68rem}
+  .sg-table td{padding:0.4rem 0.5rem}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="../index.html#aws" class="nav-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-title">AWS 3-Tier Architecture</span>
+</nav>
+
+<div class="layout">
+
+<!-- TABLE OF CONTENTS -->
+<aside class="toc">
+  <div class="toc-label">On this page</div>
+  <a href="#prerequisites">Prerequisites</a>
+  <a href="#vpc">VPC Setup</a>
+  <a href="#route53">Route 53</a>
+  <a href="#cloudfront">CloudFront Distribution</a>
+  <a href="#alb">Application Load Balancer</a>
+  <a href="#ec2">EC2 Instances</a>
+  <a href="#rds">RDS Multi-AZ</a>
+  <a href="#elasticache">ElastiCache Redis</a>
+  <a href="#s3">S3 Static Assets</a>
+  <a href="#cloudwatch">CloudWatch Monitoring</a>
+  <a href="#security">Security</a>
+  <a href="#cost">Cost Optimization</a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="content">
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-tag">Step-by-Step Tutorial</div>
+  <h1>AWS 3-Tier Architecture</h1>
+  <p>Deploy a production-ready, highly available 3-tier application on AWS using Terraform. This guide covers VPC networking, CloudFront CDN, Application Load Balancer, EC2 auto-scaling, RDS Multi-AZ, ElastiCache, S3, and CloudWatch monitoring.</p>
+  <div class="hero-meta">
+    <span>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      45 min read
+    </span>
+    <span>
+      <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      Intermediate
+    </span>
+    <span>
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Terraform + AWS CLI
+    </span>
+  </div>
+</header>
+
+<!-- Architecture overview -->
+<div class="arch-flow">
+  <span class="arch-node" style="color:var(--text);border-color:rgba(255,255,255,0.15)">Users</span>
+  <span class="arch-arrow">&rarr;</span>
+  <span class="arch-node" style="color:var(--aws);border-color:rgba(255,153,0,0.3)">Route 53</span>
+  <span class="arch-arrow">&rarr;</span>
+  <span class="arch-node" style="color:var(--aws);border-color:rgba(255,153,0,0.3)">CloudFront</span>
+  <span class="arch-arrow">&rarr;</span>
+  <span class="arch-node" style="color:var(--blue);border-color:rgba(74,158,255,0.3)">ALB</span>
+  <span class="arch-arrow">&rarr;</span>
+  <span class="arch-node" style="color:var(--blue);border-color:rgba(74,158,255,0.3)">EC2</span>
+  <span class="arch-arrow">&rarr;</span>
+  <span class="arch-node" style="color:var(--purple);border-color:rgba(167,139,250,0.3)">RDS</span>
+  <span class="arch-arrow">+</span>
+  <span class="arch-node" style="color:var(--red);border-color:rgba(248,113,113,0.3)">Redis</span>
+</div>
+
+<!-- ═══════════ SECTION 1: PREREQUISITES ═══════════ -->
+<section class="tutorial-section" id="prerequisites">
+  <div class="section-number">Section 01</div>
+  <h2>Prerequisites</h2>
+  <p>Before starting, ensure you have the following tools installed and an AWS account configured with administrative IAM permissions.</p>
+
+  <h3>Install AWS CLI v2</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre><span class="cmt"># Linux (x86_64)</span>
+curl <span class="str">"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"</span> -o <span class="str">"awscliv2.zip"</span>
+unzip awscliv2.zip
+sudo ./aws/install
+
+<span class="cmt"># Verify installation</span>
+aws --version
+<span class="cmt"># aws-cli/2.15.x Python/3.11.x Linux/...</span></pre>
+  </div>
+
+  <h3>Install Terraform</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre><span class="cmt"># Add HashiCorp GPG key and repo</span>
+wget -O- https://apt.releases.hashicorp.com/gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+<span class="kw">echo</span> <span class="str">"deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+  https://apt.releases.hashicorp.com $(lsb_release -cs) main"</span> | \
+  sudo tee /etc/apt/sources.list.d/hashicorp.list
+
+sudo apt update &amp;&amp; sudo apt install terraform
+
+<span class="cmt"># Verify</span>
+terraform -version
+<span class="cmt"># Terraform v1.7.x</span></pre>
+  </div>
+
+  <h3>Configure AWS Credentials</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre>aws configure
+<span class="cmt"># AWS Access Key ID:     AKIA****************</span>
+<span class="cmt"># AWS Secret Access Key: ********</span>
+<span class="cmt"># Default region name:   us-east-1</span>
+<span class="cmt"># Default output format: json</span></pre>
+  </div>
+
+  <h3>Project Structure</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">plaintext</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre>aws-3tier/
+  <span class="var">providers.tf</span>       <span class="cmt"># AWS provider config</span>
+  <span class="var">variables.tf</span>       <span class="cmt"># Input variables</span>
+  <span class="var">vpc.tf</span>             <span class="cmt"># VPC, subnets, gateways</span>
+  <span class="var">alb.tf</span>             <span class="cmt"># Load balancer</span>
+  <span class="var">ec2.tf</span>             <span class="cmt"># App servers</span>
+  <span class="var">rds.tf</span>             <span class="cmt"># Database</span>
+  <span class="var">elasticache.tf</span>     <span class="cmt"># Redis cache</span>
+  <span class="var">cloudfront.tf</span>      <span class="cmt"># CDN distribution</span>
+  <span class="var">s3.tf</span>              <span class="cmt"># Static assets bucket</span>
+  <span class="var">route53.tf</span>         <span class="cmt"># DNS records</span>
+  <span class="var">monitoring.tf</span>      <span class="cmt"># CloudWatch alarms</span>
+  <span class="var">security.tf</span>        <span class="cmt"># IAM roles, policies</span>
+  <span class="var">outputs.tf</span>         <span class="cmt"># Output values</span>
+  <span class="var">terraform.tfvars</span>   <span class="cmt"># Variable values (git-ignored)</span></pre>
+  </div>
+
+  <h3>Provider Configuration</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">providers.tf</span>
+    </div>
+<pre><span class="kw">terraform</span> {
+  <span class="attr">required_version</span> = <span class="str">"&gt;= 1.5"</span>
+
+  <span class="kw">required_providers</span> {
+    <span class="var">aws</span> = {
+      <span class="attr">source</span>  = <span class="str">"hashicorp/aws"</span>
+      <span class="attr">version</span> = <span class="str">"~&gt; 5.0"</span>
+    }
+  }
+
+  <span class="kw">backend</span> <span class="str">"s3"</span> {
+    <span class="attr">bucket</span>         = <span class="str">"my-terraform-state-bucket"</span>
+    <span class="attr">key</span>            = <span class="str">"3tier/terraform.tfstate"</span>
+    <span class="attr">region</span>         = <span class="str">"us-east-1"</span>
+    <span class="attr">dynamodb_table</span> = <span class="str">"terraform-locks"</span>
+    <span class="attr">encrypt</span>        = <span class="bool">true</span>
+  }
+}
+
+<span class="kw">provider</span> <span class="str">"aws"</span> {
+  <span class="attr">region</span> = <span class="var">var.aws_region</span>
+
+  <span class="attr">default_tags</span> {
+    <span class="attr">tags</span> = {
+      <span class="attr">Project</span>     = <span class="str">"3tier-app"</span>
+      <span class="attr">Environment</span> = <span class="var">var.environment</span>
+      <span class="attr">ManagedBy</span>   = <span class="str">"terraform"</span>
+    }
+  }
+}</pre>
+  </div>
+
+  <h3>Variables</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">variables.tf</span>
+    </div>
+<pre><span class="kw">variable</span> <span class="str">"aws_region"</span> {
+  <span class="attr">description</span> = <span class="str">"AWS region to deploy into"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">default</span>     = <span class="str">"us-east-1"</span>
+}
+
+<span class="kw">variable</span> <span class="str">"environment"</span> {
+  <span class="attr">description</span> = <span class="str">"Deployment environment"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">default</span>     = <span class="str">"production"</span>
+}
+
+<span class="kw">variable</span> <span class="str">"vpc_cidr"</span> {
+  <span class="attr">description</span> = <span class="str">"CIDR block for the VPC"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">default</span>     = <span class="str">"10.0.0.0/16"</span>
+}
+
+<span class="kw">variable</span> <span class="str">"domain_name"</span> {
+  <span class="attr">description</span> = <span class="str">"Root domain name"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+}
+
+<span class="kw">variable</span> <span class="str">"db_password"</span> {
+  <span class="attr">description</span> = <span class="str">"RDS master password"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">sensitive</span>   = <span class="bool">true</span>
+}
+
+<span class="kw">variable</span> <span class="str">"instance_type"</span> {
+  <span class="attr">description</span> = <span class="str">"EC2 instance type"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">default</span>     = <span class="str">"t3.medium"</span>
+}
+
+<span class="kw">variable</span> <span class="str">"db_instance_class"</span> {
+  <span class="attr">description</span> = <span class="str">"RDS instance class"</span>
+  <span class="attr">type</span>        = <span class="type">string</span>
+  <span class="attr">default</span>     = <span class="str">"db.r6g.large"</span>
+}</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <span class="code-file">Initialize</span>
+    </div>
+<pre><span class="kw">cd</span> aws-3tier/
+terraform init</pre>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 2: VPC ═══════════ -->
+<section class="tutorial-section" id="vpc">
+  <div class="section-number">Section 02</div>
+  <h2>VPC Setup</h2>
+  <p>We create a VPC with a <code>10.0.0.0/16</code> CIDR block spanning 2 Availability Zones. Public subnets host the ALB and NAT Gateways, while private subnets host EC2 instances, RDS, and ElastiCache. An Internet Gateway provides outbound access for public subnets, and a NAT Gateway enables private subnet instances to reach the internet for updates.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">vpc.tf</span>
+    </div>
+<pre><span class="kw">data</span> <span class="str">"aws_availability_zones"</span> <span class="str">"available"</span> {
+  <span class="attr">state</span> = <span class="str">"available"</span>
+}
+
+<span class="kw">locals</span> {
+  <span class="attr">azs</span> = <span class="fn">slice</span>(<span class="var">data.aws_availability_zones.available.names</span>, <span class="num">0</span>, <span class="num">2</span>)
+}
+
+<span class="cmt"># ─── VPC ────────────────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_vpc"</span> <span class="str">"main"</span> {
+  <span class="attr">cidr_block</span>           = <span class="var">var.vpc_cidr</span>
+  <span class="attr">enable_dns_support</span>   = <span class="bool">true</span>
+  <span class="attr">enable_dns_hostnames</span> = <span class="bool">true</span>
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-vpc"</span>
+  }
+}
+
+<span class="cmt"># ─── Internet Gateway ──────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_internet_gateway"</span> <span class="str">"igw"</span> {
+  <span class="attr">vpc_id</span> = <span class="var">aws_vpc.main.id</span>
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-igw"</span>
+  }
+}
+
+<span class="cmt"># ─── Public Subnets (2 AZs) ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_subnet"</span> <span class="str">"public"</span> {
+  <span class="attr">count</span>                   = <span class="num">2</span>
+  <span class="attr">vpc_id</span>                  = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">cidr_block</span>              = <span class="fn">cidrsubnet</span>(<span class="var">var.vpc_cidr</span>, <span class="num">8</span>, <span class="var">count.index</span>)
+  <span class="attr">availability_zone</span>       = <span class="var">local.azs</span>[<span class="var">count.index</span>]
+  <span class="attr">map_public_ip_on_launch</span> = <span class="bool">true</span>
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-public-${local.azs[count.index]}"</span>
+    <span class="attr">Tier</span> = <span class="str">"public"</span>
+  }
+}
+
+<span class="cmt"># ─── Private Subnets (2 AZs) ───────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_subnet"</span> <span class="str">"private"</span> {
+  <span class="attr">count</span>             = <span class="num">2</span>
+  <span class="attr">vpc_id</span>            = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">cidr_block</span>        = <span class="fn">cidrsubnet</span>(<span class="var">var.vpc_cidr</span>, <span class="num">8</span>, <span class="var">count.index</span> + <span class="num">10</span>)
+  <span class="attr">availability_zone</span> = <span class="var">local.azs</span>[<span class="var">count.index</span>]
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-private-${local.azs[count.index]}"</span>
+    <span class="attr">Tier</span> = <span class="str">"private"</span>
+  }
+}
+
+<span class="cmt"># ─── Elastic IP for NAT Gateway ────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_eip"</span> <span class="str">"nat"</span> {
+  <span class="attr">domain</span> = <span class="str">"vpc"</span>
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-nat-eip"</span>
+  }
+}
+
+<span class="cmt"># ─── NAT Gateway (in first public subnet) ─────────</span>
+<span class="kw">resource</span> <span class="str">"aws_nat_gateway"</span> <span class="str">"nat"</span> {
+  <span class="attr">allocation_id</span> = <span class="var">aws_eip.nat.id</span>
+  <span class="attr">subnet_id</span>     = <span class="var">aws_subnet.public</span>[<span class="num">0</span>].<span class="attr">id</span>
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-nat-gw"</span>
+  }
+
+  <span class="attr">depends_on</span> = [<span class="var">aws_internet_gateway.igw</span>]
+}
+
+<span class="cmt"># ─── Route Tables ──────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_route_table"</span> <span class="str">"public"</span> {
+  <span class="attr">vpc_id</span> = <span class="var">aws_vpc.main.id</span>
+
+  <span class="kw">route</span> {
+    <span class="attr">cidr_block</span> = <span class="str">"0.0.0.0/0"</span>
+    <span class="attr">gateway_id</span> = <span class="var">aws_internet_gateway.igw.id</span>
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-public-rt"</span> }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_route_table"</span> <span class="str">"private"</span> {
+  <span class="attr">vpc_id</span> = <span class="var">aws_vpc.main.id</span>
+
+  <span class="kw">route</span> {
+    <span class="attr">cidr_block</span>     = <span class="str">"0.0.0.0/0"</span>
+    <span class="attr">nat_gateway_id</span> = <span class="var">aws_nat_gateway.nat.id</span>
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-private-rt"</span> }
+}
+
+<span class="cmt"># ─── Route Table Associations ──────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_route_table_association"</span> <span class="str">"public"</span> {
+  <span class="attr">count</span>          = <span class="num">2</span>
+  <span class="attr">subnet_id</span>      = <span class="var">aws_subnet.public</span>[<span class="var">count.index</span>].<span class="attr">id</span>
+  <span class="attr">route_table_id</span> = <span class="var">aws_route_table.public.id</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_route_table_association"</span> <span class="str">"private"</span> {
+  <span class="attr">count</span>          = <span class="num">2</span>
+  <span class="attr">subnet_id</span>      = <span class="var">aws_subnet.private</span>[<span class="var">count.index</span>].<span class="attr">id</span>
+  <span class="attr">route_table_id</span> = <span class="var">aws_route_table.private.id</span>
+}</pre>
+  </div>
+
+  <div class="info-box note">
+    <strong>Note</strong>
+    <p>The <code>cidrsubnet(var.vpc_cidr, 8, count.index)</code> call produces <code>10.0.0.0/24</code> and <code>10.0.1.0/24</code> for public subnets, and <code>10.0.10.0/24</code> and <code>10.0.11.0/24</code> for private subnets. This leaves plenty of room for future expansion.</p>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 3: ROUTE 53 ═══════════ -->
+<section class="tutorial-section" id="route53">
+  <div class="section-number">Section 03</div>
+  <h2>Route 53</h2>
+  <p>Route 53 provides DNS resolution for our domain. We register the domain (or use an existing one), create a hosted zone, and then add an alias A record that points to our CloudFront distribution.</p>
+
+  <h3>Register a Domain (CLI)</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre><span class="cmt"># Check domain availability</span>
+aws route53domains check-domain-availability \
+  --region us-east-1 \
+  --domain-name <span class="str">"example.com"</span>
+
+<span class="cmt"># Register (requires contact details JSON)</span>
+aws route53domains register-domain \
+  --region us-east-1 \
+  --domain-name <span class="str">"example.com"</span> \
+  --duration-in-years <span class="num">1</span> \
+  --admin-contact <span class="str">file://contact.json</span> \
+  --registrant-contact <span class="str">file://contact.json</span> \
+  --tech-contact <span class="str">file://contact.json</span> \
+  --auto-renew</pre>
+  </div>
+
+  <h3>Hosted Zone and Records</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">route53.tf</span>
+    </div>
+<pre><span class="kw">data</span> <span class="str">"aws_route53_zone"</span> <span class="str">"main"</span> {
+  <span class="attr">name</span>         = <span class="var">var.domain_name</span>
+  <span class="attr">private_zone</span> = <span class="bool">false</span>
+}
+
+<span class="cmt"># ─── A Record: root domain -> CloudFront ───────────</span>
+<span class="kw">resource</span> <span class="str">"aws_route53_record"</span> <span class="str">"root"</span> {
+  <span class="attr">zone_id</span> = <span class="var">data.aws_route53_zone.main.zone_id</span>
+  <span class="attr">name</span>    = <span class="var">var.domain_name</span>
+  <span class="attr">type</span>    = <span class="str">"A"</span>
+
+  <span class="kw">alias</span> {
+    <span class="attr">name</span>                   = <span class="var">aws_cloudfront_distribution.main.domain_name</span>
+    <span class="attr">zone_id</span>                = <span class="var">aws_cloudfront_distribution.main.hosted_zone_id</span>
+    <span class="attr">evaluate_target_health</span> = <span class="bool">false</span>
+  }
+}
+
+<span class="cmt"># ─── A Record: www -> CloudFront ───────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_route53_record"</span> <span class="str">"www"</span> {
+  <span class="attr">zone_id</span> = <span class="var">data.aws_route53_zone.main.zone_id</span>
+  <span class="attr">name</span>    = <span class="str">"www.${var.domain_name}"</span>
+  <span class="attr">type</span>    = <span class="str">"A"</span>
+
+  <span class="kw">alias</span> {
+    <span class="attr">name</span>                   = <span class="var">aws_cloudfront_distribution.main.domain_name</span>
+    <span class="attr">zone_id</span>                = <span class="var">aws_cloudfront_distribution.main.hosted_zone_id</span>
+    <span class="attr">evaluate_target_health</span> = <span class="bool">false</span>
+  }
+}</pre>
+  </div>
+
+  <div class="info-box tip">
+    <strong>Tip</strong>
+    <p>If you registered your domain outside of AWS, update your domain registrar's nameservers to point to the NS records in your Route 53 hosted zone. You can retrieve them with <code>aws route53 get-hosted-zone --id ZONE_ID</code>.</p>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 4: CLOUDFRONT ═══════════ -->
+<section class="tutorial-section" id="cloudfront">
+  <div class="section-number">Section 04</div>
+  <h2>CloudFront Distribution</h2>
+  <p>CloudFront serves as our CDN edge layer. It terminates TLS using an ACM certificate, caches static content globally, and forwards dynamic requests to the ALB origin. We request the SSL certificate via ACM with DNS validation.</p>
+
+  <h3>ACM Certificate</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">cloudfront.tf</span>
+    </div>
+<pre><span class="cmt"># ACM cert must be in us-east-1 for CloudFront</span>
+<span class="kw">resource</span> <span class="str">"aws_acm_certificate"</span> <span class="str">"cert"</span> {
+  <span class="attr">domain_name</span>       = <span class="var">var.domain_name</span>
+  <span class="attr">validation_method</span> = <span class="str">"DNS"</span>
+
+  <span class="attr">subject_alternative_names</span> = [
+    <span class="str">"*.${var.domain_name}"</span>
+  ]
+
+  <span class="attr">lifecycle</span> {
+    <span class="attr">create_before_destroy</span> = <span class="bool">true</span>
+  }
+}
+
+<span class="cmt"># DNS validation record</span>
+<span class="kw">resource</span> <span class="str">"aws_route53_record"</span> <span class="str">"cert_validation"</span> {
+  <span class="kw">for_each</span> = {
+    <span class="kw">for</span> dvo <span class="kw">in</span> <span class="var">aws_acm_certificate.cert.domain_validation_options</span> : dvo.domain_name =&gt; {
+      <span class="attr">name</span>   = dvo.resource_record_name
+      <span class="attr">record</span> = dvo.resource_record_value
+      <span class="attr">type</span>   = dvo.resource_record_type
+    }
+  }
+
+  <span class="attr">zone_id</span> = <span class="var">data.aws_route53_zone.main.zone_id</span>
+  <span class="attr">name</span>    = <span class="var">each.value.name</span>
+  <span class="attr">type</span>    = <span class="var">each.value.type</span>
+  <span class="attr">records</span> = [<span class="var">each.value.record</span>]
+  <span class="attr">ttl</span>     = <span class="num">60</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_acm_certificate_validation"</span> <span class="str">"cert"</span> {
+  <span class="attr">certificate_arn</span>         = <span class="var">aws_acm_certificate.cert.arn</span>
+  <span class="attr">validation_record_fqdns</span> = [
+    <span class="kw">for</span> record <span class="kw">in</span> <span class="var">aws_route53_record.cert_validation</span> : record.fqdn
+  ]
+}</pre>
+  </div>
+
+  <h3>CloudFront Distribution</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">cloudfront.tf (continued)</span>
+    </div>
+<pre><span class="kw">resource</span> <span class="str">"aws_cloudfront_distribution"</span> <span class="str">"main"</span> {
+  <span class="attr">enabled</span>             = <span class="bool">true</span>
+  <span class="attr">is_ipv6_enabled</span>     = <span class="bool">true</span>
+  <span class="attr">default_root_object</span> = <span class="str">"index.html"</span>
+  <span class="attr">aliases</span>             = [<span class="var">var.domain_name</span>, <span class="str">"www.${var.domain_name}"</span>]
+  <span class="attr">price_class</span>         = <span class="str">"PriceClass_100"</span>
+
+  <span class="cmt"># ── ALB Origin (dynamic content) ──</span>
+  <span class="kw">origin</span> {
+    <span class="attr">domain_name</span> = <span class="var">aws_lb.app.dns_name</span>
+    <span class="attr">origin_id</span>   = <span class="str">"alb-origin"</span>
+
+    <span class="kw">custom_origin_config</span> {
+      <span class="attr">http_port</span>              = <span class="num">80</span>
+      <span class="attr">https_port</span>             = <span class="num">443</span>
+      <span class="attr">origin_protocol_policy</span> = <span class="str">"https-only"</span>
+      <span class="attr">origin_ssl_protocols</span>   = [<span class="str">"TLSv1.2"</span>]
+    }
+  }
+
+  <span class="cmt"># ── S3 Origin (static assets) ──</span>
+  <span class="kw">origin</span> {
+    <span class="attr">domain_name</span> = <span class="var">aws_s3_bucket.assets.bucket_regional_domain_name</span>
+    <span class="attr">origin_id</span>   = <span class="str">"s3-assets"</span>
+
+    <span class="kw">s3_origin_config</span> {
+      <span class="attr">origin_access_identity</span> = <span class="var">aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path</span>
+    }
+  }
+
+  <span class="cmt"># ── Default behavior (ALB) ──</span>
+  <span class="kw">default_cache_behavior</span> {
+    <span class="attr">allowed_methods</span>        = [<span class="str">"DELETE"</span>, <span class="str">"GET"</span>, <span class="str">"HEAD"</span>, <span class="str">"OPTIONS"</span>, <span class="str">"PATCH"</span>, <span class="str">"POST"</span>, <span class="str">"PUT"</span>]
+    <span class="attr">cached_methods</span>         = [<span class="str">"GET"</span>, <span class="str">"HEAD"</span>]
+    <span class="attr">target_origin_id</span>       = <span class="str">"alb-origin"</span>
+    <span class="attr">viewer_protocol_policy</span> = <span class="str">"redirect-to-https"</span>
+    <span class="attr">compress</span>               = <span class="bool">true</span>
+
+    <span class="kw">forwarded_values</span> {
+      <span class="attr">query_string</span> = <span class="bool">true</span>
+      <span class="attr">headers</span>      = [<span class="str">"Host"</span>, <span class="str">"Origin"</span>, <span class="str">"Authorization"</span>]
+
+      <span class="kw">cookies</span> {
+        <span class="attr">forward</span> = <span class="str">"all"</span>
+      }
+    }
+
+    <span class="attr">min_ttl</span>     = <span class="num">0</span>
+    <span class="attr">default_ttl</span> = <span class="num">0</span>
+    <span class="attr">max_ttl</span>     = <span class="num">0</span>
+  }
+
+  <span class="cmt"># ── Static assets behavior ──</span>
+  <span class="kw">ordered_cache_behavior</span> {
+    <span class="attr">path_pattern</span>           = <span class="str">"/static/*"</span>
+    <span class="attr">allowed_methods</span>        = [<span class="str">"GET"</span>, <span class="str">"HEAD"</span>]
+    <span class="attr">cached_methods</span>         = [<span class="str">"GET"</span>, <span class="str">"HEAD"</span>]
+    <span class="attr">target_origin_id</span>       = <span class="str">"s3-assets"</span>
+    <span class="attr">viewer_protocol_policy</span> = <span class="str">"redirect-to-https"</span>
+    <span class="attr">compress</span>               = <span class="bool">true</span>
+
+    <span class="kw">forwarded_values</span> {
+      <span class="attr">query_string</span> = <span class="bool">false</span>
+      <span class="kw">cookies</span> { <span class="attr">forward</span> = <span class="str">"none"</span> }
+    }
+
+    <span class="attr">min_ttl</span>     = <span class="num">86400</span>
+    <span class="attr">default_ttl</span> = <span class="num">604800</span>
+    <span class="attr">max_ttl</span>     = <span class="num">2592000</span>
+  }
+
+  <span class="kw">restrictions</span> {
+    <span class="kw">geo_restriction</span> {
+      <span class="attr">restriction_type</span> = <span class="str">"none"</span>
+    }
+  }
+
+  <span class="kw">viewer_certificate</span> {
+    <span class="attr">acm_certificate_arn</span>      = <span class="var">aws_acm_certificate_validation.cert.certificate_arn</span>
+    <span class="attr">ssl_support_method</span>       = <span class="str">"sni-only"</span>
+    <span class="attr">minimum_protocol_version</span> = <span class="str">"TLSv1.2_2021"</span>
+  }
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-cdn"</span>
+  }
+}</pre>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 5: ALB ═══════════ -->
+<section class="tutorial-section" id="alb">
+  <div class="section-number">Section 05</div>
+  <h2>Application Load Balancer</h2>
+  <p>The ALB sits in the public subnets and distributes HTTP/HTTPS traffic across the EC2 instances in private subnets. We configure a target group with health checks and an HTTPS listener that terminates TLS.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">alb.tf</span>
+    </div>
+<pre><span class="cmt"># ─── Security Group for ALB ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"alb"</span> {
+  <span class="attr">name_prefix</span> = <span class="str">"3tier-alb-"</span>
+  <span class="attr">vpc_id</span>      = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">description</span> = <span class="str">"Allow inbound HTTPS from CloudFront"</span>
+
+  <span class="kw">ingress</span> {
+    <span class="attr">from_port</span>   = <span class="num">443</span>
+    <span class="attr">to_port</span>     = <span class="num">443</span>
+    <span class="attr">protocol</span>    = <span class="str">"tcp"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+    <span class="attr">description</span> = <span class="str">"HTTPS from internet (CloudFront)"</span>
+  }
+
+  <span class="kw">ingress</span> {
+    <span class="attr">from_port</span>   = <span class="num">80</span>
+    <span class="attr">to_port</span>     = <span class="num">80</span>
+    <span class="attr">protocol</span>    = <span class="str">"tcp"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+    <span class="attr">description</span> = <span class="str">"HTTP redirect"</span>
+  }
+
+  <span class="kw">egress</span> {
+    <span class="attr">from_port</span>   = <span class="num">0</span>
+    <span class="attr">to_port</span>     = <span class="num">0</span>
+    <span class="attr">protocol</span>    = <span class="str">"-1"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-alb-sg"</span> }
+}
+
+<span class="cmt"># ─── Application Load Balancer ─────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_lb"</span> <span class="str">"app"</span> {
+  <span class="attr">name</span>               = <span class="str">"3tier-alb"</span>
+  <span class="attr">internal</span>           = <span class="bool">false</span>
+  <span class="attr">load_balancer_type</span> = <span class="str">"application"</span>
+  <span class="attr">security_groups</span>    = [<span class="var">aws_security_group.alb.id</span>]
+  <span class="attr">subnets</span>            = <span class="var">aws_subnet.public</span>[*].<span class="attr">id</span>
+
+  <span class="attr">enable_deletion_protection</span> = <span class="bool">true</span>
+  <span class="attr">drop_invalid_header_fields</span> = <span class="bool">true</span>
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-alb"</span> }
+}
+
+<span class="cmt"># ─── Target Group ──────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_lb_target_group"</span> <span class="str">"app"</span> {
+  <span class="attr">name</span>     = <span class="str">"3tier-app-tg"</span>
+  <span class="attr">port</span>     = <span class="num">8080</span>
+  <span class="attr">protocol</span> = <span class="str">"HTTP"</span>
+  <span class="attr">vpc_id</span>   = <span class="var">aws_vpc.main.id</span>
+
+  <span class="kw">health_check</span> {
+    <span class="attr">enabled</span>             = <span class="bool">true</span>
+    <span class="attr">path</span>                = <span class="str">"/health"</span>
+    <span class="attr">port</span>                = <span class="str">"traffic-port"</span>
+    <span class="attr">protocol</span>            = <span class="str">"HTTP"</span>
+    <span class="attr">healthy_threshold</span>   = <span class="num">3</span>
+    <span class="attr">unhealthy_threshold</span> = <span class="num">3</span>
+    <span class="attr">timeout</span>             = <span class="num">5</span>
+    <span class="attr">interval</span>            = <span class="num">30</span>
+    <span class="attr">matcher</span>             = <span class="str">"200"</span>
+  }
+
+  <span class="kw">stickiness</span> {
+    <span class="attr">type</span>            = <span class="str">"lb_cookie"</span>
+    <span class="attr">cookie_duration</span> = <span class="num">86400</span>
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-app-tg"</span> }
+}
+
+<span class="cmt"># ─── HTTPS Listener ────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_lb_listener"</span> <span class="str">"https"</span> {
+  <span class="attr">load_balancer_arn</span> = <span class="var">aws_lb.app.arn</span>
+  <span class="attr">port</span>              = <span class="num">443</span>
+  <span class="attr">protocol</span>          = <span class="str">"HTTPS"</span>
+  <span class="attr">ssl_policy</span>        = <span class="str">"ELBSecurityPolicy-TLS13-1-2-2021-06"</span>
+  <span class="attr">certificate_arn</span>   = <span class="var">aws_acm_certificate_validation.cert.certificate_arn</span>
+
+  <span class="kw">default_action</span> {
+    <span class="attr">type</span>             = <span class="str">"forward"</span>
+    <span class="attr">target_group_arn</span> = <span class="var">aws_lb_target_group.app.arn</span>
+  }
+}
+
+<span class="cmt"># ─── HTTP -> HTTPS Redirect ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_lb_listener"</span> <span class="str">"http_redirect"</span> {
+  <span class="attr">load_balancer_arn</span> = <span class="var">aws_lb.app.arn</span>
+  <span class="attr">port</span>              = <span class="num">80</span>
+  <span class="attr">protocol</span>          = <span class="str">"HTTP"</span>
+
+  <span class="kw">default_action</span> {
+    <span class="attr">type</span> = <span class="str">"redirect"</span>
+
+    <span class="kw">redirect</span> {
+      <span class="attr">port</span>        = <span class="str">"443"</span>
+      <span class="attr">protocol</span>    = <span class="str">"HTTPS"</span>
+      <span class="attr">status_code</span> = <span class="str">"HTTP_301"</span>
+    }
+  }
+}</pre>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 6: EC2 ═══════════ -->
+<section class="tutorial-section" id="ec2">
+  <div class="section-number">Section 06</div>
+  <h2>EC2 Instances</h2>
+  <p>Two EC2 instances run in separate private subnets across Availability Zones for high availability. Each instance bootstraps the application via <code>user_data</code>. We use the latest Amazon Linux 2023 AMI and attach the instances to the ALB target group.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">ec2.tf</span>
+    </div>
+<pre><span class="cmt"># ─── Latest Amazon Linux 2023 AMI ──────────────────</span>
+<span class="kw">data</span> <span class="str">"aws_ami"</span> <span class="str">"al2023"</span> {
+  <span class="attr">most_recent</span> = <span class="bool">true</span>
+  <span class="attr">owners</span>      = [<span class="str">"amazon"</span>]
+
+  <span class="kw">filter</span> {
+    <span class="attr">name</span>   = <span class="str">"name"</span>
+    <span class="attr">values</span> = [<span class="str">"al2023-ami-*-x86_64"</span>]
+  }
+
+  <span class="kw">filter</span> {
+    <span class="attr">name</span>   = <span class="str">"virtualization-type"</span>
+    <span class="attr">values</span> = [<span class="str">"hvm"</span>]
+  }
+}
+
+<span class="cmt"># ─── Security Group for EC2 ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"ec2"</span> {
+  <span class="attr">name_prefix</span> = <span class="str">"3tier-ec2-"</span>
+  <span class="attr">vpc_id</span>      = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">description</span> = <span class="str">"Allow traffic from ALB only"</span>
+
+  <span class="kw">ingress</span> {
+    <span class="attr">from_port</span>       = <span class="num">8080</span>
+    <span class="attr">to_port</span>         = <span class="num">8080</span>
+    <span class="attr">protocol</span>        = <span class="str">"tcp"</span>
+    <span class="attr">security_groups</span> = [<span class="var">aws_security_group.alb.id</span>]
+    <span class="attr">description</span>     = <span class="str">"App port from ALB"</span>
+  }
+
+  <span class="kw">egress</span> {
+    <span class="attr">from_port</span>   = <span class="num">0</span>
+    <span class="attr">to_port</span>     = <span class="num">0</span>
+    <span class="attr">protocol</span>    = <span class="str">"-1"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-ec2-sg"</span> }
+}
+
+<span class="cmt"># ─── EC2 Instances (one per AZ) ────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_instance"</span> <span class="str">"app"</span> {
+  <span class="attr">count</span>                  = <span class="num">2</span>
+  <span class="attr">ami</span>                    = <span class="var">data.aws_ami.al2023.id</span>
+  <span class="attr">instance_type</span>          = <span class="var">var.instance_type</span>
+  <span class="attr">subnet_id</span>              = <span class="var">aws_subnet.private</span>[<span class="var">count.index</span>].<span class="attr">id</span>
+  <span class="attr">vpc_security_group_ids</span> = [<span class="var">aws_security_group.ec2.id</span>]
+  <span class="attr">iam_instance_profile</span>   = <span class="var">aws_iam_instance_profile.ec2_profile.name</span>
+
+  <span class="attr">user_data</span> = <span class="fn">&lt;&lt;-EOF</span>
+    <span class="str">#!/bin/bash
+    set -euo pipefail
+
+    # System updates
+    dnf update -y
+    dnf install -y docker nodejs20 npm
+
+    # Start Docker
+    systemctl enable docker
+    systemctl start docker
+
+    # Install CloudWatch agent
+    dnf install -y amazon-cloudwatch-agent
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config -m ec2 \
+      -s -c ssm:AmazonCloudWatch-linux
+
+    # Deploy application
+    mkdir -p /opt/app
+    aws s3 cp s3://my-deploy-bucket/app/latest.tar.gz /opt/app/
+    cd /opt/app &amp;&amp; tar xzf latest.tar.gz
+    npm ci --production
+
+    # Configure environment
+    cat &gt; /opt/app/.env &lt;&lt;'ENVFILE'
+    NODE_ENV=production
+    PORT=8080
+    DB_HOST=${aws_db_instance.mysql.address}
+    DB_PORT=3306
+    DB_NAME=appdb
+    REDIS_HOST=${aws_elasticache_replication_group.redis.primary_endpoint_address}
+    REDIS_PORT=6379
+    ENVFILE
+
+    # Start application with systemd
+    cat &gt; /etc/systemd/system/app.service &lt;&lt;'UNIT'
+    [Unit]
+    Description=Node.js Application
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=ec2-user
+    WorkingDirectory=/opt/app
+    EnvironmentFile=/opt/app/.env
+    ExecStart=/usr/bin/node server.js
+    Restart=on-failure
+    RestartSec=10
+
+    [Install]
+    WantedBy=multi-user.target
+    UNIT
+
+    systemctl daemon-reload
+    systemctl enable app
+    systemctl start app</span>
+  <span class="fn">EOF</span>
+
+  <span class="attr">root_block_device</span> {
+    <span class="attr">volume_type</span>           = <span class="str">"gp3"</span>
+    <span class="attr">volume_size</span>           = <span class="num">30</span>
+    <span class="attr">encrypted</span>             = <span class="bool">true</span>
+    <span class="attr">delete_on_termination</span> = <span class="bool">true</span>
+  }
+
+  <span class="attr">metadata_options</span> {
+    <span class="attr">http_tokens</span>   = <span class="str">"required"</span>  <span class="cmt"># IMDSv2 enforced</span>
+    <span class="attr">http_endpoint</span> = <span class="str">"enabled"</span>
+  }
+
+  <span class="attr">tags</span> = {
+    <span class="attr">Name</span> = <span class="str">"3tier-app-${count.index + 1}"</span>
+  }
+}
+
+<span class="cmt"># ─── Attach instances to target group ──────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_lb_target_group_attachment"</span> <span class="str">"app"</span> {
+  <span class="attr">count</span>            = <span class="num">2</span>
+  <span class="attr">target_group_arn</span> = <span class="var">aws_lb_target_group.app.arn</span>
+  <span class="attr">target_id</span>       = <span class="var">aws_instance.app</span>[<span class="var">count.index</span>].<span class="attr">id</span>
+  <span class="attr">port</span>            = <span class="num">8080</span>
+}</pre>
+  </div>
+
+  <div class="info-box warning">
+    <strong>Security Warning</strong>
+    <p>The <code>user_data</code> above references database credentials via Terraform interpolation. In production, use AWS Secrets Manager or SSM Parameter Store instead of baking secrets into user_data. See the Security section below.</p>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 7: RDS ═══════════ -->
+<section class="tutorial-section" id="rds">
+  <div class="section-number">Section 07</div>
+  <h2>RDS Multi-AZ</h2>
+  <p>We deploy a MySQL 8.0 RDS instance with Multi-AZ enabled for automatic failover. The database lives in private subnets and only accepts connections from the EC2 security group on port 3306.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">rds.tf</span>
+    </div>
+<pre><span class="cmt"># ─── DB Subnet Group ───────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_db_subnet_group"</span> <span class="str">"mysql"</span> {
+  <span class="attr">name</span>       = <span class="str">"3tier-db-subnets"</span>
+  <span class="attr">subnet_ids</span> = <span class="var">aws_subnet.private</span>[*].<span class="attr">id</span>
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-db-subnet-group"</span> }
+}
+
+<span class="cmt"># ─── Security Group for RDS ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"rds"</span> {
+  <span class="attr">name_prefix</span> = <span class="str">"3tier-rds-"</span>
+  <span class="attr">vpc_id</span>      = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">description</span> = <span class="str">"Allow MySQL from EC2 instances only"</span>
+
+  <span class="kw">ingress</span> {
+    <span class="attr">from_port</span>       = <span class="num">3306</span>
+    <span class="attr">to_port</span>         = <span class="num">3306</span>
+    <span class="attr">protocol</span>        = <span class="str">"tcp"</span>
+    <span class="attr">security_groups</span> = [<span class="var">aws_security_group.ec2.id</span>]
+    <span class="attr">description</span>     = <span class="str">"MySQL from app servers"</span>
+  }
+
+  <span class="kw">egress</span> {
+    <span class="attr">from_port</span>   = <span class="num">0</span>
+    <span class="attr">to_port</span>     = <span class="num">0</span>
+    <span class="attr">protocol</span>    = <span class="str">"-1"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-rds-sg"</span> }
+}
+
+<span class="cmt"># ─── RDS MySQL Instance ────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_db_instance"</span> <span class="str">"mysql"</span> {
+  <span class="attr">identifier</span>     = <span class="str">"3tier-mysql"</span>
+  <span class="attr">engine</span>         = <span class="str">"mysql"</span>
+  <span class="attr">engine_version</span> = <span class="str">"8.0"</span>
+  <span class="attr">instance_class</span> = <span class="var">var.db_instance_class</span>
+
+  <span class="attr">allocated_storage</span>     = <span class="num">100</span>
+  <span class="attr">max_allocated_storage</span> = <span class="num">500</span>
+  <span class="attr">storage_type</span>          = <span class="str">"gp3"</span>
+  <span class="attr">storage_encrypted</span>     = <span class="bool">true</span>
+
+  <span class="attr">db_name</span>  = <span class="str">"appdb"</span>
+  <span class="attr">username</span> = <span class="str">"admin"</span>
+  <span class="attr">password</span> = <span class="var">var.db_password</span>
+
+  <span class="attr">multi_az</span>               = <span class="bool">true</span>
+  <span class="attr">db_subnet_group_name</span>   = <span class="var">aws_db_subnet_group.mysql.name</span>
+  <span class="attr">vpc_security_group_ids</span> = [<span class="var">aws_security_group.rds.id</span>]
+
+  <span class="attr">backup_retention_period</span> = <span class="num">7</span>
+  <span class="attr">backup_window</span>           = <span class="str">"03:00-04:00"</span>
+  <span class="attr">maintenance_window</span>      = <span class="str">"sun:04:30-sun:05:30"</span>
+
+  <span class="attr">deletion_protection</span>       = <span class="bool">true</span>
+  <span class="attr">skip_final_snapshot</span>       = <span class="bool">false</span>
+  <span class="attr">final_snapshot_identifier</span> = <span class="str">"3tier-mysql-final-snapshot"</span>
+  <span class="attr">copy_tags_to_snapshot</span>     = <span class="bool">true</span>
+
+  <span class="attr">performance_insights_enabled</span> = <span class="bool">true</span>
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-mysql"</span> }
+}</pre>
+  </div>
+
+  <div class="info-box tip">
+    <strong>Tip</strong>
+    <p>Use <code>manage_master_user_password = true</code> (AWS provider 5.x+) to let RDS auto-manage the master password in Secrets Manager instead of passing <code>var.db_password</code> directly. This eliminates secrets from your Terraform state.</p>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 8: ELASTICACHE ═══════════ -->
+<section class="tutorial-section" id="elasticache">
+  <div class="section-number">Section 08</div>
+  <h2>ElastiCache Redis</h2>
+  <p>A Redis replication group provides in-memory caching for session data and frequently queried results. We deploy it in private subnets with automatic failover and encryption in transit.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">elasticache.tf</span>
+    </div>
+<pre><span class="cmt"># ─── ElastiCache Subnet Group ──────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_elasticache_subnet_group"</span> <span class="str">"redis"</span> {
+  <span class="attr">name</span>       = <span class="str">"3tier-redis-subnets"</span>
+  <span class="attr">subnet_ids</span> = <span class="var">aws_subnet.private</span>[*].<span class="attr">id</span>
+}
+
+<span class="cmt"># ─── Security Group for Redis ──────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_security_group"</span> <span class="str">"redis"</span> {
+  <span class="attr">name_prefix</span> = <span class="str">"3tier-redis-"</span>
+  <span class="attr">vpc_id</span>      = <span class="var">aws_vpc.main.id</span>
+  <span class="attr">description</span> = <span class="str">"Allow Redis from EC2 instances"</span>
+
+  <span class="kw">ingress</span> {
+    <span class="attr">from_port</span>       = <span class="num">6379</span>
+    <span class="attr">to_port</span>         = <span class="num">6379</span>
+    <span class="attr">protocol</span>        = <span class="str">"tcp"</span>
+    <span class="attr">security_groups</span> = [<span class="var">aws_security_group.ec2.id</span>]
+    <span class="attr">description</span>     = <span class="str">"Redis from app servers"</span>
+  }
+
+  <span class="kw">egress</span> {
+    <span class="attr">from_port</span>   = <span class="num">0</span>
+    <span class="attr">to_port</span>     = <span class="num">0</span>
+    <span class="attr">protocol</span>    = <span class="str">"-1"</span>
+    <span class="attr">cidr_blocks</span> = [<span class="str">"0.0.0.0/0"</span>]
+  }
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-redis-sg"</span> }
+}
+
+<span class="cmt"># ─── Redis Replication Group ───────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_elasticache_replication_group"</span> <span class="str">"redis"</span> {
+  <span class="attr">replication_group_id</span> = <span class="str">"3tier-redis"</span>
+  <span class="attr">description</span>          = <span class="str">"Redis cluster for session and cache"</span>
+  <span class="attr">node_type</span>            = <span class="str">"cache.r6g.large"</span>
+  <span class="attr">num_cache_clusters</span>   = <span class="num">2</span>
+  <span class="attr">engine</span>               = <span class="str">"redis"</span>
+  <span class="attr">engine_version</span>       = <span class="str">"7.0"</span>
+  <span class="attr">port</span>                 = <span class="num">6379</span>
+
+  <span class="attr">subnet_group_name</span>  = <span class="var">aws_elasticache_subnet_group.redis.name</span>
+  <span class="attr">security_group_ids</span> = [<span class="var">aws_security_group.redis.id</span>]
+
+  <span class="attr">automatic_failover_enabled</span> = <span class="bool">true</span>
+  <span class="attr">multi_az_enabled</span>           = <span class="bool">true</span>
+  <span class="attr">at_rest_encryption_enabled</span> = <span class="bool">true</span>
+  <span class="attr">transit_encryption_enabled</span> = <span class="bool">true</span>
+
+  <span class="attr">snapshot_retention_limit</span> = <span class="num">5</span>
+  <span class="attr">snapshot_window</span>          = <span class="str">"02:00-03:00"</span>
+  <span class="attr">maintenance_window</span>       = <span class="str">"sun:05:00-sun:06:00"</span>
+
+  <span class="attr">apply_immediately</span> = <span class="bool">false</span>
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-redis"</span> }
+}</pre>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 9: S3 ═══════════ -->
+<section class="tutorial-section" id="s3">
+  <div class="section-number">Section 09</div>
+  <h2>S3 Static Assets</h2>
+  <p>An S3 bucket stores static files (CSS, JS, images) served through CloudFront. We use an Origin Access Identity (OAI) to restrict direct bucket access and ensure all requests go through the CDN.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">s3.tf</span>
+    </div>
+<pre><span class="cmt"># ─── CloudFront OAI ────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudfront_origin_access_identity"</span> <span class="str">"oai"</span> {
+  <span class="attr">comment</span> = <span class="str">"OAI for 3tier static assets"</span>
+}
+
+<span class="cmt"># ─── S3 Bucket ─────────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"assets"</span> {
+  <span class="attr">bucket</span> = <span class="str">"3tier-static-assets-${data.aws_caller_identity.current.account_id}"</span>
+
+  <span class="attr">tags</span> = { <span class="attr">Name</span> = <span class="str">"3tier-static-assets"</span> }
+}
+
+<span class="kw">data</span> <span class="str">"aws_caller_identity"</span> <span class="str">"current"</span> {}
+
+<span class="cmt"># ─── Block Public Access ───────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_public_access_block"</span> <span class="str">"assets"</span> {
+  <span class="attr">bucket</span> = <span class="var">aws_s3_bucket.assets.id</span>
+
+  <span class="attr">block_public_acls</span>       = <span class="bool">true</span>
+  <span class="attr">block_public_policy</span>     = <span class="bool">true</span>
+  <span class="attr">ignore_public_acls</span>      = <span class="bool">true</span>
+  <span class="attr">restrict_public_buckets</span> = <span class="bool">true</span>
+}
+
+<span class="cmt"># ─── Bucket Policy: CloudFront OAI read-only ──────</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_policy"</span> <span class="str">"assets"</span> {
+  <span class="attr">bucket</span> = <span class="var">aws_s3_bucket.assets.id</span>
+
+  <span class="attr">policy</span> = <span class="fn">jsonencode</span>({
+    <span class="attr">Version</span> = <span class="str">"2012-10-17"</span>
+    <span class="attr">Statement</span> = [
+      {
+        <span class="attr">Sid</span>       = <span class="str">"AllowCloudFrontOAI"</span>
+        <span class="attr">Effect</span>    = <span class="str">"Allow"</span>
+        <span class="attr">Principal</span> = {
+          <span class="attr">AWS</span> = <span class="var">aws_cloudfront_origin_access_identity.oai.iam_arn</span>
+        }
+        <span class="attr">Action</span>   = <span class="str">"s3:GetObject"</span>
+        <span class="attr">Resource</span> = <span class="str">"${aws_s3_bucket.assets.arn}/*"</span>
+      }
+    ]
+  })
+
+  <span class="attr">depends_on</span> = [<span class="var">aws_s3_bucket_public_access_block.assets</span>]
+}
+
+<span class="cmt"># ─── Versioning (for rollback) ─────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_versioning"</span> <span class="str">"assets"</span> {
+  <span class="attr">bucket</span> = <span class="var">aws_s3_bucket.assets.id</span>
+
+  <span class="kw">versioning_configuration</span> {
+    <span class="attr">status</span> = <span class="str">"Enabled"</span>
+  }
+}
+
+<span class="cmt"># ─── Server-Side Encryption ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket_server_side_encryption_configuration"</span> <span class="str">"assets"</span> {
+  <span class="attr">bucket</span> = <span class="var">aws_s3_bucket.assets.id</span>
+
+  <span class="kw">rule</span> {
+    <span class="kw">apply_server_side_encryption_by_default</span> {
+      <span class="attr">sse_algorithm</span> = <span class="str">"AES256"</span>
+    }
+  }
+}</pre>
+  </div>
+
+  <h3>Upload Static Assets</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre><span class="cmt"># Sync local build directory to S3</span>
+aws s3 sync ./build/static s3://3tier-static-assets-123456789012/static/ \
+  --cache-control <span class="str">"public, max-age=31536000, immutable"</span> \
+  --delete
+
+<span class="cmt"># Invalidate CloudFront cache after deploy</span>
+aws cloudfront create-invalidation \
+  --distribution-id <span class="var">E1ABCDEF123456</span> \
+  --paths <span class="str">"/static/*"</span></pre>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 10: CLOUDWATCH ═══════════ -->
+<section class="tutorial-section" id="cloudwatch">
+  <div class="section-number">Section 10</div>
+  <h2>CloudWatch Monitoring</h2>
+  <p>We set up CloudWatch alarms to monitor critical metrics across the stack: EC2 CPU utilization, RDS database connections, and ALB health. Alarms trigger notifications via an SNS topic.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">monitoring.tf</span>
+    </div>
+<pre><span class="cmt"># ─── SNS Topic for Alerts ──────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_sns_topic"</span> <span class="str">"alerts"</span> {
+  <span class="attr">name</span> = <span class="str">"3tier-alerts"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"aws_sns_topic_subscription"</span> <span class="str">"email"</span> {
+  <span class="attr">topic_arn</span> = <span class="var">aws_sns_topic.alerts.arn</span>
+  <span class="attr">protocol</span>  = <span class="str">"email"</span>
+  <span class="attr">endpoint</span>  = <span class="str">"ops-team@example.com"</span>
+}
+
+<span class="cmt"># ─── EC2 CPU Utilization Alarm ─────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"ec2_cpu"</span> {
+  <span class="attr">count</span>               = <span class="num">2</span>
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-ec2-${count.index + 1}-high-cpu"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"GreaterThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">3</span>
+  <span class="attr">metric_name</span>         = <span class="str">"CPUUtilization"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/EC2"</span>
+  <span class="attr">period</span>              = <span class="num">300</span>
+  <span class="attr">statistic</span>           = <span class="str">"Average"</span>
+  <span class="attr">threshold</span>           = <span class="num">80</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"EC2 instance CPU above 80% for 15 minutes"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">InstanceId</span> = <span class="var">aws_instance.app</span>[<span class="var">count.index</span>].<span class="attr">id</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+  <span class="attr">ok_actions</span>    = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}
+
+<span class="cmt"># ─── RDS Database Connections Alarm ────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"rds_connections"</span> {
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-rds-high-connections"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"GreaterThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">2</span>
+  <span class="attr">metric_name</span>         = <span class="str">"DatabaseConnections"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/RDS"</span>
+  <span class="attr">period</span>              = <span class="num">300</span>
+  <span class="attr">statistic</span>           = <span class="str">"Average"</span>
+  <span class="attr">threshold</span>           = <span class="num">100</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"RDS connections exceed 100 (review connection pooling)"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">DBInstanceIdentifier</span> = <span class="var">aws_db_instance.mysql.identifier</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}
+
+<span class="cmt"># ─── RDS CPU Alarm ─────────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"rds_cpu"</span> {
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-rds-high-cpu"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"GreaterThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">3</span>
+  <span class="attr">metric_name</span>         = <span class="str">"CPUUtilization"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/RDS"</span>
+  <span class="attr">period</span>              = <span class="num">300</span>
+  <span class="attr">statistic</span>           = <span class="str">"Average"</span>
+  <span class="attr">threshold</span>           = <span class="num">75</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"RDS CPU above 75% for 15 minutes"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">DBInstanceIdentifier</span> = <span class="var">aws_db_instance.mysql.identifier</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}
+
+<span class="cmt"># ─── RDS Free Storage Alarm ────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"rds_storage"</span> {
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-rds-low-storage"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"LessThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">1</span>
+  <span class="attr">metric_name</span>         = <span class="str">"FreeStorageSpace"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/RDS"</span>
+  <span class="attr">period</span>              = <span class="num">300</span>
+  <span class="attr">statistic</span>           = <span class="str">"Average"</span>
+  <span class="attr">threshold</span>           = <span class="num">10737418240</span>  <span class="cmt"># 10 GB in bytes</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"RDS free storage below 10 GB"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">DBInstanceIdentifier</span> = <span class="var">aws_db_instance.mysql.identifier</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}
+
+<span class="cmt"># ─── ALB Unhealthy Host Count ──────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"alb_unhealthy"</span> {
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-alb-unhealthy-hosts"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"GreaterThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">1</span>
+  <span class="attr">metric_name</span>         = <span class="str">"UnHealthyHostCount"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/ApplicationELB"</span>
+  <span class="attr">period</span>              = <span class="num">60</span>
+  <span class="attr">statistic</span>           = <span class="str">"Maximum"</span>
+  <span class="attr">threshold</span>           = <span class="num">0</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"One or more ALB targets are unhealthy"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">TargetGroup</span>  = <span class="var">aws_lb_target_group.app.arn_suffix</span>
+    <span class="attr">LoadBalancer</span> = <span class="var">aws_lb.app.arn_suffix</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}
+
+<span class="cmt"># ─── ALB 5xx Error Rate ────────────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_cloudwatch_metric_alarm"</span> <span class="str">"alb_5xx"</span> {
+  <span class="attr">alarm_name</span>          = <span class="str">"3tier-alb-5xx-errors"</span>
+  <span class="attr">comparison_operator</span> = <span class="str">"GreaterThanThreshold"</span>
+  <span class="attr">evaluation_periods</span>  = <span class="num">2</span>
+  <span class="attr">metric_name</span>         = <span class="str">"HTTPCode_ELB_5XX_Count"</span>
+  <span class="attr">namespace</span>           = <span class="str">"AWS/ApplicationELB"</span>
+  <span class="attr">period</span>              = <span class="num">300</span>
+  <span class="attr">statistic</span>           = <span class="str">"Sum"</span>
+  <span class="attr">threshold</span>           = <span class="num">50</span>
+  <span class="attr">alarm_description</span>   = <span class="str">"ALB returning 50+ 5xx errors in 5 minutes"</span>
+  <span class="attr">treat_missing_data</span>  = <span class="str">"notBreaching"</span>
+
+  <span class="attr">dimensions</span> = {
+    <span class="attr">LoadBalancer</span> = <span class="var">aws_lb.app.arn_suffix</span>
+  }
+
+  <span class="attr">alarm_actions</span> = [<span class="var">aws_sns_topic.alerts.arn</span>]
+}</pre>
+  </div>
+
+  <div class="info-box note">
+    <strong>Note</strong>
+    <p>For memory and disk metrics on EC2, install the CloudWatch Agent. The default EC2 metrics only include CPU, network, and disk I/O. The agent configuration is handled in the EC2 user_data script above via SSM parameter <code>AmazonCloudWatch-linux</code>.</p>
+  </div>
+</section>
+
+<!-- ═══════════ SECTION 11: SECURITY ═══════════ -->
+<section class="tutorial-section" id="security">
+  <div class="section-number">Section 11</div>
+  <h2>Security</h2>
+  <p>Proper IAM roles, security group rules, and encryption ensure defense in depth. EC2 instances use an instance profile with least-privilege policies rather than static credentials.</p>
+
+  <h3>IAM Role for EC2</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">security.tf</span>
+    </div>
+<pre><span class="cmt"># ─── IAM Role for EC2 Instances ────────────────────</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role"</span> <span class="str">"ec2_role"</span> {
+  <span class="attr">name</span> = <span class="str">"3tier-ec2-role"</span>
+
+  <span class="attr">assume_role_policy</span> = <span class="fn">jsonencode</span>({
+    <span class="attr">Version</span> = <span class="str">"2012-10-17"</span>
+    <span class="attr">Statement</span> = [
+      {
+        <span class="attr">Action</span> = <span class="str">"sts:AssumeRole"</span>
+        <span class="attr">Effect</span> = <span class="str">"Allow"</span>
+        <span class="attr">Principal</span> = {
+          <span class="attr">Service</span> = <span class="str">"ec2.amazonaws.com"</span>
+        }
+      }
+    ]
+  })
+}
+
+<span class="cmt"># SSM access (for Session Manager - no SSH needed)</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy_attachment"</span> <span class="str">"ssm"</span> {
+  <span class="attr">role</span>       = <span class="var">aws_iam_role.ec2_role.name</span>
+  <span class="attr">policy_arn</span> = <span class="str">"arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"</span>
+}
+
+<span class="cmt"># CloudWatch agent</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy_attachment"</span> <span class="str">"cloudwatch"</span> {
+  <span class="attr">role</span>       = <span class="var">aws_iam_role.ec2_role.name</span>
+  <span class="attr">policy_arn</span> = <span class="str">"arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"</span>
+}
+
+<span class="cmt"># Custom policy for S3 deploy bucket access</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_role_policy"</span> <span class="str">"s3_deploy"</span> {
+  <span class="attr">name</span> = <span class="str">"s3-deploy-access"</span>
+  <span class="attr">role</span> = <span class="var">aws_iam_role.ec2_role.id</span>
+
+  <span class="attr">policy</span> = <span class="fn">jsonencode</span>({
+    <span class="attr">Version</span> = <span class="str">"2012-10-17"</span>
+    <span class="attr">Statement</span> = [
+      {
+        <span class="attr">Effect</span> = <span class="str">"Allow"</span>
+        <span class="attr">Action</span> = [
+          <span class="str">"s3:GetObject"</span>,
+          <span class="str">"s3:ListBucket"</span>
+        ]
+        <span class="attr">Resource</span> = [
+          <span class="str">"arn:aws:s3:::my-deploy-bucket"</span>,
+          <span class="str">"arn:aws:s3:::my-deploy-bucket/*"</span>
+        ]
+      }
+    ]
+  })
+}
+
+<span class="cmt"># Instance profile</span>
+<span class="kw">resource</span> <span class="str">"aws_iam_instance_profile"</span> <span class="str">"ec2_profile"</span> {
+  <span class="attr">name</span> = <span class="str">"3tier-ec2-profile"</span>
+  <span class="attr">role</span> = <span class="var">aws_iam_role.ec2_role.name</span>
+}</pre>
+  </div>
+
+  <h3>Security Group Rules Summary</h3>
+  <p>The following table summarizes all security group rules. Each layer only accepts traffic from the layer directly above it, enforcing strict network segmentation.</p>
+
+  <table class="sg-table">
+    <thead>
+      <tr>
+        <th>Security Group</th>
+        <th>Direction</th>
+        <th>Port</th>
+        <th>Source / Destination</th>
+        <th>Purpose</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:var(--blue)">ALB SG</td>
+        <td>Inbound</td>
+        <td>443</td>
+        <td>0.0.0.0/0</td>
+        <td>HTTPS from CloudFront</td>
+      </tr>
+      <tr>
+        <td style="color:var(--blue)">ALB SG</td>
+        <td>Inbound</td>
+        <td>80</td>
+        <td>0.0.0.0/0</td>
+        <td>HTTP redirect to HTTPS</td>
+      </tr>
+      <tr>
+        <td style="color:var(--blue)">EC2 SG</td>
+        <td>Inbound</td>
+        <td>8080</td>
+        <td>ALB SG</td>
+        <td>App traffic from ALB</td>
+      </tr>
+      <tr>
+        <td style="color:var(--purple)">RDS SG</td>
+        <td>Inbound</td>
+        <td>3306</td>
+        <td>EC2 SG</td>
+        <td>MySQL from app servers</td>
+      </tr>
+      <tr>
+        <td style="color:var(--red)">Redis SG</td>
+        <td>Inbound</td>
+        <td>6379</td>
+        <td>EC2 SG</td>
+        <td>Redis from app servers</td>
+      </tr>
+      <tr>
+        <td style="color:var(--muted)">All SGs</td>
+        <td>Outbound</td>
+        <td>All</td>
+        <td>0.0.0.0/0</td>
+        <td>Allow outbound</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box tip">
+    <strong>Best practices</strong>
+    <p>No SSH key pairs are configured on the EC2 instances. Use AWS Systems Manager Session Manager for shell access. This eliminates the need to manage SSH keys and open port 22, significantly reducing your attack surface. All connections are logged in CloudTrail.</p>
+  </div>
+
+  <h3>Additional Hardening</h3>
+  <ul>
+    <li>All EBS volumes and RDS storage are encrypted at rest using AWS-managed KMS keys</li>
+    <li>IMDSv2 is enforced on EC2 instances (<code>http_tokens = "required"</code>) to prevent SSRF-based credential theft</li>
+    <li>S3 bucket blocks all public access; objects are only reachable via CloudFront OAI</li>
+    <li>RDS deletion protection and final snapshots are enabled to prevent accidental data loss</li>
+    <li>ElastiCache has both at-rest and in-transit encryption enabled</li>
+    <li>ALB drops invalid HTTP header fields to mitigate request smuggling</li>
+    <li>CloudFront enforces TLS 1.2+ minimum protocol version</li>
+  </ul>
+</section>
+
+<!-- ═══════════ SECTION 12: COST ═══════════ -->
+<section class="tutorial-section" id="cost">
+  <div class="section-number">Section 12</div>
+  <h2>Cost Optimization Tips</h2>
+  <p>This architecture runs approximately $450-700/month depending on traffic. Here is a rough breakdown and tips for reducing costs.</p>
+
+  <h3>Estimated Monthly Cost</h3>
+  <table class="cost-table">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Configuration</th>
+        <th>Est. Cost</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>NAT Gateway</td>
+        <td>Single AZ + data processing</td>
+        <td>~$45</td>
+      </tr>
+      <tr>
+        <td>ALB</td>
+        <td>Application Load Balancer + LCU</td>
+        <td>~$25</td>
+      </tr>
+      <tr>
+        <td>EC2 (x2)</td>
+        <td>t3.medium On-Demand</td>
+        <td>~$61</td>
+      </tr>
+      <tr>
+        <td>RDS MySQL</td>
+        <td>db.r6g.large Multi-AZ</td>
+        <td>~$380</td>
+      </tr>
+      <tr>
+        <td>ElastiCache</td>
+        <td>cache.r6g.large (2 nodes)</td>
+        <td>~$290</td>
+      </tr>
+      <tr>
+        <td>CloudFront</td>
+        <td>PriceClass_100 + requests</td>
+        <td>~$10</td>
+      </tr>
+      <tr>
+        <td>S3</td>
+        <td>Static assets storage</td>
+        <td>~$1</td>
+      </tr>
+      <tr>
+        <td>Route 53</td>
+        <td>Hosted zone + queries</td>
+        <td>~$1</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text);font-weight:700">Total</td>
+        <td></td>
+        <td style="color:var(--aws) !important">~$813</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Optimization Strategies</h3>
+  <ul>
+    <li><strong style="color:var(--text)">Reserved Instances / Savings Plans:</strong> Commit to 1-year or 3-year terms for EC2 and RDS. Typical savings of 30-60% vs On-Demand pricing.</li>
+    <li><strong style="color:var(--text)">Right-size instances:</strong> Start with smaller instance types and scale up based on CloudWatch metrics. Use AWS Compute Optimizer for recommendations.</li>
+    <li><strong style="color:var(--text)">Use Graviton (ARM):</strong> Switch to <code>t4g</code> / <code>r7g</code> instance families for ~20% cost savings with better performance.</li>
+    <li><strong style="color:var(--text)">Single NAT Gateway:</strong> For non-critical environments, use one NAT Gateway instead of one per AZ. This saves ~$45/month per extra gateway.</li>
+    <li><strong style="color:var(--text)">ElastiCache Serverless:</strong> For variable workloads, consider ElastiCache Serverless instead of provisioned nodes to pay only for what you use.</li>
+    <li><strong style="color:var(--text)">RDS Aurora Serverless v2:</strong> If traffic is spiky, Aurora Serverless v2 scales automatically and can be cheaper than provisioned Multi-AZ.</li>
+    <li><strong style="color:var(--text)">S3 Intelligent Tiering:</strong> For assets that are accessed infrequently, enable S3 Intelligent-Tiering to automatically move objects to cheaper storage classes.</li>
+    <li><strong style="color:var(--text)">CloudFront caching:</strong> Increase cache TTLs for static content to reduce origin requests and lower ALB/EC2 load.</li>
+  </ul>
+
+  <h3>Dev/Staging Environment Savings</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Terraform</span>
+      <span class="code-file">terraform.tfvars (staging)</span>
+    </div>
+<pre><span class="cmt"># Staging overrides for cost savings</span>
+<span class="attr">environment</span>       = <span class="str">"staging"</span>
+<span class="attr">instance_type</span>     = <span class="str">"t3.small"</span>        <span class="cmt"># smaller EC2</span>
+<span class="attr">db_instance_class</span> = <span class="str">"db.t4g.medium"</span>   <span class="cmt"># burstable RDS, single-AZ</span></pre>
+  </div>
+
+  <div class="info-box tip">
+    <strong>Tip</strong>
+    <p>Tag all resources consistently and enable AWS Cost Explorer with tag-based cost allocation. This lets you break down costs per environment, per service, and per team. Set up AWS Budgets to alert you before costs exceed thresholds.</p>
+  </div>
+
+  <h3>Deploy the Infrastructure</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">bash</span>
+      <button class="code-copy" onclick="copyCode(this)">Copy</button>
+    </div>
+<pre><span class="cmt"># Review the execution plan</span>
+terraform plan -var-file=<span class="str">"terraform.tfvars"</span> -out=<span class="str">"tfplan"</span>
+
+<span class="cmt"># Apply (type 'yes' to confirm)</span>
+terraform apply <span class="str">"tfplan"</span>
+
+<span class="cmt"># View outputs</span>
+terraform output
+
+<span class="cmt"># Outputs:</span>
+<span class="cmt">#   alb_dns_name       = "3tier-alb-123456.us-east-1.elb.amazonaws.com"</span>
+<span class="cmt">#   cloudfront_domain  = "d1234abcdef.cloudfront.net"</span>
+<span class="cmt">#   rds_endpoint       = "3tier-mysql.abc123.us-east-1.rds.amazonaws.com"</span>
+<span class="cmt">#   redis_endpoint     = "3tier-redis.abc123.cache.amazonaws.com"</span></pre>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>Stefan Laza &mdash; DevOps Engineer &mdash; Built with Terraform and good intentions.</footer>
+
+<script>
+// Copy button functionality
+function copyCode(btn){
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+// TOC active state on scroll
+const tocLinks = document.querySelectorAll('.toc a');
+const sections = document.querySelectorAll('.tutorial-section');
+
+function updateToc(){
+  let current = '';
+  sections.forEach(s => {
+    const top = s.getBoundingClientRect().top;
+    if(top < 120) current = s.id;
+  });
+  tocLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', updateToc, {passive:true});
+updateToc();
+</script>
+
+</body>
+</html>

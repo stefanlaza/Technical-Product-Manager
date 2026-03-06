@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stefan Laza — DevOps Engineer</title>
+<title>Stefan Laza — Technical Delivery Lead</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -62,6 +62,16 @@ h2{font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:600;letter-spacing:-0.03em;t
 .tut-link svg{width:16px;height:16px;opacity:0.6}
 footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);border-top:1px solid var(--border)}
 
+/* CLICK-TO-HIGHLIGHT */
+.diagram svg[data-active] rect[data-node],.diagram svg[data-active] path,.diagram svg[data-active] circle[data-path-nodes],.diagram svg[data-active] line{opacity:0.08;transition:opacity 0.4s ease}
+.diagram svg[data-active] rect[data-node].hl,.diagram svg[data-active] path.hl,.diagram svg[data-active] circle[data-path-nodes].hl,.diagram svg[data-active] line.hl{opacity:1;transition:opacity 0.4s ease}
+.diagram svg[data-active] text{opacity:0.15;transition:opacity 0.4s ease}
+.diagram svg[data-active] text.hl{opacity:1;transition:opacity 0.4s ease}
+rect[data-node]{cursor:pointer}
+rect[data-node]:hover{filter:brightness(1.2)}
+.diagram .hint{position:absolute;bottom:12px;right:16px;font-size:0.6rem;color:var(--muted);opacity:0.5;pointer-events:none;transition:opacity 0.3s}
+.diagram.active .hint{opacity:0}
+
 /* RESPONSIVE */
 @media(max-width:700px){
   nav{padding:0.8rem 1rem}.nav-links{gap:0.8rem}.nav-links a{font-size:0.7rem}
@@ -91,7 +101,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 <!-- ══════════ HERO ══════════ -->
 <section id="hero">
   <div class="tag reveal" style="color:var(--green)">Available for hire</div>
-  <h1 class="reveal">DevOps<br>Engineer.</h1>
+  <h1 class="reveal">Technical<br>Delivery Lead.</h1>
   <p class="sub reveal">I design cloud architectures, automate pipelines, and keep production running. Real infrastructure — visualized.</p>
 </section>
 
@@ -103,6 +113,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--aws)">AWS — Production VPC</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 520" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -125,77 +136,77 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <text x="620" y="302" fill="rgba(167,139,250,0.5)" font-size="8" font-weight="600" letter-spacing="0.08em">PRIVATE SUBNET — AZ-2</text>
 
       <!-- USERS node -->
-      <rect x="20" y="135" width="100" height="60" rx="14" fill="#111118" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+      <rect x="20" y="135" width="100" height="60" rx="14" fill="#111118" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" data-node="users"/>
       <text x="70" y="165" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Users</text>
       <text x="70" y="180" text-anchor="middle" fill="#6e6e80" font-size="7" font-weight="600">HTTPS</text>
 
       <!-- Route 53 -->
-      <rect x="295" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5"/>
+      <rect x="295" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5" data-node="r53"/>
       <text x="340" y="148" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="700">Route 53</text>
       <text x="340" y="163" text-anchor="middle" fill="#6e6e80" font-size="7">DNS</text>
 
       <!-- CloudFront -->
-      <rect x="430" y="120" width="100" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5"/>
+      <rect x="430" y="120" width="100" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5" data-node="cf"/>
       <text x="480" y="148" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="700">CloudFront</text>
       <text x="480" y="163" text-anchor="middle" fill="#6e6e80" font-size="7">CDN Edge</text>
 
       <!-- ALB -->
-      <rect x="430" y="210" width="100" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="430" y="210" width="100" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="alb"/>
       <text x="480" y="236" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">ALB</text>
       <text x="480" y="249" text-anchor="middle" fill="#6e6e80" font-size="7">Load Balancer</text>
 
       <!-- EC2 instances -->
-      <rect x="310" y="320" width="90" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="310" y="320" width="90" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="ec2a"/>
       <text x="355" y="348" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">EC2</text>
       <text x="355" y="363" text-anchor="middle" fill="#6e6e80" font-size="7">App Server 1</text>
 
-      <rect x="630" y="320" width="90" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="630" y="320" width="90" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="ec2b"/>
       <text x="675" y="348" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">EC2</text>
       <text x="675" y="363" text-anchor="middle" fill="#6e6e80" font-size="7">App Server 2</text>
 
       <!-- RDS -->
-      <rect x="430" y="410" width="100" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="430" y="410" width="100" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="rds"/>
       <text x="480" y="438" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">RDS</text>
       <text x="480" y="453" text-anchor="middle" fill="#6e6e80" font-size="7">Multi-AZ MySQL</text>
 
       <!-- ElastiCache -->
-      <rect x="750" y="410" width="100" height="56" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5"/>
+      <rect x="750" y="410" width="100" height="56" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5" data-node="redis"/>
       <text x="800" y="438" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700">ElastiCache</text>
       <text x="800" y="453" text-anchor="middle" fill="#6e6e80" font-size="7">Redis Cluster</text>
 
       <!-- S3 -->
-      <rect x="630" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="630" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="s3"/>
       <text x="675" y="148" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">S3</text>
       <text x="675" y="163" text-anchor="middle" fill="#6e6e80" font-size="7">Static Assets</text>
 
       <!-- CloudWatch -->
-      <rect x="800" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5"/>
+      <rect x="800" y="120" width="90" height="56" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5" data-node="cw"/>
       <text x="845" y="148" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700">CloudWatch</text>
       <text x="845" y="163" text-anchor="middle" fill="#6e6e80" font-size="7">Monitoring</text>
 
       <!-- Connection paths -->
-      <path d="M120,165 C180,165 240,148 295,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p1"/>
-      <path d="M385,148 L430,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p2"/>
-      <path d="M480,176 L480,210" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p3"/>
-      <path d="M480,260 C480,290 400,320 400,348" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p4"/>
-      <path d="M480,260 C480,290 620,320 630,348" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p5"/>
-      <path d="M355,376 C355,410 430,430 430,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p6"/>
-      <path d="M675,376 C675,410 530,430 530,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p7"/>
-      <path d="M675,376 L750,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p8"/>
-      <path d="M530,148 L630,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p9"/>
-      <path d="M720,148 L800,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="4,3" id="aws-p10"/>
+      <path d="M120,165 C180,165 240,148 295,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p1" data-path-nodes="users r53"/>
+      <path d="M385,148 L430,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p2" data-path-nodes="r53 cf"/>
+      <path d="M480,176 L480,210" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p3" data-path-nodes="cf alb"/>
+      <path d="M480,260 C480,290 400,320 400,348" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p4" data-path-nodes="alb ec2a"/>
+      <path d="M480,260 C480,290 620,320 630,348" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p5" data-path-nodes="alb ec2b"/>
+      <path d="M355,376 C355,410 430,430 430,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p6" data-path-nodes="ec2a rds"/>
+      <path d="M675,376 C675,410 530,430 530,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p7" data-path-nodes="ec2b rds"/>
+      <path d="M675,376 L750,438" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p8" data-path-nodes="ec2b redis"/>
+      <path d="M530,148 L630,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="aws-p9" data-path-nodes="cf s3"/>
+      <path d="M720,148 L800,148" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="4,3" id="aws-p10" data-path-nodes="s3 cw"/>
 
       <!-- Animated packets -->
-      <circle r="4" fill="#ff9900" filter="url(#g1)"><animateMotion dur="2.5s" repeatCount="indefinite"><mpath href="#aws-p1"/></animateMotion></circle>
-      <circle r="3.5" fill="#ff9900" filter="url(#g1)"><animateMotion dur="1s" repeatCount="indefinite" begin="0.3s"><mpath href="#aws-p2"/></animateMotion></circle>
-      <circle r="3.5" fill="#4a9eff" filter="url(#g1)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="0.6s"><mpath href="#aws-p3"/></animateMotion></circle>
-      <circle r="4" fill="#4a9eff" filter="url(#g1)"><animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath href="#aws-p4"/></animateMotion></circle>
-      <circle r="4" fill="#4a9eff" filter="url(#g1)"><animateMotion dur="2s" repeatCount="indefinite" begin="1.5s"><mpath href="#aws-p5"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g1)"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#aws-p6"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g1)"><animateMotion dur="2s" repeatCount="indefinite" begin="2.4s"><mpath href="#aws-p7"/></animateMotion></circle>
-      <circle r="3" fill="#f87171" filter="url(#g1)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.8s"><mpath href="#aws-p8"/></animateMotion></circle>
-      <circle r="3" fill="#34d399" filter="url(#g1)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.8s"><mpath href="#aws-p9"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g1)"><animateMotion dur="2s" repeatCount="indefinite" begin="3s"><mpath href="#aws-p10"/></animateMotion></circle>
+      <circle r="4" fill="#ff9900" filter="url(#g1)" data-path-nodes="users r53"><animateMotion dur="2.5s" repeatCount="indefinite"><mpath href="#aws-p1"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g1)" data-path-nodes="r53 cf"><animateMotion dur="1s" repeatCount="indefinite" begin="0.3s"><mpath href="#aws-p2"/></animateMotion></circle>
+      <circle r="3.5" fill="#4a9eff" filter="url(#g1)" data-path-nodes="cf alb"><animateMotion dur="1.2s" repeatCount="indefinite" begin="0.6s"><mpath href="#aws-p3"/></animateMotion></circle>
+      <circle r="4" fill="#4a9eff" filter="url(#g1)" data-path-nodes="alb ec2a"><animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath href="#aws-p4"/></animateMotion></circle>
+      <circle r="4" fill="#4a9eff" filter="url(#g1)" data-path-nodes="alb ec2b"><animateMotion dur="2s" repeatCount="indefinite" begin="1.5s"><mpath href="#aws-p5"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g1)" data-path-nodes="ec2a rds"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#aws-p6"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g1)" data-path-nodes="ec2b rds"><animateMotion dur="2s" repeatCount="indefinite" begin="2.4s"><mpath href="#aws-p7"/></animateMotion></circle>
+      <circle r="3" fill="#f87171" filter="url(#g1)" data-path-nodes="ec2b redis"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.8s"><mpath href="#aws-p8"/></animateMotion></circle>
+      <circle r="3" fill="#34d399" filter="url(#g1)" data-path-nodes="cf s3"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.8s"><mpath href="#aws-p9"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g1)" data-path-nodes="s3 cw"><animateMotion dur="2s" repeatCount="indefinite" begin="3s"><mpath href="#aws-p10"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/aws-3tier.html" class="tut-link reveal">View Full Tutorial — AWS 3-Tier Setup Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -209,6 +220,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--indigo)">Cisco — 3-Tier Campus Network</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 560" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -227,25 +239,25 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
       <!-- EDGE LAYER -->
       <!-- Internet -->
-      <rect x="380" y="30" width="200" height="50" rx="12" fill="#111118" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/>
+      <rect x="380" y="30" width="200" height="50" rx="12" fill="#111118" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" data-node="isp"/>
       <text x="480" y="56" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">Internet / ISP</text>
       <text x="480" y="70" text-anchor="middle" fill="#6e6e80" font-size="7">BGP Peering</text>
 
       <!-- Firewalls -->
-      <rect x="280" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5"/>
+      <rect x="280" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5" data-node="fw1"/>
       <text x="340" y="126" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700">ASA 5525-X</text>
       <text x="340" y="140" text-anchor="middle" fill="#6e6e80" font-size="7">Firewall — Active</text>
 
-      <rect x="560" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5"/>
+      <rect x="560" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5" data-node="fw2"/>
       <text x="620" y="126" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700">ASA 5525-X</text>
       <text x="620" y="140" text-anchor="middle" fill="#6e6e80" font-size="7">Firewall — Standby</text>
 
       <!-- CORE LAYER -->
-      <rect x="220" y="180" width="160" height="56" rx="14" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="220" y="180" width="160" height="56" rx="14" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="core1"/>
       <text x="300" y="208" text-anchor="middle" fill="#818cf8" font-size="10" font-weight="700">Cat 9500</text>
       <text x="300" y="223" text-anchor="middle" fill="#6e6e80" font-size="7">Core Switch 1 — L3</text>
 
-      <rect x="580" y="180" width="160" height="56" rx="14" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="580" y="180" width="160" height="56" rx="14" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="core2"/>
       <text x="660" y="208" text-anchor="middle" fill="#818cf8" font-size="10" font-weight="700">Cat 9500</text>
       <text x="660" y="223" text-anchor="middle" fill="#6e6e80" font-size="7">Core Switch 2 — L3</text>
 
@@ -253,77 +265,77 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <line x1="380" y1="208" x2="580" y2="208" stroke="rgba(129,140,248,0.15)" stroke-width="2"/>
 
       <!-- DISTRIBUTION LAYER -->
-      <rect x="100" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+      <rect x="100" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(34,211,238,0.3)" stroke-width="1.5" data-node="dist1"/>
       <text x="170" y="326" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="700">Cat 9300</text>
       <text x="170" y="340" text-anchor="middle" fill="#6e6e80" font-size="7">Dist-SW1 — VLAN 10,20</text>
 
-      <rect x="400" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+      <rect x="400" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(34,211,238,0.3)" stroke-width="1.5" data-node="dist2"/>
       <text x="470" y="326" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="700">Cat 9300</text>
       <text x="470" y="340" text-anchor="middle" fill="#6e6e80" font-size="7">Dist-SW2 — VLAN 30,40</text>
 
-      <rect x="710" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+      <rect x="710" y="300" width="140" height="52" rx="12" fill="#111118" stroke="rgba(255,153,0,0.25)" stroke-width="1.5" data-node="dist3"/>
       <text x="780" y="326" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="700">Cat 9300</text>
       <text x="780" y="340" text-anchor="middle" fill="#6e6e80" font-size="7">Dist-SW3 — VLAN 50</text>
 
       <!-- ACCESS LAYER -->
-      <rect x="70" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(52,211,153,0.25)" stroke-width="1"/>
+      <rect x="70" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(52,211,153,0.25)" stroke-width="1" data-node="v10"/>
       <text x="120" y="463" text-anchor="middle" fill="#34d399" font-size="9" font-weight="600">VLAN 10</text>
       <text x="120" y="476" text-anchor="middle" fill="#6e6e80" font-size="7">Servers</text>
 
-      <rect x="200" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1"/>
+      <rect x="200" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1" data-node="v20"/>
       <text x="250" y="463" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="600">VLAN 20</text>
       <text x="250" y="476" text-anchor="middle" fill="#6e6e80" font-size="7">DMZ</text>
 
-      <rect x="370" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(74,158,255,0.25)" stroke-width="1"/>
+      <rect x="370" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(74,158,255,0.25)" stroke-width="1" data-node="v30"/>
       <text x="420" y="463" text-anchor="middle" fill="#4a9eff" font-size="9" font-weight="600">VLAN 30</text>
       <text x="420" y="476" text-anchor="middle" fill="#6e6e80" font-size="7">Workstations</text>
 
-      <rect x="500" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(167,139,250,0.25)" stroke-width="1"/>
+      <rect x="500" y="440" width="100" height="46" rx="10" fill="#111118" stroke="rgba(167,139,250,0.25)" stroke-width="1" data-node="v40"/>
       <text x="550" y="463" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="600">VLAN 40</text>
       <text x="550" y="476" text-anchor="middle" fill="#6e6e80" font-size="7">VoIP</text>
 
-      <rect x="710" y="440" width="140" height="46" rx="10" fill="#111118" stroke="rgba(255,153,0,0.25)" stroke-width="1"/>
+      <rect x="710" y="440" width="140" height="46" rx="10" fill="#111118" stroke="rgba(255,153,0,0.25)" stroke-width="1" data-node="v50"/>
       <text x="780" y="463" text-anchor="middle" fill="#ff9900" font-size="9" font-weight="600">VLAN 50</text>
       <text x="780" y="476" text-anchor="middle" fill="#6e6e80" font-size="7">Management / OOB</text>
 
       <!-- WLC + AP -->
-      <rect x="820" y="510" width="100" height="40" rx="10" fill="#111118" stroke="rgba(52,211,153,0.2)" stroke-width="1"/>
+      <rect x="820" y="510" width="100" height="40" rx="10" fill="#111118" stroke="rgba(52,211,153,0.2)" stroke-width="1" data-node="wlc"/>
       <text x="870" y="533" text-anchor="middle" fill="#34d399" font-size="8" font-weight="600">WLC + APs</text>
 
       <!-- Connection paths -->
-      <path d="M480,80 C480,90 340,95 340,100" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p1"/>
-      <path d="M480,80 C480,90 620,95 620,100" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p2"/>
-      <path d="M340,150 L300,180" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p3"/>
-      <path d="M620,150 L660,180" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p4"/>
-      <path d="M340,150 L660,180" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p3b"/>
-      <path d="M620,150 L300,180" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p4b"/>
-      <path d="M300,236 L170,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p5"/>
-      <path d="M300,236 C350,260 420,280 470,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p6"/>
-      <path d="M660,236 C610,260 530,280 470,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p7"/>
-      <path d="M660,236 L780,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p8"/>
-      <path d="M170,352 L120,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p9"/>
-      <path d="M170,352 L250,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p10"/>
-      <path d="M470,352 L420,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p11"/>
-      <path d="M470,352 L550,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p12"/>
-      <path d="M780,352 L780,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p13"/>
-      <path d="M780,486 L870,510" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p14"/>
+      <path d="M480,80 C480,90 340,95 340,100" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p1" data-path-nodes="isp fw1"/>
+      <path d="M480,80 C480,90 620,95 620,100" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p2" data-path-nodes="isp fw2"/>
+      <path d="M340,150 L300,180" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p3" data-path-nodes="fw1 core1"/>
+      <path d="M620,150 L660,180" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p4" data-path-nodes="fw2 core2"/>
+      <path d="M340,150 L660,180" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p3b" data-path-nodes="fw1 core2"/>
+      <path d="M620,150 L300,180" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p4b" data-path-nodes="fw2 core1"/>
+      <path d="M300,236 L170,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p5" data-path-nodes="core1 dist1"/>
+      <path d="M300,236 C350,260 420,280 470,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p6" data-path-nodes="core1 dist2"/>
+      <path d="M660,236 C610,260 530,280 470,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p7" data-path-nodes="core2 dist2"/>
+      <path d="M660,236 L780,300" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p8" data-path-nodes="core2 dist3"/>
+      <path d="M170,352 L120,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p9" data-path-nodes="dist1 v10"/>
+      <path d="M170,352 L250,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p10" data-path-nodes="dist1 v20"/>
+      <path d="M470,352 L420,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p11" data-path-nodes="dist2 v30"/>
+      <path d="M470,352 L550,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p12" data-path-nodes="dist2 v40"/>
+      <path d="M780,352 L780,440" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="c-p13" data-path-nodes="dist3 v50"/>
+      <path d="M780,486 L870,510" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="c-p14" data-path-nodes="v50 wlc"/>
 
       <!-- Animated packets -->
-      <circle r="4" fill="#f87171" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#c-p1"/></animateMotion></circle>
-      <circle r="4" fill="#f87171" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.8s"><mpath href="#c-p2"/></animateMotion></circle>
-      <circle r="3.5" fill="#818cf8" filter="url(#g2)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="0.3s"><mpath href="#c-p3"/></animateMotion></circle>
-      <circle r="3.5" fill="#818cf8" filter="url(#g2)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="1s"><mpath href="#c-p4"/></animateMotion></circle>
-      <circle r="3" fill="rgba(129,140,248,0.5)" filter="url(#g2)"><animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath href="#c-p3b"/></animateMotion></circle>
-      <circle r="3.5" fill="#22d3ee" filter="url(#g2)"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.5s"><mpath href="#c-p5"/></animateMotion></circle>
-      <circle r="3.5" fill="#22d3ee" filter="url(#g2)"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#c-p6"/></animateMotion></circle>
-      <circle r="3.5" fill="#22d3ee" filter="url(#g2)"><animateMotion dur="2s" repeatCount="indefinite" begin="2.5s"><mpath href="#c-p7"/></animateMotion></circle>
-      <circle r="3.5" fill="#22d3ee" filter="url(#g2)"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s"><mpath href="#c-p8"/></animateMotion></circle>
-      <circle r="3" fill="#34d399" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#c-p9"/></animateMotion></circle>
-      <circle r="3" fill="#fb923c" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.3s"><mpath href="#c-p10"/></animateMotion></circle>
-      <circle r="3" fill="#4a9eff" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="2.8s"><mpath href="#c-p11"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g2)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#c-p12"/></animateMotion></circle>
-      <circle r="3" fill="#ff9900" filter="url(#g2)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2.2s"><mpath href="#c-p13"/></animateMotion></circle>
-      <circle r="2.5" fill="#34d399" filter="url(#g2)"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#c-p14"/></animateMotion></circle>
+      <circle r="4" fill="#f87171" filter="url(#g2)" data-path-nodes="isp fw1"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#c-p1"/></animateMotion></circle>
+      <circle r="4" fill="#f87171" filter="url(#g2)" data-path-nodes="isp fw2"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.8s"><mpath href="#c-p2"/></animateMotion></circle>
+      <circle r="3.5" fill="#818cf8" filter="url(#g2)" data-path-nodes="fw1 core1"><animateMotion dur="1.2s" repeatCount="indefinite" begin="0.3s"><mpath href="#c-p3"/></animateMotion></circle>
+      <circle r="3.5" fill="#818cf8" filter="url(#g2)" data-path-nodes="fw2 core2"><animateMotion dur="1.2s" repeatCount="indefinite" begin="1s"><mpath href="#c-p4"/></animateMotion></circle>
+      <circle r="3" fill="rgba(129,140,248,0.5)" filter="url(#g2)" data-path-nodes="fw1 core2"><animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath href="#c-p3b"/></animateMotion></circle>
+      <circle r="3.5" fill="#22d3ee" filter="url(#g2)" data-path-nodes="core1 dist1"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.5s"><mpath href="#c-p5"/></animateMotion></circle>
+      <circle r="3.5" fill="#22d3ee" filter="url(#g2)" data-path-nodes="core1 dist2"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#c-p6"/></animateMotion></circle>
+      <circle r="3.5" fill="#22d3ee" filter="url(#g2)" data-path-nodes="core2 dist2"><animateMotion dur="2s" repeatCount="indefinite" begin="2.5s"><mpath href="#c-p7"/></animateMotion></circle>
+      <circle r="3.5" fill="#22d3ee" filter="url(#g2)" data-path-nodes="core2 dist3"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.2s"><mpath href="#c-p8"/></animateMotion></circle>
+      <circle r="3" fill="#34d399" filter="url(#g2)" data-path-nodes="dist1 v10"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#c-p9"/></animateMotion></circle>
+      <circle r="3" fill="#fb923c" filter="url(#g2)" data-path-nodes="dist1 v20"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.3s"><mpath href="#c-p10"/></animateMotion></circle>
+      <circle r="3" fill="#4a9eff" filter="url(#g2)" data-path-nodes="dist2 v30"><animateMotion dur="1.5s" repeatCount="indefinite" begin="2.8s"><mpath href="#c-p11"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g2)" data-path-nodes="dist2 v40"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#c-p12"/></animateMotion></circle>
+      <circle r="3" fill="#ff9900" filter="url(#g2)" data-path-nodes="dist3 v50"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2.2s"><mpath href="#c-p13"/></animateMotion></circle>
+      <circle r="2.5" fill="#34d399" filter="url(#g2)" data-path-nodes="v50 wlc"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#c-p14"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/cisco-network.html" class="tut-link reveal">View Full Tutorial — Cisco Network Setup Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -337,6 +349,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--green)">ETL — Daily Data Ingestion Pipeline</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 420" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -356,83 +369,83 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <text x="770" y="61" text-anchor="middle" fill="#34d399" font-size="8" font-weight="700" letter-spacing="0.1em">LOAD</text>
 
       <!-- EXTRACT: Data Sources -->
-      <rect x="50" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="50" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="eapi"/>
       <text x="110" y="126" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="700">REST APIs</text>
       <text x="110" y="140" text-anchor="middle" fill="#6e6e80" font-size="7">12 Endpoints</text>
 
-      <rect x="50" y="175" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="50" y="175" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="epg"/>
       <text x="110" y="201" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="700">PostgreSQL</text>
       <text x="110" y="215" text-anchor="middle" fill="#6e6e80" font-size="7">Source DB</text>
 
-      <rect x="50" y="250" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="50" y="250" width="120" height="50" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="esftp"/>
       <text x="110" y="276" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="700">SFTP / CSV</text>
       <text x="110" y="290" text-anchor="middle" fill="#6e6e80" font-size="7">File Drops</text>
 
       <!-- STAGING: S3 Raw -->
-      <rect x="270" y="140" width="120" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="270" y="140" width="120" height="56" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="eraw"/>
       <text x="330" y="168" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">S3 Bucket</text>
       <text x="330" y="183" text-anchor="middle" fill="#6e6e80" font-size="7">s3://raw-data/</text>
 
-      <rect x="270" y="225" width="120" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="270" y="225" width="120" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="eval"/>
       <text x="330" y="251" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">Schema</text>
       <text x="330" y="265" text-anchor="middle" fill="#6e6e80" font-size="7">Validation</text>
 
       <!-- TRANSFORM -->
-      <rect x="490" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="490" y="100" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="eglue"/>
       <text x="550" y="126" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Glue Job</text>
       <text x="550" y="140" text-anchor="middle" fill="#6e6e80" font-size="7">PySpark Clean</text>
 
-      <rect x="490" y="175" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="490" y="175" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="ededup"/>
       <text x="550" y="201" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Deduplicate</text>
       <text x="550" y="215" text-anchor="middle" fill="#6e6e80" font-size="7">Hash Matching</text>
 
-      <rect x="490" y="250" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="490" y="250" width="120" height="50" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="eenrich"/>
       <text x="550" y="276" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Enrich</text>
       <text x="550" y="290" text-anchor="middle" fill="#6e6e80" font-size="7">Join + Aggregate</text>
 
       <!-- LOAD -->
-      <rect x="710" y="100" width="120" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="710" y="100" width="120" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="eproc"/>
       <text x="770" y="128" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">S3 Bucket</text>
       <text x="770" y="143" text-anchor="middle" fill="#6e6e80" font-size="7">s3://processed/</text>
 
-      <rect x="710" y="190" width="120" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="710" y="190" width="120" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="ers"/>
       <text x="770" y="218" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">Redshift</text>
       <text x="770" y="233" text-anchor="middle" fill="#6e6e80" font-size="7">COPY Command</text>
 
       <!-- DQ + Alerts -->
-      <rect x="600" y="340" width="120" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="600" y="340" width="120" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="ecw"/>
       <text x="660" y="363" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">CloudWatch</text>
       <text x="660" y="376" text-anchor="middle" fill="#6e6e80" font-size="7">Alerts + Logs</text>
 
-      <rect x="760" y="340" width="100" height="46" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1"/>
+      <rect x="760" y="340" width="100" height="46" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1" data-node="esns"/>
       <text x="810" y="363" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="600">SNS</text>
       <text x="810" y="376" text-anchor="middle" fill="#6e6e80" font-size="7">Failure Alerts</text>
 
       <!-- Connection paths -->
-      <path d="M170,125 C210,125 230,160 270,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p1"/>
-      <path d="M170,200 C210,200 230,170 270,168" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p2"/>
-      <path d="M170,275 C210,275 230,175 270,170" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p3"/>
-      <path d="M330,196 L330,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p4"/>
-      <path d="M390,250 C420,220 460,125 490,125" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p5"/>
-      <path d="M550,150 L550,175" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p6"/>
-      <path d="M550,225 L550,250" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p7"/>
-      <path d="M610,125 L710,128" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p8"/>
-      <path d="M770,156 L770,190" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p9"/>
-      <path d="M550,300 C580,340 620,350 600,360" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="e-p10"/>
-      <path d="M720,363 L760,363" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="e-p11"/>
+      <path d="M170,125 C210,125 230,160 270,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p1" data-path-nodes="eapi eraw"/>
+      <path d="M170,200 C210,200 230,170 270,168" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p2" data-path-nodes="epg eraw"/>
+      <path d="M170,275 C210,275 230,175 270,170" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p3" data-path-nodes="esftp eraw"/>
+      <path d="M330,196 L330,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p4" data-path-nodes="eraw eval"/>
+      <path d="M390,250 C420,220 460,125 490,125" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p5" data-path-nodes="eval eglue"/>
+      <path d="M550,150 L550,175" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p6" data-path-nodes="eglue ededup"/>
+      <path d="M550,225 L550,250" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p7" data-path-nodes="ededup eenrich"/>
+      <path d="M610,125 L710,128" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p8" data-path-nodes="eenrich eproc"/>
+      <path d="M770,156 L770,190" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="e-p9" data-path-nodes="eproc ers"/>
+      <path d="M550,300 C580,340 620,350 600,360" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="e-p10" data-path-nodes="eenrich ecw"/>
+      <path d="M720,363 L760,363" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="e-p11" data-path-nodes="ecw esns"/>
 
       <!-- Animated packets -->
-      <circle r="4" fill="#fb923c" filter="url(#g3)"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e-p1"/></animateMotion></circle>
-      <circle r="4" fill="#fb923c" filter="url(#g3)"><animateMotion dur="2s" repeatCount="indefinite" begin="0.7s"><mpath href="#e-p2"/></animateMotion></circle>
-      <circle r="4" fill="#fb923c" filter="url(#g3)"><animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath href="#e-p3"/></animateMotion></circle>
-      <circle r="3" fill="#4a9eff" filter="url(#g3)"><animateMotion dur="1s" repeatCount="indefinite" begin="2.5s"><mpath href="#e-p4"/></animateMotion></circle>
-      <circle r="4" fill="#4a9eff" filter="url(#g3)"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#e-p5"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g3)"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#e-p6"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g3)"><animateMotion dur="1s" repeatCount="indefinite" begin="4.5s"><mpath href="#e-p7"/></animateMotion></circle>
-      <circle r="4" fill="#34d399" filter="url(#g3)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="5s"><mpath href="#e-p8"/></animateMotion></circle>
-      <circle r="3.5" fill="#34d399" filter="url(#g3)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="5.5s"><mpath href="#e-p9"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g3)"><animateMotion dur="2s" repeatCount="indefinite" begin="3s"><mpath href="#e-p10"/></animateMotion></circle>
-      <circle r="2.5" fill="#fb923c" filter="url(#g3)"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#e-p11"/></animateMotion></circle>
+      <circle r="4" fill="#fb923c" filter="url(#g3)" data-path-nodes="eapi eraw"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#e-p1"/></animateMotion></circle>
+      <circle r="4" fill="#fb923c" filter="url(#g3)" data-path-nodes="epg eraw"><animateMotion dur="2s" repeatCount="indefinite" begin="0.7s"><mpath href="#e-p2"/></animateMotion></circle>
+      <circle r="4" fill="#fb923c" filter="url(#g3)" data-path-nodes="esftp eraw"><animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath href="#e-p3"/></animateMotion></circle>
+      <circle r="3" fill="#4a9eff" filter="url(#g3)" data-path-nodes="eraw eval"><animateMotion dur="1s" repeatCount="indefinite" begin="2.5s"><mpath href="#e-p4"/></animateMotion></circle>
+      <circle r="4" fill="#4a9eff" filter="url(#g3)" data-path-nodes="eval eglue"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#e-p5"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g3)" data-path-nodes="eglue ededup"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#e-p6"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g3)" data-path-nodes="ededup eenrich"><animateMotion dur="1s" repeatCount="indefinite" begin="4.5s"><mpath href="#e-p7"/></animateMotion></circle>
+      <circle r="4" fill="#34d399" filter="url(#g3)" data-path-nodes="eenrich eproc"><animateMotion dur="1.5s" repeatCount="indefinite" begin="5s"><mpath href="#e-p8"/></animateMotion></circle>
+      <circle r="3.5" fill="#34d399" filter="url(#g3)" data-path-nodes="eproc ers"><animateMotion dur="1.2s" repeatCount="indefinite" begin="5.5s"><mpath href="#e-p9"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g3)" data-path-nodes="eenrich ecw"><animateMotion dur="2s" repeatCount="indefinite" begin="3s"><mpath href="#e-p10"/></animateMotion></circle>
+      <circle r="2.5" fill="#fb923c" filter="url(#g3)" data-path-nodes="ecw esns"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#e-p11"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/etl-pipeline.html" class="tut-link reveal">View Full Tutorial — ETL Pipeline Setup Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -446,37 +459,38 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--cyan)">AWS Batch — Nightly Processing Pipeline</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 400" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g4" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
 
       <!-- TRIGGER -->
-      <rect x="30" y="140" width="110" height="56" rx="14" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="30" y="140" width="110" height="56" rx="14" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="beb"/>
       <text x="85" y="168" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="700">EventBridge</text>
       <text x="85" y="183" text-anchor="middle" fill="#6e6e80" font-size="7">cron(0 2 * * ? *)</text>
 
       <!-- STEP FUNCTIONS -->
-      <rect x="190" y="120" width="120" height="90" rx="14" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="190" y="120" width="120" height="90" rx="14" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="bsfn"/>
       <text x="250" y="158" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Step</text>
       <text x="250" y="172" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Functions</text>
       <text x="250" y="198" text-anchor="middle" fill="#6e6e80" font-size="7">Orchestrator</text>
 
       <!-- LAMBDA VALIDATE -->
-      <rect x="360" y="90" width="110" height="50" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5"/>
+      <rect x="360" y="90" width="110" height="50" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5" data-node="blam"/>
       <text x="415" y="116" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="700">Lambda</text>
       <text x="415" y="130" text-anchor="middle" fill="#6e6e80" font-size="7">Validate Input</text>
 
       <!-- BATCH COMPUTE -->
-      <rect x="520" y="55" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="520" y="55" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="bj1"/>
       <text x="585" y="81" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">Batch Job 1</text>
       <text x="585" y="96" text-anchor="middle" fill="#6e6e80" font-size="7">Fargate — Report Gen</text>
 
-      <rect x="520" y="130" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="520" y="130" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="bj2"/>
       <text x="585" y="156" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">Batch Job 2</text>
       <text x="585" y="171" text-anchor="middle" fill="#6e6e80" font-size="7">Fargate — Aggregation</text>
 
-      <rect x="520" y="205" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="520" y="205" width="130" height="52" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="bj3"/>
       <text x="585" y="231" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">Batch Job 3</text>
       <text x="585" y="246" text-anchor="middle" fill="#6e6e80" font-size="7">Fargate — Cleanup</text>
 
@@ -485,55 +499,55 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <text x="498" y="150" fill="rgba(74,158,255,0.2)" font-size="7" font-weight="600" letter-spacing="0.06em">PARALLEL</text>
 
       <!-- OUTPUT S3 -->
-      <rect x="700" y="100" width="110" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="700" y="100" width="110" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="bs3"/>
       <text x="755" y="128" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">S3 Bucket</text>
       <text x="755" y="143" text-anchor="middle" fill="#6e6e80" font-size="7">s3://batch-output/</text>
 
       <!-- DynamoDB state -->
-      <rect x="700" y="190" width="110" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.25)" stroke-width="1"/>
+      <rect x="700" y="190" width="110" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.25)" stroke-width="1" data-node="bddb"/>
       <text x="755" y="216" text-anchor="middle" fill="#4a9eff" font-size="9" font-weight="600">DynamoDB</text>
       <text x="755" y="230" text-anchor="middle" fill="#6e6e80" font-size="7">Job State Table</text>
 
       <!-- SNS -->
-      <rect x="860" y="100" width="80" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5"/>
+      <rect x="860" y="100" width="80" height="50" rx="12" fill="#111118" stroke="rgba(248,113,113,0.3)" stroke-width="1.5" data-node="bsns"/>
       <text x="900" y="126" text-anchor="middle" fill="#f87171" font-size="10" font-weight="700">SNS</text>
       <text x="900" y="140" text-anchor="middle" fill="#6e6e80" font-size="7">Notify</text>
 
       <!-- CloudWatch Logs -->
-      <rect x="360" y="300" width="120" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="360" y="300" width="120" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="bcw"/>
       <text x="420" y="323" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">CloudWatch</text>
       <text x="420" y="336" text-anchor="middle" fill="#6e6e80" font-size="7">Logs + Metrics</text>
 
       <!-- Dead Letter Queue -->
-      <rect x="540" y="300" width="110" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="540" y="300" width="110" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="bdlq"/>
       <text x="595" y="323" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">SQS DLQ</text>
       <text x="595" y="336" text-anchor="middle" fill="#6e6e80" font-size="7">Failed Jobs</text>
 
       <!-- Paths -->
-      <path d="M140,168 L190,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p1"/>
-      <path d="M310,155 C330,140 350,120 360,115" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p2"/>
-      <path d="M470,105 C490,90 510,82 520,81" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p3"/>
-      <path d="M470,115 C490,130 510,145 520,156" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p4"/>
-      <path d="M470,120 C490,170 510,210 520,231" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p5"/>
-      <path d="M650,81 L700,118" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p6"/>
-      <path d="M650,156 L700,130" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p7"/>
-      <path d="M650,231 C670,220 690,200 700,215" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p8"/>
-      <path d="M810,128 L860,125" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p9"/>
-      <path d="M585,257 L585,300" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="b-p10"/>
-      <path d="M415,140 L415,300" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="b-p11"/>
+      <path d="M140,168 L190,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p1" data-path-nodes="beb bsfn"/>
+      <path d="M310,155 C330,140 350,120 360,115" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p2" data-path-nodes="bsfn blam"/>
+      <path d="M470,105 C490,90 510,82 520,81" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p3" data-path-nodes="blam bj1"/>
+      <path d="M470,115 C490,130 510,145 520,156" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p4" data-path-nodes="blam bj2"/>
+      <path d="M470,120 C490,170 510,210 520,231" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p5" data-path-nodes="blam bj3"/>
+      <path d="M650,81 L700,118" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p6" data-path-nodes="bj1 bs3"/>
+      <path d="M650,156 L700,130" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p7" data-path-nodes="bj2 bs3"/>
+      <path d="M650,231 C670,220 690,200 700,215" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p8" data-path-nodes="bj3 bddb"/>
+      <path d="M810,128 L860,125" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="b-p9" data-path-nodes="bs3 bsns"/>
+      <path d="M585,257 L585,300" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="b-p10" data-path-nodes="bj3 bdlq"/>
+      <path d="M415,140 L415,300" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="b-p11" data-path-nodes="blam bcw"/>
 
       <!-- Animated packets -->
-      <circle r="4" fill="#fb923c" filter="url(#g4)"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#b-p1"/></animateMotion></circle>
-      <circle r="4" fill="#a78bfa" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.5s"><mpath href="#b-p2"/></animateMotion></circle>
-      <circle r="3.5" fill="#ff9900" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#b-p3"/></animateMotion></circle>
-      <circle r="3.5" fill="#ff9900" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.3s"><mpath href="#b-p4"/></animateMotion></circle>
-      <circle r="3.5" fill="#ff9900" filter="url(#g4)"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.6s"><mpath href="#b-p5"/></animateMotion></circle>
-      <circle r="4" fill="#4a9eff" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="2.5s"><mpath href="#b-p6"/></animateMotion></circle>
-      <circle r="4" fill="#4a9eff" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#b-p7"/></animateMotion></circle>
-      <circle r="3" fill="#4a9eff" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#b-p8"/></animateMotion></circle>
-      <circle r="3.5" fill="#34d399" filter="url(#g4)"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#b-p9"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g4)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#b-p10"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g4)"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#b-p11"/></animateMotion></circle>
+      <circle r="4" fill="#fb923c" filter="url(#g4)" data-path-nodes="beb bsfn"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#b-p1"/></animateMotion></circle>
+      <circle r="4" fill="#a78bfa" filter="url(#g4)" data-path-nodes="bsfn blam"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0.5s"><mpath href="#b-p2"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g4)" data-path-nodes="blam bj1"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#b-p3"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g4)" data-path-nodes="blam bj2"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.3s"><mpath href="#b-p4"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g4)" data-path-nodes="blam bj3"><animateMotion dur="1.8s" repeatCount="indefinite" begin="1.6s"><mpath href="#b-p5"/></animateMotion></circle>
+      <circle r="4" fill="#4a9eff" filter="url(#g4)" data-path-nodes="bj1 bs3"><animateMotion dur="1.5s" repeatCount="indefinite" begin="2.5s"><mpath href="#b-p6"/></animateMotion></circle>
+      <circle r="4" fill="#4a9eff" filter="url(#g4)" data-path-nodes="bj2 bs3"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#b-p7"/></animateMotion></circle>
+      <circle r="3" fill="#4a9eff" filter="url(#g4)" data-path-nodes="bj3 bddb"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#b-p8"/></animateMotion></circle>
+      <circle r="3.5" fill="#34d399" filter="url(#g4)" data-path-nodes="bs3 bsns"><animateMotion dur="1s" repeatCount="indefinite" begin="4s"><mpath href="#b-p9"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g4)" data-path-nodes="bj3 bdlq"><animateMotion dur="1.5s" repeatCount="indefinite" begin="3s"><mpath href="#b-p10"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g4)" data-path-nodes="blam bcw"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#b-p11"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/batch-pipeline.html" class="tut-link reveal">View Full Tutorial — Batch Pipeline Setup Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -547,6 +561,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--cyan)">Jenkins — Microservices CI/CD to K8s</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 540" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -574,69 +589,69 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <!-- ── PIPELINE ROW 1: user-service ── -->
       <text x="40" y="78" fill="rgba(255,255,255,0.25)" font-size="8" font-weight="700" letter-spacing="0.06em">user-service</text>
 
-      <rect x="30" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="30" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="mga"/>
       <text x="75" y="112" text-anchor="middle" fill="#818cf8" font-size="9" font-weight="700">Git Push</text>
       <text x="75" y="126" text-anchor="middle" fill="#6e6e80" font-size="6.5">Webhook</text>
 
-      <rect x="170" y="88" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="170" y="88" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="mja"/>
       <text x="220" y="112" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="700">Jenkins</text>
       <text x="220" y="126" text-anchor="middle" fill="#6e6e80" font-size="6.5">mvn clean package</text>
 
-      <rect x="320" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="320" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="mta"/>
       <text x="365" y="112" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="700">Tests</text>
       <text x="365" y="126" text-anchor="middle" fill="#6e6e80" font-size="6.5">JUnit + Mockito</text>
 
-      <rect x="460" y="88" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="460" y="88" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="mda"/>
       <text x="510" y="112" text-anchor="middle" fill="#4a9eff" font-size="9" font-weight="700">Docker</text>
       <text x="510" y="126" text-anchor="middle" fill="#6e6e80" font-size="6.5">Build + Push</text>
 
-      <rect x="615" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="615" y="88" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="mha"/>
       <text x="660" y="112" text-anchor="middle" fill="#34d399" font-size="9" font-weight="700">Helm</text>
       <text x="660" y="126" text-anchor="middle" fill="#6e6e80" font-size="6.5">upgrade --install</text>
 
       <!-- ── PIPELINE ROW 2: order-service ── -->
       <text x="40" y="168" fill="rgba(255,255,255,0.25)" font-size="8" font-weight="700" letter-spacing="0.06em">order-service</text>
 
-      <rect x="30" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="30" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="mgb"/>
       <text x="75" y="202" text-anchor="middle" fill="#818cf8" font-size="9" font-weight="700">Git Push</text>
       <text x="75" y="216" text-anchor="middle" fill="#6e6e80" font-size="6.5">Webhook</text>
 
-      <rect x="170" y="178" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="170" y="178" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="mjb"/>
       <text x="220" y="202" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="700">Jenkins</text>
       <text x="220" y="216" text-anchor="middle" fill="#6e6e80" font-size="6.5">mvn clean package</text>
 
-      <rect x="320" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="320" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="mtb"/>
       <text x="365" y="202" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="700">Tests</text>
       <text x="365" y="216" text-anchor="middle" fill="#6e6e80" font-size="6.5">JUnit + Testcontainers</text>
 
-      <rect x="460" y="178" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="460" y="178" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="mdb"/>
       <text x="510" y="202" text-anchor="middle" fill="#4a9eff" font-size="9" font-weight="700">Docker</text>
       <text x="510" y="216" text-anchor="middle" fill="#6e6e80" font-size="6.5">Build + Push</text>
 
-      <rect x="615" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="615" y="178" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="mhb"/>
       <text x="660" y="202" text-anchor="middle" fill="#34d399" font-size="9" font-weight="700">Helm</text>
       <text x="660" y="216" text-anchor="middle" fill="#6e6e80" font-size="6.5">upgrade --install</text>
 
       <!-- ── PIPELINE ROW 3: payment-service ── -->
       <text x="40" y="258" fill="rgba(255,255,255,0.25)" font-size="8" font-weight="700" letter-spacing="0.06em">payment-service</text>
 
-      <rect x="30" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="30" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="mgc"/>
       <text x="75" y="292" text-anchor="middle" fill="#818cf8" font-size="9" font-weight="700">Git Push</text>
       <text x="75" y="306" text-anchor="middle" fill="#6e6e80" font-size="6.5">Webhook</text>
 
-      <rect x="170" y="268" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="170" y="268" width="100" height="48" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="mjc"/>
       <text x="220" y="292" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="700">Jenkins</text>
       <text x="220" y="306" text-anchor="middle" fill="#6e6e80" font-size="6.5">mvn clean package</text>
 
-      <rect x="320" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="320" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="mtc"/>
       <text x="365" y="292" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="700">Tests</text>
       <text x="365" y="306" text-anchor="middle" fill="#6e6e80" font-size="6.5">JUnit + WireMock</text>
 
-      <rect x="460" y="268" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="460" y="268" width="100" height="48" rx="10" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="mdc"/>
       <text x="510" y="292" text-anchor="middle" fill="#4a9eff" font-size="9" font-weight="700">Docker</text>
       <text x="510" y="306" text-anchor="middle" fill="#6e6e80" font-size="6.5">Build + Push</text>
 
-      <rect x="615" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="615" y="268" width="90" height="48" rx="10" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="mhc"/>
       <text x="660" y="292" text-anchor="middle" fill="#34d399" font-size="9" font-weight="700">Helm</text>
       <text x="660" y="306" text-anchor="middle" fill="#6e6e80" font-size="6.5">upgrade --install</text>
 
@@ -645,103 +660,103 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <text x="775" y="80" fill="rgba(34,211,238,0.4)" font-size="7" font-weight="700" letter-spacing="0.08em">K8S CLUSTER</text>
 
       <!-- K8s pods -->
-      <rect x="780" y="92" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1"/>
+      <rect x="780" y="92" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1" data-node="mk1"/>
       <text x="847" y="112" text-anchor="middle" fill="#22d3ee" font-size="8" font-weight="600">user-svc (3 pods)</text>
       <text x="847" y="124" text-anchor="middle" fill="#6e6e80" font-size="6">Deployment + HPA</text>
 
-      <rect x="780" y="145" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1"/>
+      <rect x="780" y="145" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1" data-node="mk2"/>
       <text x="847" y="165" text-anchor="middle" fill="#22d3ee" font-size="8" font-weight="600">order-svc (3 pods)</text>
       <text x="847" y="177" text-anchor="middle" fill="#6e6e80" font-size="6">Deployment + HPA</text>
 
-      <rect x="780" y="198" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1"/>
+      <rect x="780" y="198" width="135" height="40" rx="8" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1" data-node="mk3"/>
       <text x="847" y="218" text-anchor="middle" fill="#22d3ee" font-size="8" font-weight="600">payment-svc (2 pods)</text>
       <text x="847" y="230" text-anchor="middle" fill="#6e6e80" font-size="6">Deployment + HPA</text>
 
       <!-- Ingress -->
-      <rect x="780" y="252" width="135" height="34" rx="8" fill="#111118" stroke="rgba(52,211,153,0.25)" stroke-width="1"/>
+      <rect x="780" y="252" width="135" height="34" rx="8" fill="#111118" stroke="rgba(52,211,153,0.25)" stroke-width="1" data-node="ming"/>
       <text x="847" y="272" text-anchor="middle" fill="#34d399" font-size="8" font-weight="600">NGINX Ingress</text>
       <text x="847" y="282" text-anchor="middle" fill="#6e6e80" font-size="6">/api/* routing</text>
 
       <!-- Config -->
-      <rect x="780" y="298" width="135" height="30" rx="8" fill="#111118" stroke="rgba(255,153,0,0.2)" stroke-width="1"/>
+      <rect x="780" y="298" width="135" height="30" rx="8" fill="#111118" stroke="rgba(255,153,0,0.2)" stroke-width="1" data-node="mcfg"/>
       <text x="847" y="317" text-anchor="middle" fill="#ff9900" font-size="7" font-weight="600">ConfigMaps + Secrets</text>
 
       <!-- ── PostgreSQL cluster ── -->
-      <rect x="340" y="390" width="130" height="54" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="340" y="390" width="130" height="54" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="mpg"/>
       <text x="405" y="418" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">PostgreSQL</text>
       <text x="405" y="434" text-anchor="middle" fill="#6e6e80" font-size="7">user_db / order_db / pay_db</text>
 
       <!-- Harbor Registry -->
-      <rect x="480" y="390" width="110" height="54" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="480" y="390" width="110" height="54" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="mhar"/>
       <text x="535" y="418" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">Harbor</text>
       <text x="535" y="434" text-anchor="middle" fill="#6e6e80" font-size="7">Docker Registry</text>
 
       <!-- SonarQube -->
-      <rect x="170" y="390" width="110" height="54" rx="12" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="170" y="390" width="110" height="54" rx="12" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="msonar"/>
       <text x="225" y="418" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">SonarQube</text>
       <text x="225" y="434" text-anchor="middle" fill="#6e6e80" font-size="7">Code Quality Gate</text>
 
       <!-- Grafana + Prometheus -->
-      <rect x="780" y="390" width="135" height="54" rx="12" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="780" y="390" width="135" height="54" rx="12" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="mmon"/>
       <text x="847" y="418" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">Prometheus + Grafana</text>
       <text x="847" y="434" text-anchor="middle" fill="#6e6e80" font-size="7">Metrics + Dashboards</text>
 
       <!-- ── Connection paths: Row 1 ── -->
-      <path d="M120,112 L170,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a1"/>
-      <path d="M270,112 L320,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a2"/>
-      <path d="M410,112 L460,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a3"/>
-      <path d="M560,112 L615,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a4"/>
-      <path d="M705,112 L780,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a5"/>
+      <path d="M120,112 L170,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a1" data-path-nodes="mga mja"/>
+      <path d="M270,112 L320,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a2" data-path-nodes="mja mta"/>
+      <path d="M410,112 L460,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a3" data-path-nodes="mta mda"/>
+      <path d="M560,112 L615,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a4" data-path-nodes="mda mha"/>
+      <path d="M705,112 L780,112" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-a5" data-path-nodes="mha mk1"/>
 
       <!-- ── Connection paths: Row 2 ── -->
-      <path d="M120,202 L170,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b1"/>
-      <path d="M270,202 L320,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b2"/>
-      <path d="M410,202 L460,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b3"/>
-      <path d="M560,202 L615,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b4"/>
-      <path d="M705,202 L780,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b5"/>
+      <path d="M120,202 L170,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b1" data-path-nodes="mgb mjb"/>
+      <path d="M270,202 L320,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b2" data-path-nodes="mjb mtb"/>
+      <path d="M410,202 L460,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b3" data-path-nodes="mtb mdb"/>
+      <path d="M560,202 L615,202" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b4" data-path-nodes="mdb mhb"/>
+      <path d="M705,202 L780,165" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-b5" data-path-nodes="mhb mk2"/>
 
       <!-- ── Connection paths: Row 3 ── -->
-      <path d="M120,292 L170,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c1"/>
-      <path d="M270,292 L320,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c2"/>
-      <path d="M410,292 L460,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c3"/>
-      <path d="M560,292 L615,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c4"/>
-      <path d="M705,292 L780,218" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c5"/>
+      <path d="M120,292 L170,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c1" data-path-nodes="mgc mjc"/>
+      <path d="M270,292 L320,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c2" data-path-nodes="mjc mtc"/>
+      <path d="M410,292 L460,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c3" data-path-nodes="mtc mdc"/>
+      <path d="M560,292 L615,292" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c4" data-path-nodes="mdc mhc"/>
+      <path d="M705,292 L780,218" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="ms-c5" data-path-nodes="mhc mk3"/>
 
       <!-- Docker to Harbor -->
-      <path d="M510,136 C510,350 535,370 535,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-harbor"/>
+      <path d="M510,136 C510,350 535,370 535,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-harbor" data-path-nodes="mda mhar"/>
       <!-- Jenkins to Sonar -->
-      <path d="M220,136 L225,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-sonar"/>
+      <path d="M220,136 L225,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-sonar" data-path-nodes="mja msonar"/>
       <!-- K8s to PostgreSQL -->
-      <path d="M847,340 C847,370 500,420 470,420" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-db"/>
+      <path d="M847,340 C847,370 500,420 470,420" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-db" data-path-nodes="mk1 mpg"/>
       <!-- K8s to monitoring -->
-      <path d="M847,340 L847,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-mon"/>
+      <path d="M847,340 L847,390" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="ms-mon" data-path-nodes="mk1 mmon"/>
 
       <!-- ── Animated packets Row 1 ── -->
-      <circle r="3.5" fill="#818cf8" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#ms-a1"/></animateMotion></circle>
-      <circle r="3.5" fill="#fb923c" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="0.5s"><mpath href="#ms-a2"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="1s"><mpath href="#ms-a3"/></animateMotion></circle>
-      <circle r="3.5" fill="#4a9eff" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#ms-a4"/></animateMotion></circle>
-      <circle r="3.5" fill="#34d399" filter="url(#g5)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2s"><mpath href="#ms-a5"/></animateMotion></circle>
+      <circle r="3.5" fill="#818cf8" filter="url(#g5)" data-path-nodes="mga mja"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#ms-a1"/></animateMotion></circle>
+      <circle r="3.5" fill="#fb923c" filter="url(#g5)" data-path-nodes="mja mta"><animateMotion dur="1s" repeatCount="indefinite" begin="0.5s"><mpath href="#ms-a2"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g5)" data-path-nodes="mta mda"><animateMotion dur="1s" repeatCount="indefinite" begin="1s"><mpath href="#ms-a3"/></animateMotion></circle>
+      <circle r="3.5" fill="#4a9eff" filter="url(#g5)" data-path-nodes="mda mha"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#ms-a4"/></animateMotion></circle>
+      <circle r="3.5" fill="#34d399" filter="url(#g5)" data-path-nodes="mha mk1"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2s"><mpath href="#ms-a5"/></animateMotion></circle>
 
       <!-- ── Animated packets Row 2 ── -->
-      <circle r="3.5" fill="#818cf8" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="0.8s"><mpath href="#ms-b1"/></animateMotion></circle>
-      <circle r="3.5" fill="#fb923c" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="1.3s"><mpath href="#ms-b2"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="1.8s"><mpath href="#ms-b3"/></animateMotion></circle>
-      <circle r="3.5" fill="#4a9eff" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="2.3s"><mpath href="#ms-b4"/></animateMotion></circle>
-      <circle r="3.5" fill="#34d399" filter="url(#g5)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2.8s"><mpath href="#ms-b5"/></animateMotion></circle>
+      <circle r="3.5" fill="#818cf8" filter="url(#g5)" data-path-nodes="mgb mjb"><animateMotion dur="1s" repeatCount="indefinite" begin="0.8s"><mpath href="#ms-b1"/></animateMotion></circle>
+      <circle r="3.5" fill="#fb923c" filter="url(#g5)" data-path-nodes="mjb mtb"><animateMotion dur="1s" repeatCount="indefinite" begin="1.3s"><mpath href="#ms-b2"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g5)" data-path-nodes="mtb mdb"><animateMotion dur="1s" repeatCount="indefinite" begin="1.8s"><mpath href="#ms-b3"/></animateMotion></circle>
+      <circle r="3.5" fill="#4a9eff" filter="url(#g5)" data-path-nodes="mdb mhb"><animateMotion dur="1s" repeatCount="indefinite" begin="2.3s"><mpath href="#ms-b4"/></animateMotion></circle>
+      <circle r="3.5" fill="#34d399" filter="url(#g5)" data-path-nodes="mhb mk2"><animateMotion dur="1.2s" repeatCount="indefinite" begin="2.8s"><mpath href="#ms-b5"/></animateMotion></circle>
 
       <!-- ── Animated packets Row 3 ── -->
-      <circle r="3.5" fill="#818cf8" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#ms-c1"/></animateMotion></circle>
-      <circle r="3.5" fill="#fb923c" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="2s"><mpath href="#ms-c2"/></animateMotion></circle>
-      <circle r="3" fill="#a78bfa" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="2.5s"><mpath href="#ms-c3"/></animateMotion></circle>
-      <circle r="3.5" fill="#4a9eff" filter="url(#g5)"><animateMotion dur="1s" repeatCount="indefinite" begin="3s"><mpath href="#ms-c4"/></animateMotion></circle>
-      <circle r="3.5" fill="#34d399" filter="url(#g5)"><animateMotion dur="1.2s" repeatCount="indefinite" begin="3.5s"><mpath href="#ms-c5"/></animateMotion></circle>
+      <circle r="3.5" fill="#818cf8" filter="url(#g5)" data-path-nodes="mgc mjc"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#ms-c1"/></animateMotion></circle>
+      <circle r="3.5" fill="#fb923c" filter="url(#g5)" data-path-nodes="mjc mtc"><animateMotion dur="1s" repeatCount="indefinite" begin="2s"><mpath href="#ms-c2"/></animateMotion></circle>
+      <circle r="3" fill="#a78bfa" filter="url(#g5)" data-path-nodes="mtc mdc"><animateMotion dur="1s" repeatCount="indefinite" begin="2.5s"><mpath href="#ms-c3"/></animateMotion></circle>
+      <circle r="3.5" fill="#4a9eff" filter="url(#g5)" data-path-nodes="mdc mhc"><animateMotion dur="1s" repeatCount="indefinite" begin="3s"><mpath href="#ms-c4"/></animateMotion></circle>
+      <circle r="3.5" fill="#34d399" filter="url(#g5)" data-path-nodes="mhc mk3"><animateMotion dur="1.2s" repeatCount="indefinite" begin="3.5s"><mpath href="#ms-c5"/></animateMotion></circle>
 
       <!-- ── Side paths packets ── -->
-      <circle r="2.5" fill="#4a9eff" filter="url(#g5)"><animateMotion dur="3s" repeatCount="indefinite" begin="2s"><mpath href="#ms-harbor"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g5)"><animateMotion dur="2.5s" repeatCount="indefinite" begin="1s"><mpath href="#ms-sonar"/></animateMotion></circle>
-      <circle r="2.5" fill="#a78bfa" filter="url(#g5)"><animateMotion dur="3s" repeatCount="indefinite" begin="3s"><mpath href="#ms-db"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g5)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="4s"><mpath href="#ms-mon"/></animateMotion></circle>
+      <circle r="2.5" fill="#4a9eff" filter="url(#g5)" data-path-nodes="mda mhar"><animateMotion dur="3s" repeatCount="indefinite" begin="2s"><mpath href="#ms-harbor"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g5)" data-path-nodes="mja msonar"><animateMotion dur="2.5s" repeatCount="indefinite" begin="1s"><mpath href="#ms-sonar"/></animateMotion></circle>
+      <circle r="2.5" fill="#a78bfa" filter="url(#g5)" data-path-nodes="mk1 mpg"><animateMotion dur="3s" repeatCount="indefinite" begin="3s"><mpath href="#ms-db"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g5)" data-path-nodes="mk1 mmon"><animateMotion dur="1.5s" repeatCount="indefinite" begin="4s"><mpath href="#ms-mon"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/microservices-k8s.html" class="tut-link reveal">View Full Tutorial — Microservices K8s Setup Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -755,29 +770,30 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 
   <div class="diagram reveal">
     <span class="diagram-title" style="color:var(--orange)">Jenkins — Monolith CI/CD to EC2/Tomcat</span>
+    <span class="hint">Click any service to trace its connections</span>
     <svg viewBox="0 0 960 420" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="g6" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
 
       <!-- Single pipeline flow — top row -->
-      <rect x="30" y="80" width="100" height="56" rx="12" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5"/>
+      <rect x="30" y="80" width="100" height="56" rx="12" fill="#111118" stroke="rgba(129,140,248,0.3)" stroke-width="1.5" data-node="xgit"/>
       <text x="80" y="106" text-anchor="middle" fill="#818cf8" font-size="10" font-weight="700">Git Push</text>
       <text x="80" y="122" text-anchor="middle" fill="#6e6e80" font-size="7">monolith repo</text>
 
-      <rect x="175" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="175" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="xjen"/>
       <text x="230" y="106" text-anchor="middle" fill="#fb923c" font-size="10" font-weight="700">Jenkins</text>
       <text x="230" y="122" text-anchor="middle" fill="#6e6e80" font-size="7">mvn clean package</text>
 
-      <rect x="330" y="80" width="100" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="330" y="80" width="100" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="xtest"/>
       <text x="380" y="106" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">Tests</text>
       <text x="380" y="122" text-anchor="middle" fill="#6e6e80" font-size="7">JUnit + Selenium</text>
 
-      <rect x="475" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <rect x="475" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(52,211,153,0.3)" stroke-width="1.5" data-node="xs3"/>
       <text x="530" y="106" text-anchor="middle" fill="#34d399" font-size="10" font-weight="700">S3 Artifact</text>
       <text x="530" y="122" text-anchor="middle" fill="#6e6e80" font-size="7">app-v2.1.war</text>
 
-      <rect x="630" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5"/>
+      <rect x="630" y="80" width="110" height="56" rx="12" fill="#111118" stroke="rgba(255,153,0,0.3)" stroke-width="1.5" data-node="xans"/>
       <text x="685" y="106" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="700">Ansible</text>
       <text x="685" y="122" text-anchor="middle" fill="#6e6e80" font-size="7">Rolling Deploy</text>
 
@@ -786,94 +802,94 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
       <text x="720" y="210" fill="rgba(74,158,255,0.4)" font-size="7" font-weight="700" letter-spacing="0.08em">EC2 TARGET GROUP</text>
 
       <!-- ALB -->
-      <rect x="560" y="220" width="100" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <rect x="560" y="220" width="100" height="50" rx="12" fill="#111118" stroke="rgba(74,158,255,0.3)" stroke-width="1.5" data-node="xalb"/>
       <text x="610" y="246" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="700">ALB</text>
       <text x="610" y="259" text-anchor="middle" fill="#6e6e80" font-size="7">Health Checks</text>
 
       <!-- EC2 + Tomcat instances -->
-      <rect x="720" y="225" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="720" y="225" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="xt1"/>
       <text x="765" y="250" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="700">EC2 + Tomcat</text>
       <text x="765" y="264" text-anchor="middle" fill="#6e6e80" font-size="6.5">Instance 1</text>
 
-      <rect x="825" y="225" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5"/>
+      <rect x="825" y="225" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.3)" stroke-width="1.5" data-node="xt2"/>
       <text x="870" y="250" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="700">EC2 + Tomcat</text>
       <text x="870" y="264" text-anchor="middle" fill="#6e6e80" font-size="6.5">Instance 2</text>
 
-      <rect x="720" y="295" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1"/>
+      <rect x="720" y="295" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1" data-node="xt3"/>
       <text x="765" y="320" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="600">EC2 + Tomcat</text>
       <text x="765" y="334" text-anchor="middle" fill="#6e6e80" font-size="6.5">Instance 3</text>
 
-      <rect x="825" y="295" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1"/>
+      <rect x="825" y="295" width="90" height="50" rx="10" fill="#111118" stroke="rgba(251,146,60,0.25)" stroke-width="1" data-node="xt4"/>
       <text x="870" y="320" text-anchor="middle" fill="#fb923c" font-size="9" font-weight="600">EC2 + Tomcat</text>
       <text x="870" y="334" text-anchor="middle" fill="#6e6e80" font-size="6.5">Instance 4</text>
 
       <!-- PostgreSQL -->
-      <rect x="340" y="310" width="120" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <rect x="340" y="310" width="120" height="56" rx="12" fill="#111118" stroke="rgba(167,139,250,0.3)" stroke-width="1.5" data-node="xpg"/>
       <text x="400" y="338" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">PostgreSQL</text>
       <text x="400" y="354" text-anchor="middle" fill="#6e6e80" font-size="7">RDS Multi-AZ</text>
 
       <!-- SonarQube -->
-      <rect x="175" y="195" width="110" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="175" y="195" width="110" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="xsonar"/>
       <text x="230" y="218" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">SonarQube</text>
       <text x="230" y="232" text-anchor="middle" fill="#6e6e80" font-size="7">Quality Gate</text>
 
       <!-- Nexus -->
-      <rect x="330" y="195" width="100" height="46" rx="10" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1"/>
+      <rect x="330" y="195" width="100" height="46" rx="10" fill="#111118" stroke="rgba(34,211,238,0.25)" stroke-width="1" data-node="xnex"/>
       <text x="380" y="218" text-anchor="middle" fill="#22d3ee" font-size="9" font-weight="600">Nexus</text>
       <text x="380" y="232" text-anchor="middle" fill="#6e6e80" font-size="7">Maven Repo</text>
 
       <!-- CloudWatch -->
-      <rect x="560" y="310" width="100" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1"/>
+      <rect x="560" y="310" width="100" height="46" rx="10" fill="#111118" stroke="rgba(248,113,113,0.25)" stroke-width="1" data-node="xcw"/>
       <text x="610" y="333" text-anchor="middle" fill="#f87171" font-size="9" font-weight="600">CloudWatch</text>
       <text x="610" y="346" text-anchor="middle" fill="#6e6e80" font-size="7">Logs + Alarms</text>
 
       <!-- Pipeline paths -->
-      <path d="M130,108 L175,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p1"/>
-      <path d="M285,108 L330,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p2"/>
-      <path d="M430,108 L475,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p3"/>
-      <path d="M585,108 L630,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p4"/>
+      <path d="M130,108 L175,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p1" data-path-nodes="xgit xjen"/>
+      <path d="M285,108 L330,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p2" data-path-nodes="xjen xtest"/>
+      <path d="M430,108 L475,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p3" data-path-nodes="xtest xs3"/>
+      <path d="M585,108 L630,108" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p4" data-path-nodes="xs3 xans"/>
 
       <!-- Ansible to EC2s -->
-      <path d="M685,136 C685,180 765,200 765,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p5"/>
-      <path d="M685,136 C700,180 870,200 870,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p6"/>
-      <path d="M685,136 C685,220 765,270 765,295" stroke="rgba(255,255,255,0.05)" stroke-width="1" id="mo-p7"/>
-      <path d="M685,136 C700,220 870,270 870,295" stroke="rgba(255,255,255,0.05)" stroke-width="1" id="mo-p8"/>
+      <path d="M685,136 C685,180 765,200 765,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p5" data-path-nodes="xans xt1"/>
+      <path d="M685,136 C700,180 870,200 870,225" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p6" data-path-nodes="xans xt2"/>
+      <path d="M685,136 C685,220 765,270 765,295" stroke="rgba(255,255,255,0.05)" stroke-width="1" id="mo-p7" data-path-nodes="xans xt3"/>
+      <path d="M685,136 C700,220 870,270 870,295" stroke="rgba(255,255,255,0.05)" stroke-width="1" id="mo-p8" data-path-nodes="xans xt4"/>
 
       <!-- ALB to EC2s -->
-      <path d="M660,245 L720,250" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p9"/>
-      <path d="M660,245 L720,320" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p10"/>
+      <path d="M660,245 L720,250" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p9" data-path-nodes="xalb xt1"/>
+      <path d="M660,245 L720,320" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" id="mo-p10" data-path-nodes="xalb xt3"/>
 
       <!-- EC2 to PostgreSQL -->
-      <path d="M720,275 C600,300 480,320 460,335" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-db"/>
+      <path d="M720,275 C600,300 480,320 460,335" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-db" data-path-nodes="xt1 xpg"/>
 
       <!-- Jenkins to SonarQube -->
-      <path d="M230,136 L230,195" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-sonar"/>
+      <path d="M230,136 L230,195" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-sonar" data-path-nodes="xjen xsonar"/>
       <!-- Tests to Nexus -->
-      <path d="M380,136 L380,195" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-nexus"/>
+      <path d="M380,136 L380,195" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-nexus" data-path-nodes="xtest xnex"/>
       <!-- EC2 to CloudWatch -->
-      <path d="M720,345 C680,345 650,340 660,333" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-cw"/>
+      <path d="M720,345 C680,345 650,340 660,333" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,3" id="mo-cw" data-path-nodes="xt3 xcw"/>
 
       <!-- Animated packets -->
-      <circle r="4" fill="#818cf8" filter="url(#g6)"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#mo-p1"/></animateMotion></circle>
-      <circle r="4" fill="#fb923c" filter="url(#g6)"><animateMotion dur="1s" repeatCount="indefinite" begin="0.5s"><mpath href="#mo-p2"/></animateMotion></circle>
-      <circle r="3.5" fill="#a78bfa" filter="url(#g6)"><animateMotion dur="1s" repeatCount="indefinite" begin="1s"><mpath href="#mo-p3"/></animateMotion></circle>
-      <circle r="4" fill="#34d399" filter="url(#g6)"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#mo-p4"/></animateMotion></circle>
+      <circle r="4" fill="#818cf8" filter="url(#g6)" data-path-nodes="xgit xjen"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#mo-p1"/></animateMotion></circle>
+      <circle r="4" fill="#fb923c" filter="url(#g6)" data-path-nodes="xjen xtest"><animateMotion dur="1s" repeatCount="indefinite" begin="0.5s"><mpath href="#mo-p2"/></animateMotion></circle>
+      <circle r="3.5" fill="#a78bfa" filter="url(#g6)" data-path-nodes="xtest xs3"><animateMotion dur="1s" repeatCount="indefinite" begin="1s"><mpath href="#mo-p3"/></animateMotion></circle>
+      <circle r="4" fill="#34d399" filter="url(#g6)" data-path-nodes="xs3 xans"><animateMotion dur="1s" repeatCount="indefinite" begin="1.5s"><mpath href="#mo-p4"/></animateMotion></circle>
 
       <!-- Ansible deploy packets -->
-      <circle r="3.5" fill="#ff9900" filter="url(#g6)"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#mo-p5"/></animateMotion></circle>
-      <circle r="3.5" fill="#ff9900" filter="url(#g6)"><animateMotion dur="2s" repeatCount="indefinite" begin="2.5s"><mpath href="#mo-p6"/></animateMotion></circle>
-      <circle r="3" fill="#ff9900" filter="url(#g6)"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#mo-p7"/></animateMotion></circle>
-      <circle r="3" fill="#ff9900" filter="url(#g6)"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#mo-p8"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g6)" data-path-nodes="xans xt1"><animateMotion dur="2s" repeatCount="indefinite" begin="2s"><mpath href="#mo-p5"/></animateMotion></circle>
+      <circle r="3.5" fill="#ff9900" filter="url(#g6)" data-path-nodes="xans xt2"><animateMotion dur="2s" repeatCount="indefinite" begin="2.5s"><mpath href="#mo-p6"/></animateMotion></circle>
+      <circle r="3" fill="#ff9900" filter="url(#g6)" data-path-nodes="xans xt3"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#mo-p7"/></animateMotion></circle>
+      <circle r="3" fill="#ff9900" filter="url(#g6)" data-path-nodes="xans xt4"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3.5s"><mpath href="#mo-p8"/></animateMotion></circle>
 
       <!-- ALB traffic -->
-      <circle r="3" fill="#4a9eff" filter="url(#g6)"><animateMotion dur="1s" repeatCount="indefinite" begin="0.3s"><mpath href="#mo-p9"/></animateMotion></circle>
-      <circle r="3" fill="#4a9eff" filter="url(#g6)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#mo-p10"/></animateMotion></circle>
+      <circle r="3" fill="#4a9eff" filter="url(#g6)" data-path-nodes="xalb xt1"><animateMotion dur="1s" repeatCount="indefinite" begin="0.3s"><mpath href="#mo-p9"/></animateMotion></circle>
+      <circle r="3" fill="#4a9eff" filter="url(#g6)" data-path-nodes="xalb xt3"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#mo-p10"/></animateMotion></circle>
 
       <!-- Side paths -->
-      <circle r="2.5" fill="#a78bfa" filter="url(#g6)"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#mo-db"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g6)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#mo-sonar"/></animateMotion></circle>
-      <circle r="2.5" fill="#22d3ee" filter="url(#g6)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.5s"><mpath href="#mo-nexus"/></animateMotion></circle>
-      <circle r="2.5" fill="#f87171" filter="url(#g6)"><animateMotion dur="1.5s" repeatCount="indefinite" begin="4s"><mpath href="#mo-cw"/></animateMotion></circle>
+      <circle r="2.5" fill="#a78bfa" filter="url(#g6)" data-path-nodes="xt1 xpg"><animateMotion dur="2.5s" repeatCount="indefinite" begin="3s"><mpath href="#mo-db"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g6)" data-path-nodes="xjen xsonar"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1s"><mpath href="#mo-sonar"/></animateMotion></circle>
+      <circle r="2.5" fill="#22d3ee" filter="url(#g6)" data-path-nodes="xtest xnex"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.5s"><mpath href="#mo-nexus"/></animateMotion></circle>
+      <circle r="2.5" fill="#f87171" filter="url(#g6)" data-path-nodes="xt3 xcw"><animateMotion dur="1.5s" repeatCount="indefinite" begin="4s"><mpath href="#mo-cw"/></animateMotion></circle>
     </svg>
   </div>
   <a href="tutorials/monolith-ec2.html" class="tut-link reveal">View Full Tutorial — Monolith EC2 Deployment Guide <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
@@ -883,7 +899,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 <section id="services" class="alt-bg">
   <div class="tag reveal" style="color:var(--blue)">What I do</div>
   <h2 class="reveal">Services</h2>
-  <p class="sub reveal">End-to-end DevOps engineering — from cloud provisioning to production monitoring.</p>
+  <p class="sub reveal">End-to-end technical delivery — from cloud provisioning to production monitoring.</p>
 
   <div class="services reveal">
     <div class="svc">
@@ -941,7 +957,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 <section id="contact">
   <div class="tag reveal" style="color:var(--cyan)">Get in touch</div>
   <h2 class="reveal">Let's build something.</h2>
-  <p class="sub reveal">Looking for a DevOps engineer? I'm available for freelance and full-time roles.</p>
+  <p class="sub reveal">Looking for a Technical Delivery Lead? I'm available for freelance and full-time roles.</p>
   <div class="contact-links reveal">
     <a href="https://github.com/stefanlaza" target="_blank">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -959,7 +975,7 @@ footer{text-align:center;padding:3rem 2rem;font-size:0.7rem;color:var(--muted);b
 </section>
 
 <footer>
-  <p>Stefan Laza &mdash; DevOps Engineer &mdash; 2026</p>
+  <p>Stefan Laza &mdash; Technical Delivery Lead &mdash; 2026</p>
 </footer>
 
 <script>
@@ -971,6 +987,48 @@ document.addEventListener('DOMContentLoaded',()=>{
     },{threshold:0.08});
     els.forEach(el=>obs.observe(el));
   }else{els.forEach(el=>el.classList.add('visible'))}
+
+  /* Click-to-highlight: click a node to highlight its connections */
+  document.querySelectorAll('.diagram svg').forEach(svg=>{
+    svg.addEventListener('click',e=>{
+      const node=e.target.closest('rect[data-node]');
+      if(!node){
+        /* Clicked empty space — reset */
+        svg.removeAttribute('data-active');
+        svg.closest('.diagram').classList.remove('active');
+        svg.querySelectorAll('.hl').forEach(el=>el.classList.remove('hl'));
+        return;
+      }
+      const id=node.dataset.node;
+      svg.setAttribute('data-active',id);
+      svg.closest('.diagram').classList.add('active');
+
+      /* Clear previous highlights */
+      svg.querySelectorAll('.hl').forEach(el=>el.classList.remove('hl'));
+
+      /* Highlight clicked node */
+      node.classList.add('hl');
+      /* Highlight its text labels (next sibling text elements) */
+      let sib=node.nextElementSibling;
+      while(sib&&sib.tagName==='text'){sib.classList.add('hl');sib=sib.nextElementSibling}
+
+      /* Find all paths and packets connected to this node */
+      svg.querySelectorAll('[data-path-nodes]').forEach(el=>{
+        const nodes=el.dataset.pathNodes.split(' ');
+        if(nodes.includes(id)){
+          el.classList.add('hl');
+          /* Also highlight the connected node on the other end */
+          const otherId=nodes.find(n=>n!==id)||nodes[0];
+          const otherRect=svg.querySelector('rect[data-node="'+otherId+'"]');
+          if(otherRect){
+            otherRect.classList.add('hl');
+            let s=otherRect.nextElementSibling;
+            while(s&&s.tagName==='text'){s.classList.add('hl');s=s.nextElementSibling}
+          }
+        }
+      });
+    });
+  });
 });
 </script>
 </body>

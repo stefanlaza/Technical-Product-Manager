@@ -1,0 +1,736 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Java Microservices to Kubernetes Setup Guide — Stefan Laza</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#050507;color:#f0f0f5;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding:3rem 2rem 5rem}
+a{color:#34d399;text-decoration:none}.back{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:#6e6e80;margin-bottom:2.5rem;transition:color .2s}.back:hover{color:#f0f0f5}
+h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
+.subtitle{color:#6e6e80;font-size:1rem;margin-bottom:3rem}
+h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
+h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .5rem;color:#34d399}
+p,li{font-size:.88rem;color:#c0c0c8;margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:1rem}
+pre{background:#0d0d14;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0 1.5rem;font-size:.78rem;line-height:1.6}
+code{font-family:'SF Mono',Consolas,monospace}
+pre code{color:#c0c0c8}
+.kw{color:#a78bfa}.str{color:#34d399}.cm{color:#555}.fn{color:#4a9eff}.num{color:#fb923c}.op{color:#6e6e80}
+.note{background:rgba(74,158,255,0.06);border-left:3px solid #4a9eff;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+.warn{background:rgba(248,113,113,0.06);border-left:3px solid #f87171;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
+footer{text-align:center;padding:3rem 0;font-size:.7rem;color:#6e6e80;border-top:1px solid rgba(255,255,255,0.06);margin-top:3rem}
+</style></head><body><div class="wrap">
+<a href="../index.html#microservices" class="back">&larr; Back to Portfolio</a>
+<h1>Java Microservices to Kubernetes Setup Guide</h1>
+<p class="subtitle">3 Spring Boot services &rarr; Jenkins CI &rarr; Docker &rarr; Harbor Registry &rarr; Helm &rarr; Kubernetes with HPA</p>
+
+<h2>1. Prerequisites</h2>
+<pre><code><span class="cm"># Install JDK 17</span>
+sudo apt install -y openjdk-17-jdk
+java -version
+
+<span class="cm"># Install Maven</span>
+sudo apt install -y maven
+mvn -version
+
+<span class="cm"># Install Docker</span>
+sudo apt-get update && sudo apt-get install -y docker.io
+sudo usermod -aG docker $USER
+
+<span class="cm"># Install kubectl</span>
+curl -LO <span class="str">"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"</span>
+sudo install kubectl /usr/local/bin/kubectl
+
+<span class="cm"># Install Helm</span>
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+<span class="cm"># Install Jenkins (Docker)</span>
+docker run -d --name jenkins -p 8080:8080 -p 50000:50000 \
+  -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts</code></pre>
+
+<h2>2. Project Structure</h2>
+<pre><code>microservices/
+├── user-service/
+│   ├── src/main/java/com/app/user/
+│   ├── src/main/resources/application.yml
+│   ├── src/test/java/com/app/user/
+│   ├── Dockerfile
+│   └── pom.xml
+├── order-service/
+│   ├── src/main/java/com/app/order/
+│   ├── src/main/resources/application.yml
+│   ├── src/test/java/com/app/order/
+│   ├── Dockerfile
+│   └── pom.xml
+├── payment-service/
+│   ├── src/main/java/com/app/payment/
+│   ├── src/main/resources/application.yml
+│   ├── src/test/java/com/app/payment/
+│   ├── Dockerfile
+│   └── pom.xml
+├── helm/
+│   └── microservice/          <span class="cm"># Shared Helm chart</span>
+├── k8s/
+│   ├── namespace.yaml
+│   └── ingress.yaml
+├── Jenkinsfile
+└── docker-compose.yml         <span class="cm"># Local dev</span></code></pre>
+
+<h2>3. Spring Boot Application</h2>
+<h3>user-service/pom.xml</h3>
+<pre><code><span class="op">&lt;?</span>xml version=<span class="str">"1.0"</span> encoding=<span class="str">"UTF-8"</span><span class="op">?&gt;</span>
+<span class="op">&lt;</span><span class="kw">project</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">modelVersion</span><span class="op">&gt;</span>4.0.0<span class="op">&lt;/</span><span class="kw">modelVersion</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">parent</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-parent<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>3.2.1<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="kw">parent</span><span class="op">&gt;</span>
+
+  <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>com.app<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>user-service<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>1.0.0<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
+
+  <span class="op">&lt;</span><span class="kw">dependencies</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-web<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-data-jpa<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-actuator<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>io.micrometer<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>micrometer-registry-prometheus<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.postgresql<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>postgresql<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>runtime<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-test<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>test<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.testcontainers<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>postgresql<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>test<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="kw">dependencies</span><span class="op">&gt;</span>
+<span class="op">&lt;/</span><span class="kw">project</span><span class="op">&gt;</span></code></pre>
+
+<h3>user-service/src/main/resources/application.yml</h3>
+<pre><code><span class="kw">spring</span>:
+  <span class="kw">application</span>:
+    <span class="kw">name</span>: user-service
+  <span class="kw">profiles</span>:
+    <span class="kw">active</span>: <span class="str">${SPRING_PROFILE:dev}</span>
+
+  <span class="kw">datasource</span>:
+    <span class="kw">url</span>: <span class="str">jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:userdb}</span>
+    <span class="kw">username</span>: <span class="str">${DB_USER:postgres}</span>
+    <span class="kw">password</span>: <span class="str">${DB_PASS:secret}</span>
+    <span class="kw">hikari</span>:
+      <span class="kw">maximum-pool-size</span>: <span class="num">20</span>
+      <span class="kw">minimum-idle</span>: <span class="num">5</span>
+      <span class="kw">idle-timeout</span>: <span class="num">30000</span>
+
+  <span class="kw">jpa</span>:
+    <span class="kw">hibernate</span>:
+      <span class="kw">ddl-auto</span>: validate
+    <span class="kw">properties</span>:
+      <span class="kw">hibernate.dialect</span>: org.hibernate.dialect.PostgreSQLDialect
+
+<span class="kw">management</span>:
+  <span class="kw">endpoints</span>:
+    <span class="kw">web.exposure.include</span>: health,info,prometheus,metrics
+  <span class="kw">metrics</span>:
+    <span class="kw">tags</span>:
+      <span class="kw">application</span>: user-service
+
+<span class="kw">server</span>:
+  <span class="kw">port</span>: <span class="num">8080</span></code></pre>
+
+<h2>4. Multi-Stage Dockerfile</h2>
+<h3>user-service/Dockerfile</h3>
+<pre><code><span class="cm"># ---- Build Stage ----</span>
+<span class="kw">FROM</span> maven:3.9-eclipse-temurin-17 <span class="kw">AS</span> build
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> pom.xml .
+<span class="kw">RUN</span> mvn dependency:go-offline -B
+<span class="kw">COPY</span> src ./src
+<span class="kw">RUN</span> mvn clean package -DskipTests -B
+
+<span class="cm"># ---- Runtime Stage ----</span>
+<span class="kw">FROM</span> eclipse-temurin:17-jre-alpine
+<span class="kw">RUN</span> addgroup -S appgroup && adduser -S appuser -G appgroup
+
+<span class="kw">WORKDIR</span> /app
+<span class="kw">COPY</span> --from=build /app/target/*.jar app.jar
+
+<span class="kw">USER</span> appuser
+<span class="kw">EXPOSE</span> 8080
+
+<span class="kw">HEALTHCHECK</span> --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+
+<span class="kw">ENTRYPOINT</span> [<span class="str">"java"</span>, \
+  <span class="str">"-XX:+UseG1GC"</span>, \
+  <span class="str">"-XX:MaxRAMPercentage=75.0"</span>, \
+  <span class="str">"-XX:+UseStringDeduplication"</span>, \
+  <span class="str">"-Djava.security.egd=file:/dev/./urandom"</span>, \
+  <span class="str">"-jar"</span>, <span class="str">"app.jar"</span>]</code></pre>
+
+<div class="note">The same Dockerfile pattern is used for all 3 services. Each service has its own Dockerfile in its directory. The <code>dependency:go-offline</code> step caches Maven dependencies for faster rebuilds.</div>
+
+<h2>5. Jenkins Pipeline</h2>
+<h3>Jenkinsfile</h3>
+<pre><code><span class="kw">pipeline</span> {
+  <span class="kw">agent</span> any
+
+  <span class="kw">environment</span> {
+    HARBOR_URL  = <span class="str">'harbor.internal.company.com'</span>
+    HARBOR_PROJ = <span class="str">'microservices'</span>
+    HARBOR_CRED = credentials(<span class="str">'harbor-robot'</span>)
+    KUBECONFIG  = credentials(<span class="str">'kubeconfig-prod'</span>)
+    SONAR_TOKEN = credentials(<span class="str">'sonarqube-token'</span>)
+  }
+
+  <span class="kw">parameters</span> {
+    choice(name: <span class="str">'ENVIRONMENT'</span>, choices: [<span class="str">'dev'</span>, <span class="str">'staging'</span>, <span class="str">'prod'</span>])
+    string(name: <span class="str">'IMAGE_TAG'</span>, defaultValue: <span class="str">"${env.BUILD_NUMBER}"</span>)
+  }
+
+  <span class="kw">stages</span> {
+    <span class="kw">stage</span>(<span class="str">'Checkout'</span>) {
+      <span class="kw">steps</span> {
+        checkout scm
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Build &amp; Unit Test'</span>) {
+      <span class="kw">parallel</span> {
+        <span class="kw">stage</span>(<span class="str">'user-service'</span>) {
+          <span class="kw">steps</span> {
+            dir(<span class="str">'user-service'</span>) {
+              sh <span class="str">'mvn clean package -B'</span>
+            }
+          }
+          <span class="kw">post</span> {
+            always { junit <span class="str">'user-service/target/surefire-reports/*.xml'</span> }
+          }
+        }
+        <span class="kw">stage</span>(<span class="str">'order-service'</span>) {
+          <span class="kw">steps</span> {
+            dir(<span class="str">'order-service'</span>) {
+              sh <span class="str">'mvn clean package -B'</span>
+            }
+          }
+          <span class="kw">post</span> {
+            always { junit <span class="str">'order-service/target/surefire-reports/*.xml'</span> }
+          }
+        }
+        <span class="kw">stage</span>(<span class="str">'payment-service'</span>) {
+          <span class="kw">steps</span> {
+            dir(<span class="str">'payment-service'</span>) {
+              sh <span class="str">'mvn clean package -B'</span>
+            }
+          }
+          <span class="kw">post</span> {
+            always { junit <span class="str">'payment-service/target/surefire-reports/*.xml'</span> }
+          }
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Integration Tests'</span>) {
+      <span class="kw">steps</span> {
+        <span class="cm">// Testcontainers spins up PostgreSQL in Docker</span>
+        sh <span class="str">'mvn verify -pl user-service,order-service,payment-service -P integration -B'</span>
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'SonarQube Analysis'</span>) {
+      <span class="kw">steps</span> {
+        withSonarQubeEnv(<span class="str">'sonarqube'</span>) {
+          sh <span class="str">'mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN'</span>
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Docker Build &amp; Push'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">"echo $HARBOR_CRED_PSW | docker login $HARBOR_URL -u $HARBOR_CRED_USR --password-stdin"</span>
+        script {
+          <span class="kw">def</span> services = [<span class="str">'user-service'</span>, <span class="str">'order-service'</span>, <span class="str">'payment-service'</span>]
+          <span class="kw">for</span> (svc <span class="kw">in</span> services) {
+            sh <span class="str">"""
+              docker build -t ${HARBOR_URL}/${HARBOR_PROJ}/${svc}:${params.IMAGE_TAG} ${svc}/
+              docker push ${HARBOR_URL}/${HARBOR_PROJ}/${svc}:${params.IMAGE_TAG}
+            """</span>
+          }
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Helm Deploy'</span>) {
+      <span class="kw">steps</span> {
+        script {
+          <span class="kw">def</span> services = [<span class="str">'user-service'</span>, <span class="str">'order-service'</span>, <span class="str">'payment-service'</span>]
+          <span class="kw">for</span> (svc <span class="kw">in</span> services) {
+            sh <span class="str">"""
+              helm upgrade --install ${svc} helm/microservice/ \
+                --namespace ${params.ENVIRONMENT} \
+                --set image.repository=${HARBOR_URL}/${HARBOR_PROJ}/${svc} \
+                --set image.tag=${params.IMAGE_TAG} \
+                --set env=${params.ENVIRONMENT} \
+                -f helm/microservice/values-${params.ENVIRONMENT}.yaml \
+                --wait --timeout 300s
+            """</span>
+          }
+        }
+      }
+    }
+
+    <span class="kw">stage</span>(<span class="str">'Smoke Tests'</span>) {
+      <span class="kw">steps</span> {
+        sh <span class="str">"""
+          sleep 10
+          curl -sf http://user-service.${params.ENVIRONMENT}.svc/actuator/health
+          curl -sf http://order-service.${params.ENVIRONMENT}.svc/actuator/health
+          curl -sf http://payment-service.${params.ENVIRONMENT}.svc/actuator/health
+        """</span>
+      }
+    }
+  }
+
+  <span class="kw">post</span> {
+    failure {
+      slackSend channel: <span class="str">'#deployments'</span>,
+        color: <span class="str">'danger'</span>,
+        message: <span class="str">"FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"</span>
+    }
+    success {
+      slackSend channel: <span class="str">'#deployments'</span>,
+        color: <span class="str">'good'</span>,
+        message: <span class="str">"Deployed ${params.ENVIRONMENT}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"</span>
+    }
+  }
+}</code></pre>
+
+<h2>6. Harbor Registry Setup</h2>
+<pre><code><span class="cm"># Download Harbor installer</span>
+wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-online-installer-v2.10.0.tgz
+tar xzf harbor-online-installer-v2.10.0.tgz && cd harbor
+
+<span class="cm"># Copy and edit config</span>
+cp harbor.yml.tmpl harbor.yml</code></pre>
+
+<h3>harbor.yml (key sections)</h3>
+<pre><code><span class="kw">hostname</span>: harbor.internal.company.com
+<span class="kw">https</span>:
+  <span class="kw">port</span>: <span class="num">443</span>
+  <span class="kw">certificate</span>: /etc/ssl/harbor/cert.pem
+  <span class="kw">private_key</span>: /etc/ssl/harbor/key.pem
+<span class="kw">harbor_admin_password</span>: <span class="str">ChangeMeNow!</span>
+<span class="kw">database</span>:
+  <span class="kw">password</span>: <span class="str">db-secret-pass</span>
+<span class="kw">data_volume</span>: /data/harbor</code></pre>
+
+<pre><code><span class="cm"># Install</span>
+sudo ./install.sh --with-trivy
+
+<span class="cm"># Create project and robot account via CLI</span>
+curl -k -u admin:ChangeMeNow! -X POST \
+  https://harbor.internal.company.com/api/v2.0/projects \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"project_name":"microservices","public":false}'</span>
+
+<span class="cm"># Create robot account for Jenkins</span>
+curl -k -u admin:ChangeMeNow! -X POST \
+  https://harbor.internal.company.com/api/v2.0/robots \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "name": "jenkins-push",
+    "duration": -1,
+    "level": "project",
+    "permissions": [{
+      "namespace": "microservices",
+      "kind": "project",
+      "access": [
+        {"resource": "repository", "action": "push"},
+        {"resource": "repository", "action": "pull"}
+      ]
+    }]
+  }'</span></code></pre>
+
+<div class="note">Store the robot account token in Jenkins Credentials as a Username/Password credential with ID <code>harbor-robot</code>.</div>
+
+<h2>7. Helm Chart</h2>
+<h3>helm/microservice/Chart.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: v2
+<span class="kw">name</span>: microservice
+<span class="kw">description</span>: Generic chart for Spring Boot microservices
+<span class="kw">version</span>: 1.0.0
+<span class="kw">appVersion</span>: <span class="str">"1.0.0"</span></code></pre>
+
+<h3>helm/microservice/values.yaml</h3>
+<pre><code><span class="kw">replicaCount</span>: <span class="num">2</span>
+
+<span class="kw">image</span>:
+  <span class="kw">repository</span>: harbor.internal.company.com/microservices/user-service
+  <span class="kw">tag</span>: latest
+  <span class="kw">pullPolicy</span>: IfNotPresent
+
+<span class="kw">service</span>:
+  <span class="kw">type</span>: ClusterIP
+  <span class="kw">port</span>: <span class="num">80</span>
+  <span class="kw">targetPort</span>: <span class="num">8080</span>
+
+<span class="kw">ingress</span>:
+  <span class="kw">enabled</span>: <span class="kw">true</span>
+  <span class="kw">className</span>: nginx
+  <span class="kw">hosts</span>:
+    - <span class="kw">host</span>: api.company.com
+      <span class="kw">paths</span>:
+        - <span class="kw">path</span>: /api/users
+          <span class="kw">pathType</span>: Prefix
+  <span class="kw">tls</span>:
+    - <span class="kw">secretName</span>: api-tls
+      <span class="kw">hosts</span>: [api.company.com]
+
+<span class="kw">resources</span>:
+  <span class="kw">requests</span>:
+    <span class="kw">cpu</span>: 250m
+    <span class="kw">memory</span>: 512Mi
+  <span class="kw">limits</span>:
+    <span class="kw">cpu</span>: <span class="num">1000</span>m
+    <span class="kw">memory</span>: 1Gi
+
+<span class="kw">autoscaling</span>:
+  <span class="kw">enabled</span>: <span class="kw">true</span>
+  <span class="kw">minReplicas</span>: <span class="num">2</span>
+  <span class="kw">maxReplicas</span>: <span class="num">8</span>
+  <span class="kw">targetCPUUtilizationPercentage</span>: <span class="num">70</span>
+  <span class="kw">targetMemoryUtilizationPercentage</span>: <span class="num">80</span>
+
+<span class="kw">env</span>:
+  <span class="kw">SPRING_PROFILE</span>: prod
+  <span class="kw">DB_HOST</span>: user-db-postgresql
+  <span class="kw">DB_PORT</span>: <span class="str">"5432"</span>
+  <span class="kw">DB_NAME</span>: userdb
+
+<span class="kw">secrets</span>:
+  <span class="kw">DB_USER</span>: db-credentials
+  <span class="kw">DB_PASS</span>: db-credentials</code></pre>
+
+<h3>helm/microservice/templates/deployment.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: apps/v1
+<span class="kw">kind</span>: Deployment
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: {{ .Release.Name }}
+  <span class="kw">labels</span>:
+    app: {{ .Release.Name }}
+<span class="kw">spec</span>:
+  {{- <span class="kw">if not</span> .Values.autoscaling.enabled }}
+  <span class="kw">replicas</span>: {{ .Values.replicaCount }}
+  {{- <span class="kw">end</span> }}
+  <span class="kw">selector</span>:
+    <span class="kw">matchLabels</span>:
+      app: {{ .Release.Name }}
+  <span class="kw">template</span>:
+    <span class="kw">metadata</span>:
+      <span class="kw">labels</span>:
+        app: {{ .Release.Name }}
+      <span class="kw">annotations</span>:
+        prometheus.io/scrape: <span class="str">"true"</span>
+        prometheus.io/path: /actuator/prometheus
+        prometheus.io/port: <span class="str">"8080"</span>
+    <span class="kw">spec</span>:
+      <span class="kw">containers</span>:
+        - <span class="kw">name</span>: {{ .Release.Name }}
+          <span class="kw">image</span>: <span class="str">"{{ .Values.image.repository }}:{{ .Values.image.tag }}"</span>
+          <span class="kw">imagePullPolicy</span>: {{ .Values.image.pullPolicy }}
+          <span class="kw">ports</span>:
+            - <span class="kw">containerPort</span>: <span class="num">8080</span>
+          <span class="kw">env</span>:
+            {{- range $key, $val := .Values.env }}
+            - <span class="kw">name</span>: {{ $key }}
+              <span class="kw">value</span>: {{ $val | quote }}
+            {{- end }}
+            {{- range $key, $secret := .Values.secrets }}
+            - <span class="kw">name</span>: {{ $key }}
+              <span class="kw">valueFrom</span>:
+                <span class="kw">secretKeyRef</span>:
+                  <span class="kw">name</span>: {{ $secret }}
+                  <span class="kw">key</span>: {{ $key | lower }}
+            {{- end }}
+          <span class="kw">readinessProbe</span>:
+            <span class="kw">httpGet</span>:
+              <span class="kw">path</span>: /actuator/health/readiness
+              <span class="kw">port</span>: <span class="num">8080</span>
+            <span class="kw">initialDelaySeconds</span>: <span class="num">20</span>
+            <span class="kw">periodSeconds</span>: <span class="num">10</span>
+          <span class="kw">livenessProbe</span>:
+            <span class="kw">httpGet</span>:
+              <span class="kw">path</span>: /actuator/health/liveness
+              <span class="kw">port</span>: <span class="num">8080</span>
+            <span class="kw">initialDelaySeconds</span>: <span class="num">30</span>
+            <span class="kw">periodSeconds</span>: <span class="num">15</span>
+          <span class="kw">resources</span>:
+            {{- toYaml .Values.resources | nindent 12 }}
+      <span class="kw">imagePullSecrets</span>:
+        - <span class="kw">name</span>: harbor-pull-secret</code></pre>
+
+<h3>helm/microservice/templates/service.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: Service
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: {{ .Release.Name }}
+<span class="kw">spec</span>:
+  <span class="kw">type</span>: {{ .Values.service.type }}
+  <span class="kw">ports</span>:
+    - <span class="kw">port</span>: {{ .Values.service.port }}
+      <span class="kw">targetPort</span>: {{ .Values.service.targetPort }}
+      <span class="kw">protocol</span>: TCP
+  <span class="kw">selector</span>:
+    app: {{ .Release.Name }}</code></pre>
+
+<h3>helm/microservice/templates/hpa.yaml</h3>
+<pre><code>{{- <span class="kw">if</span> .Values.autoscaling.enabled }}
+<span class="kw">apiVersion</span>: autoscaling/v2
+<span class="kw">kind</span>: HorizontalPodAutoscaler
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: {{ .Release.Name }}
+<span class="kw">spec</span>:
+  <span class="kw">scaleTargetRef</span>:
+    <span class="kw">apiVersion</span>: apps/v1
+    <span class="kw">kind</span>: Deployment
+    <span class="kw">name</span>: {{ .Release.Name }}
+  <span class="kw">minReplicas</span>: {{ .Values.autoscaling.minReplicas }}
+  <span class="kw">maxReplicas</span>: {{ .Values.autoscaling.maxReplicas }}
+  <span class="kw">metrics</span>:
+    - <span class="kw">type</span>: Resource
+      <span class="kw">resource</span>:
+        <span class="kw">name</span>: cpu
+        <span class="kw">target</span>:
+          <span class="kw">type</span>: Utilization
+          <span class="kw">averageUtilization</span>: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - <span class="kw">type</span>: Resource
+      <span class="kw">resource</span>:
+        <span class="kw">name</span>: memory
+        <span class="kw">target</span>:
+          <span class="kw">type</span>: Utilization
+          <span class="kw">averageUtilization</span>: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
+{{- <span class="kw">end</span> }}</code></pre>
+
+<h2>8. Kubernetes Namespace &amp; RBAC</h2>
+<h3>k8s/namespace.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: Namespace
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: prod
+  <span class="kw">labels</span>:
+    env: production
+---
+<span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: ServiceAccount
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: microservice-sa
+  <span class="kw">namespace</span>: prod
+---
+<span class="kw">apiVersion</span>: rbac.authorization.k8s.io/v1
+<span class="kw">kind</span>: Role
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: microservice-role
+  <span class="kw">namespace</span>: prod
+<span class="kw">rules</span>:
+  - <span class="kw">apiGroups</span>: [<span class="str">""</span>]
+    <span class="kw">resources</span>: [<span class="str">"configmaps"</span>, <span class="str">"secrets"</span>]
+    <span class="kw">verbs</span>: [<span class="str">"get"</span>, <span class="str">"list"</span>, <span class="str">"watch"</span>]
+---
+<span class="kw">apiVersion</span>: rbac.authorization.k8s.io/v1
+<span class="kw">kind</span>: RoleBinding
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: microservice-binding
+  <span class="kw">namespace</span>: prod
+<span class="kw">subjects</span>:
+  - <span class="kw">kind</span>: ServiceAccount
+    <span class="kw">name</span>: microservice-sa
+<span class="kw">roleRef</span>:
+  <span class="kw">kind</span>: Role
+  <span class="kw">name</span>: microservice-role
+  <span class="kw">apiGroup</span>: rbac.authorization.k8s.io</code></pre>
+<pre><code><span class="cm"># Apply namespaces and RBAC</span>
+kubectl apply -f k8s/namespace.yaml
+
+<span class="cm"># Create Harbor pull secret in each namespace</span>
+kubectl create secret docker-registry harbor-pull-secret \
+  --namespace prod \
+  --docker-server=harbor.internal.company.com \
+  --docker-username=robot\$jenkins-push \
+  --docker-password=&lt;robot-token&gt;</code></pre>
+
+<h2>9. PostgreSQL per Service</h2>
+<pre><code><span class="cm"># Add Bitnami repo</span>
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+
+<span class="cm"># Install PostgreSQL for each service</span>
+helm install user-db bitnami/postgresql \
+  --namespace prod \
+  --set auth.database=userdb \
+  --set auth.username=app_user \
+  --set auth.password=secret-user-pass \
+  --set primary.persistence.size=20Gi \
+  --set metrics.enabled=true
+
+helm install order-db bitnami/postgresql \
+  --namespace prod \
+  --set auth.database=orderdb \
+  --set auth.username=app_order \
+  --set auth.password=secret-order-pass \
+  --set primary.persistence.size=20Gi \
+  --set metrics.enabled=true
+
+helm install payment-db bitnami/postgresql \
+  --namespace prod \
+  --set auth.database=paymentdb \
+  --set auth.username=app_payment \
+  --set auth.password=secret-payment-pass \
+  --set primary.persistence.size=20Gi \
+  --set metrics.enabled=true</code></pre>
+
+<pre><code><span class="cm"># Store credentials as K8s secrets</span>
+kubectl create secret generic db-credentials \
+  --namespace prod \
+  --from-literal=db_user=app_user \
+  --from-literal=db_pass=secret-user-pass</code></pre>
+
+<div class="warn">Never store passwords in plain text in your repo. Use a secrets manager (Vault, AWS Secrets Manager) or Sealed Secrets for GitOps workflows.</div>
+
+<h2>10. NGINX Ingress &amp; TLS</h2>
+<pre><code><span class="cm"># Install NGINX Ingress Controller</span>
+helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.replicaCount=2
+
+<span class="cm"># Install cert-manager for auto TLS</span>
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --set installCRDs=true</code></pre>
+
+<h3>k8s/cluster-issuer.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: cert-manager.io/v1
+<span class="kw">kind</span>: ClusterIssuer
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: letsencrypt-prod
+<span class="kw">spec</span>:
+  <span class="kw">acme</span>:
+    <span class="kw">server</span>: https://acme-v02.api.letsencrypt.org/directory
+    <span class="kw">email</span>: devops@company.com
+    <span class="kw">privateKeySecretRef</span>:
+      <span class="kw">name</span>: letsencrypt-prod
+    <span class="kw">solvers</span>:
+      - <span class="kw">http01</span>:
+          <span class="kw">ingress</span>:
+            <span class="kw">class</span>: nginx</code></pre>
+
+<h3>helm/microservice/templates/ingress.yaml</h3>
+<pre><code>{{- <span class="kw">if</span> .Values.ingress.enabled }}
+<span class="kw">apiVersion</span>: networking.k8s.io/v1
+<span class="kw">kind</span>: Ingress
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: {{ .Release.Name }}
+  <span class="kw">annotations</span>:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: <span class="str">"true"</span>
+    nginx.ingress.kubernetes.io/proxy-body-size: <span class="str">"10m"</span>
+<span class="kw">spec</span>:
+  <span class="kw">ingressClassName</span>: {{ .Values.ingress.className }}
+  <span class="kw">tls</span>:
+    {{- range .Values.ingress.tls }}
+    - <span class="kw">hosts</span>:
+        {{- range .hosts }}
+        - {{ . }}
+        {{- end }}
+      <span class="kw">secretName</span>: {{ .secretName }}
+    {{- end }}
+  <span class="kw">rules</span>:
+    {{- range .Values.ingress.hosts }}
+    - <span class="kw">host</span>: {{ .host }}
+      <span class="kw">http</span>:
+        <span class="kw">paths</span>:
+          {{- range .paths }}
+          - <span class="kw">path</span>: {{ .path }}
+            <span class="kw">pathType</span>: {{ .pathType }}
+            <span class="kw">backend</span>:
+              <span class="kw">service</span>:
+                <span class="kw">name</span>: {{ $.Release.Name }}
+                <span class="kw">port</span>:
+                  <span class="kw">number</span>: 80
+          {{- end }}
+    {{- end }}
+{{- <span class="kw">end</span> }}</code></pre>
+
+<h2>11. Monitoring — Prometheus &amp; Grafana</h2>
+<pre><code><span class="cm"># Install kube-prometheus-stack</span>
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace \
+  --set grafana.adminPassword=admin-secret \
+  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false</code></pre>
+
+<h3>helm/microservice/templates/servicemonitor.yaml</h3>
+<pre><code><span class="kw">apiVersion</span>: monitoring.coreos.com/v1
+<span class="kw">kind</span>: ServiceMonitor
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: {{ .Release.Name }}
+<span class="kw">spec</span>:
+  <span class="kw">selector</span>:
+    <span class="kw">matchLabels</span>:
+      app: {{ .Release.Name }}
+  <span class="kw">endpoints</span>:
+    - <span class="kw">port</span>: http
+      <span class="kw">path</span>: /actuator/prometheus
+      <span class="kw">interval</span>: 15s</code></pre>
+
+<div class="note">After deploying, open Grafana at <code>http://monitoring-grafana.monitoring.svc</code> and import dashboard ID <strong>4701</strong> (JVM Micrometer) for Spring Boot metrics.</div>
+
+<h2>12. Testing &amp; Verification</h2>
+<pre><code><span class="cm"># Check pods</span>
+kubectl get pods -n prod
+kubectl get svc -n prod
+kubectl get ingress -n prod
+
+<span class="cm"># Check HPA</span>
+kubectl get hpa -n prod
+
+<span class="cm"># Test health endpoints</span>
+curl -sf https://api.company.com/api/users/actuator/health
+curl -sf https://api.company.com/api/orders/actuator/health
+curl -sf https://api.company.com/api/payments/actuator/health
+
+<span class="cm"># View logs</span>
+kubectl logs -l app=user-service -n prod --tail=50 -f
+
+<span class="cm"># Rollback if needed</span>
+helm rollback user-service 1 -n prod
+helm rollback order-service 1 -n prod
+helm rollback payment-service 1 -n prod
+
+<span class="cm"># Scale manually</span>
+kubectl scale deployment user-service -n prod --replicas=4
+
+<span class="cm"># Check Prometheus targets</span>
+kubectl port-forward svc/monitoring-prometheus 9090:9090 -n monitoring</code></pre>
+
+<div class="warn">Before deploying to prod, always test in staging first. Use <code>helm diff</code> plugin to preview changes: <code>helm diff upgrade user-service helm/microservice/ -f values-prod.yaml</code></div>
+
+<footer>Stefan Laza — DevOps Engineer</footer>
+</div></body></html>

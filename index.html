@@ -125,6 +125,74 @@ rect[data-node]:hover{filter:brightness(1.2)}
 .adr-content li{margin-bottom:0.2rem}
 .adr-content .chosen{color:var(--green);font-weight:600}
 
+/* PROJECT TIMELINE / GANTT */
+.gantt-wrap{width:min(94vw,960px);margin:2.5rem auto 0;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden;padding:1.5rem}
+.gantt-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.gantt-title{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)}
+.gantt-legend{display:flex;gap:1rem;flex-wrap:wrap}
+.gantt-legend span{display:flex;align-items:center;gap:0.4rem;font-size:0.62rem;color:var(--muted)}
+.gantt-legend .leg-dot{width:8px;height:8px;border-radius:3px}
+.gantt-months{display:grid;grid-template-columns:160px repeat(12,1fr);font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;padding:0 0 0.5rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem}
+.gantt-months span:first-child{font-weight:700}
+.gantt-row{display:grid;grid-template-columns:160px 1fr;align-items:center;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.02)}
+.gantt-row:hover{background:rgba(255,255,255,0.02)}
+.gantt-task{font-size:0.75rem;font-weight:500;display:flex;align-items:center;gap:0.5rem}
+.gantt-task .task-icon{width:6px;height:6px;border-radius:2px;flex-shrink:0}
+.gantt-bar-area{position:relative;height:22px}
+.gantt-bar{position:absolute;height:18px;border-radius:6px;top:2px;opacity:0.85;transition:opacity 0.2s}
+.gantt-bar:hover{opacity:1}
+.gantt-milestone{position:absolute;width:12px;height:12px;transform:rotate(45deg);top:5px;border:2px solid}
+.gantt-phase{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);padding:0.6rem 0 0.2rem;grid-column:1/-1}
+
+/* RISK REGISTER */
+.risk-wrap{width:min(94vw,960px);margin:2.5rem auto 0;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden}
+.risk-matrix{display:grid;grid-template-columns:60px repeat(5,1fr);grid-template-rows:auto repeat(5,50px);gap:1px;background:var(--border);margin:1.5rem;border-radius:12px;overflow:hidden}
+.risk-matrix .axis-label{background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
+.risk-cell{background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:600;cursor:default;transition:transform 0.2s;position:relative}
+.risk-cell:hover{z-index:2;transform:scale(1.05)}
+.risk-cell.low{background:rgba(52,211,153,0.08);color:var(--green)}
+.risk-cell.med{background:rgba(251,146,60,0.08);color:var(--orange)}
+.risk-cell.high{background:rgba(248,113,113,0.08);color:var(--red)}
+.risk-cell.crit{background:rgba(248,113,113,0.15);color:var(--red)}
+.risk-table{width:100%;border-collapse:collapse}
+.risk-table th{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);padding:0.8rem 1rem;text-align:left;border-bottom:1px solid var(--border)}
+.risk-table td{font-size:0.78rem;padding:0.7rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03);color:var(--muted)}
+.risk-table tr:hover td{background:rgba(255,255,255,0.02)}
+.risk-badge{display:inline-block;font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:0.15rem 0.5rem;border-radius:4px}
+
+/* DELIVERY METRICS */
+.del-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;max-width:960px;width:100%;margin-top:2.5rem}
+.del-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;text-align:center;transition:transform 0.3s,border-color 0.3s}
+.del-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.12)}
+.del-card .del-val{font-size:2.2rem;font-weight:700;letter-spacing:-0.03em;line-height:1.2}
+.del-card .del-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:0.3rem}
+.del-card .del-trend{font-size:0.7rem;margin-top:0.6rem;font-weight:600}
+.del-sparkline{margin-top:0.8rem}
+.del-sparkline svg{width:100%;height:auto}
+
+/* TEAM TOPOLOGY */
+.topo-wrap{width:min(94vw,960px);margin:2.5rem auto 0;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden;padding:1.5rem}
+.topo-wrap svg{width:100%;height:auto;display:block}
+
+/* RETRO INSIGHTS */
+.retro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:960px;width:100%;margin-top:2.5rem}
+.retro-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;transition:transform 0.3s,border-color 0.3s}
+.retro-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.12)}
+.retro-card .retro-sprint{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.8rem}
+.retro-card h3{font-size:0.95rem;font-weight:600;margin-bottom:0.5rem}
+.retro-items{list-style:none;padding:0}
+.retro-items li{font-size:0.78rem;color:var(--muted);line-height:1.6;padding:0.3rem 0;padding-left:1.2rem;position:relative}
+.retro-items li::before{content:'';position:absolute;left:0;top:0.65rem;width:6px;height:6px;border-radius:50%}
+.retro-items.went-well li::before{background:var(--green)}
+.retro-items.improve li::before{background:var(--orange)}
+.retro-items.actions li::before{background:var(--blue)}
+.retro-type{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.4rem;margin-top:0.8rem}
+.retro-type:first-of-type{margin-top:0}
+
+/* ESCALATION FRAMEWORK */
+.esc-wrap{width:min(94vw,960px);margin:2.5rem auto 0;border-radius:20px;background:var(--card);border:1px solid var(--border);overflow:hidden;padding:1.5rem}
+.esc-wrap svg{width:100%;height:auto;display:block}
+
 /* RESPONSIVE */
 @media(max-width:700px){
   nav{padding:0.8rem 1rem}.nav-links{gap:0.8rem}.nav-links a{font-size:0.7rem}
@@ -150,6 +218,12 @@ rect[data-node]:hover{filter:brightness(1.2)}
     <a href="#case-studies">Impact</a>
     <a href="#monitoring">Dashboard</a>
     <a href="#adrs">ADRs</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#risks">Risks</a>
+    <a href="#delivery">Delivery</a>
+    <a href="#topology">Team</a>
+    <a href="#retros">Retros</a>
+    <a href="#escalation">Escalation</a>
     <a href="#contact">Contact</a>
   </div>
 </nav>
@@ -1318,6 +1392,569 @@ rect[data-node]:hover{filter:brightness(1.2)}
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ══════════ PROJECT TIMELINE ══════════ -->
+<section id="timeline">
+  <div class="tag reveal" style="color:var(--blue)">Project Management</div>
+  <h2 class="reveal">Project Timeline</h2>
+  <p class="sub reveal">Cloud migration project — from discovery to production handoff, managed end-to-end.</p>
+
+  <div class="gantt-wrap reveal">
+    <div class="gantt-header">
+      <span class="gantt-title">Cloud Migration — E-Commerce Platform</span>
+      <div class="gantt-legend">
+        <span><span class="leg-dot" style="background:var(--blue)"></span> Planning</span>
+        <span><span class="leg-dot" style="background:var(--purple)"></span> Build</span>
+        <span><span class="leg-dot" style="background:var(--green)"></span> Deploy</span>
+        <span><span class="leg-dot" style="background:var(--aws)"></span> Milestone</span>
+      </div>
+    </div>
+    <div class="gantt-months">
+      <span>Task</span>
+      <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+    </div>
+
+    <div class="gantt-phase">Phase 1 — Initiation & Discovery</div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>Stakeholder Interviews</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:0%;width:12%;background:var(--blue)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>Current State Assessment</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:4%;width:14%;background:var(--blue)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>Risk Assessment & Budget</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:10%;width:10%;background:var(--blue)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--aws)"></span>Project Charter Approved</div>
+      <div class="gantt-bar-area"><div class="gantt-milestone" style="left:20%;border-color:var(--aws);background:rgba(255,153,0,0.2)"></div></div>
+    </div>
+
+    <div class="gantt-phase">Phase 2 — Architecture & Planning</div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>Target Architecture Design</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:18%;width:14%;background:var(--blue)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>IaC Module Development</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:22%;width:18%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--blue)"></span>CI/CD Pipeline Design</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:26%;width:12%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--aws)"></span>Architecture Review Board</div>
+      <div class="gantt-bar-area"><div class="gantt-milestone" style="left:38%;border-color:var(--aws);background:rgba(255,153,0,0.2)"></div></div>
+    </div>
+
+    <div class="gantt-phase">Phase 3 — Build & Migrate</div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--purple)"></span>VPC & Networking Setup</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:36%;width:10%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--purple)"></span>Database Migration (DMS)</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:42%;width:16%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--purple)"></span>Application Containerization</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:40%;width:20%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--purple)"></span>Integration Testing</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:56%;width:10%;background:var(--purple)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--aws)"></span>UAT Sign-off</div>
+      <div class="gantt-bar-area"><div class="gantt-milestone" style="left:66%;border-color:var(--aws);background:rgba(255,153,0,0.2)"></div></div>
+    </div>
+
+    <div class="gantt-phase">Phase 4 — Deploy & Handoff</div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--green)"></span>Blue-Green Cutover</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:66%;width:8%;background:var(--green)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--green)"></span>Monitoring & Alerting Setup</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:70%;width:10%;background:var(--green)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--green)"></span>Runbook & Documentation</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:74%;width:10%;background:var(--green)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--green)"></span>Team Training & Handoff</div>
+      <div class="gantt-bar-area"><div class="gantt-bar" style="left:78%;width:10%;background:var(--green)"></div></div>
+    </div>
+    <div class="gantt-row">
+      <div class="gantt-task"><span class="task-icon" style="background:var(--aws)"></span>Project Closure</div>
+      <div class="gantt-bar-area"><div class="gantt-milestone" style="left:88%;border-color:var(--aws);background:rgba(255,153,0,0.2)"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ RISK REGISTER ══════════ -->
+<section id="risks" class="alt-bg">
+  <div class="tag reveal" style="color:var(--red)">Risk Management</div>
+  <h2 class="reveal">Risk Register</h2>
+  <p class="sub reveal">Proactive risk identification and mitigation — scored by probability and impact.</p>
+
+  <div class="risk-wrap reveal">
+    <div style="padding:1.5rem 1.5rem 0;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted)">Probability &times; Impact Matrix</div>
+    <div class="risk-matrix">
+      <div class="axis-label"></div>
+      <div class="axis-label">Very Low</div>
+      <div class="axis-label">Low</div>
+      <div class="axis-label">Medium</div>
+      <div class="axis-label">High</div>
+      <div class="axis-label">Very High</div>
+
+      <div class="axis-label">Very High</div>
+      <div class="risk-cell med">5</div>
+      <div class="risk-cell med">10</div>
+      <div class="risk-cell high">15</div>
+      <div class="risk-cell crit">20</div>
+      <div class="risk-cell crit">25</div>
+
+      <div class="axis-label">High</div>
+      <div class="risk-cell low">4</div>
+      <div class="risk-cell med">8</div>
+      <div class="risk-cell med">12</div>
+      <div class="risk-cell high">16</div>
+      <div class="risk-cell crit">20</div>
+
+      <div class="axis-label">Medium</div>
+      <div class="risk-cell low">3</div>
+      <div class="risk-cell med">6</div>
+      <div class="risk-cell med">9</div>
+      <div class="risk-cell high">12</div>
+      <div class="risk-cell high">15</div>
+
+      <div class="axis-label">Low</div>
+      <div class="risk-cell low">2</div>
+      <div class="risk-cell low">4</div>
+      <div class="risk-cell med">6</div>
+      <div class="risk-cell med">8</div>
+      <div class="risk-cell med">10</div>
+
+      <div class="axis-label">Very Low</div>
+      <div class="risk-cell low">1</div>
+      <div class="risk-cell low">2</div>
+      <div class="risk-cell low">3</div>
+      <div class="risk-cell low">4</div>
+      <div class="risk-cell med">5</div>
+    </div>
+
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Risk</th>
+          <th>Probability</th>
+          <th>Impact</th>
+          <th>Score</th>
+          <th>Mitigation</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-001</td>
+          <td style="color:var(--text)">Database migration data loss during DMS cutover</td>
+          <td>Medium</td>
+          <td>Very High</td>
+          <td><span class="risk-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">15 — High</span></td>
+          <td>Parallel run for 2 weeks; automated checksum validation; point-in-time recovery enabled</td>
+          <td><span class="risk-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Mitigated</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-002</td>
+          <td style="color:var(--text)">Vendor lock-in with proprietary AWS services</td>
+          <td>High</td>
+          <td>Medium</td>
+          <td><span class="risk-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">12 — High</span></td>
+          <td>Abstract cloud services behind Terraform modules; use portable alternatives where feasible</td>
+          <td><span class="risk-badge" style="background:rgba(251,146,60,0.1);color:var(--orange)">Monitoring</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-003</td>
+          <td style="color:var(--text)">Key engineer leaves mid-migration</td>
+          <td>Medium</td>
+          <td>High</td>
+          <td><span class="risk-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">12 — High</span></td>
+          <td>Cross-training, pair programming, documented runbooks for all critical paths</td>
+          <td><span class="risk-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Mitigated</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-004</td>
+          <td style="color:var(--text)">Network latency spikes after VPC migration</td>
+          <td>Low</td>
+          <td>High</td>
+          <td><span class="risk-badge" style="background:rgba(251,146,60,0.1);color:var(--orange)">8 — Med</span></td>
+          <td>VPC peering pre-tested; synthetic monitoring in staging; rollback plan for DNS cutover</td>
+          <td><span class="risk-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Mitigated</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-005</td>
+          <td style="color:var(--text)">Budget overrun due to scope creep</td>
+          <td>High</td>
+          <td>Medium</td>
+          <td><span class="risk-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">12 — High</span></td>
+          <td>Formal change control process; weekly budget reviews; scope locked after Phase 2</td>
+          <td><span class="risk-badge" style="background:rgba(251,146,60,0.1);color:var(--orange)">Monitoring</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--text);font-weight:600">R-006</td>
+          <td style="color:var(--text)">Compliance gap (SOC2/HIPAA) in new environment</td>
+          <td>Low</td>
+          <td>Very High</td>
+          <td><span class="risk-badge" style="background:rgba(248,113,113,0.1);color:var(--red)">10 — Med</span></td>
+          <td>AWS Config rules from day 1; Security Hub enabled; pre-audit dry run in month 8</td>
+          <td><span class="risk-badge" style="background:rgba(52,211,153,0.1);color:var(--green)">Mitigated</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════ DELIVERY METRICS ══════════ -->
+<section id="delivery">
+  <div class="tag reveal" style="color:var(--cyan)">Delivery Performance</div>
+  <h2 class="reveal">Delivery Metrics</h2>
+  <p class="sub reveal">Quantified delivery outcomes across the last 4 quarters.</p>
+
+  <div class="del-metrics reveal">
+    <div class="del-card">
+      <div class="del-val" style="color:var(--green)">94%</div>
+      <div class="del-label">On-Time Delivery Rate</div>
+      <div class="del-trend" style="color:var(--green)">+8% from Q1</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,28 L30,22 L60,18 L90,12 L120,6" stroke="var(--green)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="6" r="2.5" fill="var(--green)"/></svg>
+      </div>
+    </div>
+    <div class="del-card">
+      <div class="del-val" style="color:var(--blue)">38</div>
+      <div class="del-label">Sprint Velocity (avg pts)</div>
+      <div class="del-trend" style="color:var(--green)">+5 from Q1</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,26 L30,24 L60,18 L90,14 L120,8" stroke="var(--blue)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="8" r="2.5" fill="var(--blue)"/></svg>
+      </div>
+    </div>
+    <div class="del-card">
+      <div class="del-val" style="color:var(--purple)">-2.1%</div>
+      <div class="del-label">Budget Variance</div>
+      <div class="del-trend" style="color:var(--green)">Under budget</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,10 L30,14 L60,12 L90,16 L120,15" stroke="var(--purple)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="15" r="2.5" fill="var(--purple)"/></svg>
+      </div>
+    </div>
+    <div class="del-card">
+      <div class="del-val" style="color:var(--aws)">7%</div>
+      <div class="del-label">Scope Change Rate</div>
+      <div class="del-trend" style="color:var(--green)">Within threshold</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,20 L30,18 L60,22 L90,16 L120,14" stroke="var(--aws)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="14" r="2.5" fill="var(--aws)"/></svg>
+      </div>
+    </div>
+    <div class="del-card">
+      <div class="del-val" style="color:var(--cyan)">1.8 days</div>
+      <div class="del-label">Avg Lead Time</div>
+      <div class="del-trend" style="color:var(--green)">-0.6 days from Q1</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,8 L30,12 L60,10 L90,16 L120,22" stroke="var(--cyan)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="22" r="2.5" fill="var(--cyan)"/></svg>
+      </div>
+    </div>
+    <div class="del-card">
+      <div class="del-val" style="color:var(--red)">0</div>
+      <div class="del-label">Missed Deadlines (Q4)</div>
+      <div class="del-trend" style="color:var(--green)">Down from 3 in Q1</div>
+      <div class="del-sparkline">
+        <svg viewBox="0 0 120 32" fill="none"><path d="M0,8 L30,14 L60,18 L90,24 L120,28" stroke="var(--red)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="120" cy="28" r="2.5" fill="var(--red)"/></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ TEAM TOPOLOGY ══════════ -->
+<section id="topology" class="alt-bg">
+  <div class="tag reveal" style="color:var(--indigo)">Team Structure</div>
+  <h2 class="reveal">Team Topology</h2>
+  <p class="sub reveal">How I organize cross-functional teams for maximum flow and minimal cognitive load.</p>
+
+  <div class="topo-wrap reveal">
+    <svg viewBox="0 0 960 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Title -->
+      <text x="480" y="30" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing="0.12em">TEAM TOPOLOGY — CLOUD MIGRATION PROGRAM</text>
+
+      <!-- Stream-Aligned Teams -->
+      <rect x="40" y="70" width="400" height="200" rx="16" fill="rgba(74,158,255,0.04)" stroke="rgba(74,158,255,0.15)" stroke-width="1.5"/>
+      <text x="60" y="95" fill="var(--blue)" font-size="9" font-weight="700" letter-spacing="0.1em">STREAM-ALIGNED TEAMS</text>
+      <text x="60" y="110" fill="var(--muted)" font-size="7">Aligned to business value streams — own full delivery lifecycle</text>
+
+      <!-- Team 1 -->
+      <rect x="60" y="125" width="170" height="60" rx="10" fill="var(--card)" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <text x="145" y="150" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="600">Checkout Team</text>
+      <text x="145" y="165" text-anchor="middle" fill="var(--muted)" font-size="7">4 engineers &bull; 1 PM</text>
+      <!-- Team 2 -->
+      <rect x="250" y="125" width="170" height="60" rx="10" fill="var(--card)" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <text x="335" y="150" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="600">Catalog Team</text>
+      <text x="335" y="165" text-anchor="middle" fill="var(--muted)" font-size="7">3 engineers &bull; 1 PM</text>
+      <!-- Team 3 -->
+      <rect x="60" y="200" width="170" height="60" rx="10" fill="var(--card)" stroke="rgba(74,158,255,0.3)" stroke-width="1.5"/>
+      <text x="145" y="225" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="600">User Auth Team</text>
+      <text x="145" y="240" text-anchor="middle" fill="var(--muted)" font-size="7">3 engineers &bull; 1 PM</text>
+
+      <!-- Platform Team -->
+      <rect x="520" y="70" width="400" height="120" rx="16" fill="rgba(167,139,250,0.04)" stroke="rgba(167,139,250,0.15)" stroke-width="1.5"/>
+      <text x="540" y="95" fill="var(--purple)" font-size="9" font-weight="700" letter-spacing="0.1em">PLATFORM TEAM</text>
+      <text x="540" y="110" fill="var(--muted)" font-size="7">Provides self-service infrastructure — reduces cognitive load on stream teams</text>
+
+      <rect x="540" y="125" width="160" height="50" rx="10" fill="var(--card)" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <text x="620" y="148" text-anchor="middle" fill="var(--purple)" font-size="10" font-weight="600">Infra Platform</text>
+      <text x="620" y="162" text-anchor="middle" fill="var(--muted)" font-size="7">Terraform, CI/CD, K8s</text>
+
+      <rect x="720" y="125" width="180" height="50" rx="10" fill="var(--card)" stroke="rgba(167,139,250,0.3)" stroke-width="1.5"/>
+      <text x="810" y="148" text-anchor="middle" fill="var(--purple)" font-size="10" font-weight="600">Observability Platform</text>
+      <text x="810" y="162" text-anchor="middle" fill="var(--muted)" font-size="7">Monitoring, Logging, Alerts</text>
+
+      <!-- Enabling Team -->
+      <rect x="520" y="220" width="400" height="100" rx="16" fill="rgba(52,211,153,0.04)" stroke="rgba(52,211,153,0.15)" stroke-width="1.5"/>
+      <text x="540" y="245" fill="var(--green)" font-size="9" font-weight="700" letter-spacing="0.1em">ENABLING TEAM</text>
+      <text x="540" y="260" fill="var(--muted)" font-size="7">Temporary coaching &amp; upskilling — helps stream teams adopt new tech</text>
+
+      <rect x="540" y="275" width="160" height="30" rx="8" fill="var(--card)" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <text x="620" y="294" text-anchor="middle" fill="var(--green)" font-size="9" font-weight="600">Security Coaching</text>
+
+      <rect x="720" y="275" width="180" height="30" rx="8" fill="var(--card)" stroke="rgba(52,211,153,0.3)" stroke-width="1.5"/>
+      <text x="810" y="294" text-anchor="middle" fill="var(--green)" font-size="9" font-weight="600">Cloud Migration Coaching</text>
+
+      <!-- Interaction arrows -->
+      <!-- Platform → Stream (X-as-a-Service) -->
+      <line x1="520" y1="155" x2="440" y2="155" stroke="var(--purple)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.5"/>
+      <text x="470" y="145" text-anchor="middle" fill="var(--purple)" font-size="6" font-weight="600" opacity="0.7">X-as-a-Service</text>
+
+      <!-- Enabling → Stream (Facilitation) -->
+      <path d="M520,270 Q470,270 440,235" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="6,3" fill="none" opacity="0.5"/>
+      <text x="465" y="260" text-anchor="middle" fill="var(--green)" font-size="6" font-weight="600" opacity="0.7">Facilitation</text>
+
+      <!-- TDL / Me -->
+      <rect x="280" y="360" width="400" height="100" rx="16" fill="rgba(255,153,0,0.04)" stroke="rgba(255,153,0,0.2)" stroke-width="1.5"/>
+      <text x="480" y="390" text-anchor="middle" fill="var(--aws)" font-size="11" font-weight="700">Technical Delivery Lead</text>
+      <text x="480" y="410" text-anchor="middle" fill="var(--muted)" font-size="8">Cross-team coordination &bull; Risk management &bull; Stakeholder communication</text>
+      <text x="480" y="428" text-anchor="middle" fill="var(--muted)" font-size="8">Sprint planning &bull; Dependency resolution &bull; Delivery cadence</text>
+      <text x="480" y="446" text-anchor="middle" fill="var(--muted)" font-size="7" font-style="italic">&mdash; Stefan Laza</text>
+
+      <!-- Lines from TDL to teams -->
+      <line x1="380" y1="360" x2="240" y2="270" stroke="var(--aws)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+      <line x1="430" y1="360" x2="335" y2="270" stroke="var(--aws)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+      <line x1="530" y1="360" x2="620" y2="190" stroke="var(--aws)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+      <line x1="580" y1="360" x2="720" y2="320" stroke="var(--aws)" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+
+      <!-- Key -->
+      <text x="40" y="500" fill="var(--muted)" font-size="7" font-weight="600" letter-spacing="0.06em">INTERACTION MODES:</text>
+      <line x1="170" y1="497" x2="200" y2="497" stroke="var(--purple)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="205" y="500" fill="var(--muted)" font-size="7">X-as-a-Service (platform provides, teams consume)</text>
+      <line x1="480" y1="497" x2="510" y2="497" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="515" y="500" fill="var(--muted)" font-size="7">Facilitation (enabling team coaches, then withdraws)</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ══════════ RETROSPECTIVE INSIGHTS ══════════ -->
+<section id="retros">
+  <div class="tag reveal" style="color:var(--green)">Continuous Improvement</div>
+  <h2 class="reveal">Retrospective Insights</h2>
+  <p class="sub reveal">Real takeaways from sprint retrospectives I've facilitated — showing iterative improvement.</p>
+
+  <div class="retro-grid reveal">
+    <div class="retro-card">
+      <div class="retro-sprint" style="color:var(--blue)">Sprint 14 — Migration Phase 2</div>
+      <h3>Database Migration Sprint</h3>
+      <div class="retro-type" style="color:var(--green)">What went well</div>
+      <ul class="retro-items went-well">
+        <li>DMS replication finished 2 days ahead of schedule</li>
+        <li>Zero data discrepancies in checksum validation</li>
+        <li>Daily standups kept stakeholders informed — no surprises</li>
+      </ul>
+      <div class="retro-type" style="color:var(--orange)">What to improve</div>
+      <ul class="retro-items improve">
+        <li>Schema change coordination between teams was ad-hoc</li>
+        <li>Staging environment drifted from production config</li>
+      </ul>
+      <div class="retro-type" style="color:var(--blue)">Action items</div>
+      <ul class="retro-items actions">
+        <li>Create shared schema change calendar (Owner: TDL)</li>
+        <li>Implement Terraform drift detection in CI pipeline</li>
+      </ul>
+    </div>
+
+    <div class="retro-card">
+      <div class="retro-sprint" style="color:var(--purple)">Sprint 18 — Migration Phase 3</div>
+      <h3>Containerization Sprint</h3>
+      <div class="retro-type" style="color:var(--green)">What went well</div>
+      <ul class="retro-items went-well">
+        <li>Multi-stage Docker builds reduced image size by 68%</li>
+        <li>Pair programming sessions accelerated onboarding</li>
+      </ul>
+      <div class="retro-type" style="color:var(--orange)">What to improve</div>
+      <ul class="retro-items improve">
+        <li>Local dev environment parity with ECS was poor</li>
+        <li>Too many WIP items — team context-switching frequently</li>
+      </ul>
+      <div class="retro-type" style="color:var(--blue)">Action items</div>
+      <ul class="retro-items actions">
+        <li>Introduce WIP limit of 2 per engineer (enforced in Jira)</li>
+        <li>Create docker-compose setup matching ECS task definitions</li>
+        <li>Weekly "focus Friday" — no meetings, deep work only</li>
+      </ul>
+    </div>
+
+    <div class="retro-card">
+      <div class="retro-sprint" style="color:var(--aws)">Sprint 22 — Deploy & Handoff</div>
+      <h3>Production Cutover Sprint</h3>
+      <div class="retro-type" style="color:var(--green)">What went well</div>
+      <ul class="retro-items went-well">
+        <li>Blue-green cutover completed with 0 downtime</li>
+        <li>Runbooks enabled on-call team to handle first week independently</li>
+        <li>Stakeholder demo went smoothly — immediate sign-off</li>
+      </ul>
+      <div class="retro-type" style="color:var(--orange)">What to improve</div>
+      <ul class="retro-items improve">
+        <li>Post-cutover monitoring alerts were too noisy (400+ in first hour)</li>
+        <li>Some runbooks assumed familiarity with old system</li>
+      </ul>
+      <div class="retro-type" style="color:var(--blue)">Action items</div>
+      <ul class="retro-items actions">
+        <li>Tune alert thresholds based on first week baseline</li>
+        <li>Rewrite runbooks assuming zero prior context</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ESCALATION FRAMEWORK ══════════ -->
+<section id="escalation" class="alt-bg">
+  <div class="tag reveal" style="color:var(--orange)">Decision Framework</div>
+  <h2 class="reveal">Escalation Framework</h2>
+  <p class="sub reveal">How I resolve blockers — a clear, repeatable decision flowchart for the team.</p>
+
+  <div class="esc-wrap reveal">
+    <svg viewBox="0 0 960 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="480" y="25" text-anchor="middle" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing="0.12em">BLOCKER ESCALATION FLOWCHART</text>
+
+      <!-- Start -->
+      <rect x="380" y="45" width="200" height="44" rx="22" fill="rgba(248,113,113,0.1)" stroke="var(--red)" stroke-width="1.5"/>
+      <text x="480" y="72" text-anchor="middle" fill="var(--red)" font-size="11" font-weight="700">Blocker Identified</text>
+
+      <!-- Arrow down -->
+      <line x1="480" y1="89" x2="480" y2="115" stroke="var(--muted)" stroke-width="1.5"/>
+      <polygon points="475,112 485,112 480,120" fill="var(--muted)"/>
+
+      <!-- Decision 1: Can team resolve? -->
+      <rect x="350" y="120" width="260" height="50" rx="12" fill="var(--card)" stroke="var(--blue)" stroke-width="1.5" transform="rotate(0)"/>
+      <text x="480" y="142" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="600">Can the team resolve it</text>
+      <text x="480" y="157" text-anchor="middle" fill="var(--blue)" font-size="10" font-weight="600">within the sprint?</text>
+
+      <!-- YES path left -->
+      <line x1="350" y1="145" x2="250" y2="145" stroke="var(--green)" stroke-width="1.5"/>
+      <polygon points="253,140 253,150 245,145" fill="var(--green)"/>
+      <text x="300" y="138" text-anchor="middle" fill="var(--green)" font-size="8" font-weight="700">YES</text>
+
+      <rect x="80" y="120" width="165" height="50" rx="12" fill="rgba(52,211,153,0.08)" stroke="var(--green)" stroke-width="1.5"/>
+      <text x="162" y="142" text-anchor="middle" fill="var(--green)" font-size="9" font-weight="600">Team resolves internally</text>
+      <text x="162" y="157" text-anchor="middle" fill="var(--muted)" font-size="7">Track in sprint board</text>
+
+      <!-- NO path down -->
+      <line x1="480" y1="170" x2="480" y2="205" stroke="var(--red)" stroke-width="1.5"/>
+      <polygon points="475,202 485,202 480,210" fill="var(--red)"/>
+      <text x="495" y="192" fill="var(--red)" font-size="8" font-weight="700">NO</text>
+
+      <!-- Decision 2: Technical or organizational? -->
+      <rect x="340" y="210" width="280" height="50" rx="12" fill="var(--card)" stroke="var(--purple)" stroke-width="1.5"/>
+      <text x="480" y="232" text-anchor="middle" fill="var(--purple)" font-size="10" font-weight="600">Is the blocker technical</text>
+      <text x="480" y="247" text-anchor="middle" fill="var(--purple)" font-size="10" font-weight="600">or organizational?</text>
+
+      <!-- Technical path left -->
+      <line x1="340" y1="235" x2="250" y2="235" stroke="var(--cyan)" stroke-width="1.5"/>
+      <polygon points="253,230 253,240 245,235" fill="var(--cyan)"/>
+      <text x="295" y="228" text-anchor="middle" fill="var(--cyan)" font-size="8" font-weight="700">TECHNICAL</text>
+
+      <rect x="50" y="210" width="195" height="50" rx="12" fill="rgba(34,211,238,0.08)" stroke="var(--cyan)" stroke-width="1.5"/>
+      <text x="147" y="232" text-anchor="middle" fill="var(--cyan)" font-size="9" font-weight="600">Engage Platform Team</text>
+      <text x="147" y="247" text-anchor="middle" fill="var(--muted)" font-size="7">SLA: 4hr response</text>
+
+      <!-- Org path right -->
+      <line x1="620" y1="235" x2="710" y2="235" stroke="var(--aws)" stroke-width="1.5"/>
+      <polygon points="707,230 707,240 715,235" fill="var(--aws)"/>
+      <text x="665" y="228" text-anchor="middle" fill="var(--aws)" font-size="8" font-weight="700">ORGANIZATIONAL</text>
+
+      <rect x="715" y="210" width="200" height="50" rx="12" fill="rgba(255,153,0,0.08)" stroke="var(--aws)" stroke-width="1.5"/>
+      <text x="815" y="232" text-anchor="middle" fill="var(--aws)" font-size="9" font-weight="600">TDL facilitates resolution</text>
+      <text x="815" y="247" text-anchor="middle" fill="var(--muted)" font-size="7">Cross-team sync within 24hr</text>
+
+      <!-- Continue down from decision 2 -->
+      <line x1="480" y1="260" x2="480" y2="295" stroke="var(--muted)" stroke-width="1.5"/>
+      <polygon points="475,292 485,292 480,300" fill="var(--muted)"/>
+      <text x="495" y="282" fill="var(--muted)" font-size="7">UNRESOLVED</text>
+
+      <!-- Decision 3: >48 hours? -->
+      <rect x="350" y="300" width="260" height="50" rx="12" fill="var(--card)" stroke="var(--orange)" stroke-width="1.5"/>
+      <text x="480" y="322" text-anchor="middle" fill="var(--orange)" font-size="10" font-weight="600">Still blocked after 48 hours?</text>
+
+      <!-- NO right -->
+      <line x1="610" y1="325" x2="710" y2="325" stroke="var(--green)" stroke-width="1.5"/>
+      <polygon points="707,320 707,330 715,325" fill="var(--green)"/>
+      <text x="660" y="318" text-anchor="middle" fill="var(--green)" font-size="8" font-weight="700">NO</text>
+
+      <rect x="715" y="300" width="200" height="50" rx="12" fill="rgba(52,211,153,0.08)" stroke="var(--green)" stroke-width="1.5"/>
+      <text x="815" y="322" text-anchor="middle" fill="var(--green)" font-size="9" font-weight="600">Resolved at team level</text>
+      <text x="815" y="337" text-anchor="middle" fill="var(--muted)" font-size="7">Document in retro</text>
+
+      <!-- YES down -->
+      <line x1="480" y1="350" x2="480" y2="385" stroke="var(--red)" stroke-width="1.5"/>
+      <polygon points="475,382 485,382 480,390" fill="var(--red)"/>
+      <text x="495" y="372" fill="var(--red)" font-size="8" font-weight="700">YES</text>
+
+      <!-- Escalate to management -->
+      <rect x="330" y="390" width="300" height="55" rx="12" fill="rgba(248,113,113,0.08)" stroke="var(--red)" stroke-width="1.5"/>
+      <text x="480" y="412" text-anchor="middle" fill="var(--red)" font-size="10" font-weight="700">Escalate to Management</text>
+      <text x="480" y="428" text-anchor="middle" fill="var(--muted)" font-size="7">Written brief: impact, options, recommendation</text>
+      <text x="480" y="440" text-anchor="middle" fill="var(--muted)" font-size="7">SLA: Decision within 24hr</text>
+
+      <!-- Arrow down -->
+      <line x1="480" y1="445" x2="480" y2="475" stroke="var(--muted)" stroke-width="1.5"/>
+      <polygon points="475,472 485,472 480,480" fill="var(--muted)"/>
+
+      <!-- Outcomes -->
+      <rect x="180" y="480" width="180" height="45" rx="10" fill="rgba(52,211,153,0.06)" stroke="var(--green)" stroke-width="1"/>
+      <text x="270" y="500" text-anchor="middle" fill="var(--green)" font-size="9" font-weight="600">Re-prioritize Backlog</text>
+      <text x="270" y="514" text-anchor="middle" fill="var(--muted)" font-size="7">Adjust scope/timeline</text>
+
+      <rect x="390" y="480" width="180" height="45" rx="10" fill="rgba(74,158,255,0.06)" stroke="var(--blue)" stroke-width="1"/>
+      <text x="480" y="500" text-anchor="middle" fill="var(--blue)" font-size="9" font-weight="600">Add Resources</text>
+      <text x="480" y="514" text-anchor="middle" fill="var(--muted)" font-size="7">Staff or vendor support</text>
+
+      <rect x="600" y="480" width="180" height="45" rx="10" fill="rgba(167,139,250,0.06)" stroke="var(--purple)" stroke-width="1"/>
+      <text x="690" y="500" text-anchor="middle" fill="var(--purple)" font-size="9" font-weight="600">Accept &amp; Communicate</text>
+      <text x="690" y="514" text-anchor="middle" fill="var(--muted)" font-size="7">Update stakeholders on delay</text>
+
+      <line x1="480" y1="480" x2="270" y2="480" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="480" y1="480" x2="690" y2="480" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- Footer note -->
+      <text x="480" y="555" text-anchor="middle" fill="var(--muted)" font-size="7" font-weight="600" letter-spacing="0.06em">ALL ESCALATIONS ARE LOGGED &bull; REVIEWED IN WEEKLY RISK MEETING &bull; TRACKED TO CLOSURE</text>
+
+      <!-- Timing legend -->
+      <rect x="300" y="575" width="360" height="30" rx="8" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="1"/>
+      <text x="320" y="594" fill="var(--green)" font-size="7" font-weight="700">L1 Team: &lt;4hr</text>
+      <text x="420" y="594" fill="var(--cyan)" font-size="7" font-weight="700">L2 Platform/TDL: &lt;24hr</text>
+      <text x="550" y="594" fill="var(--red)" font-size="7" font-weight="700">L3 Management: &lt;48hr</text>
+    </svg>
   </div>
 </section>
 

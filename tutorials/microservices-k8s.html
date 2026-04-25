@@ -1,736 +1,858 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Java Microservices to Kubernetes Setup Guide — Stefan Laza</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Microservices to Kubernetes — Stefan Lazarevic</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;background:#050507;color:#f0f0f5;line-height:1.7;-webkit-font-smoothing:antialiased}
-.wrap{max-width:820px;margin:0 auto;padding:3rem 2rem 5rem}
-a{color:#34d399;text-decoration:none}.back{display:inline-flex;align-items:center;gap:.4rem;font-size:.82rem;color:#6e6e80;margin-bottom:2.5rem;transition:color .2s}.back:hover{color:#f0f0f5}
-h1{font-size:2.2rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
-.subtitle{color:#6e6e80;font-size:1rem;margin-bottom:3rem}
-h2{font-size:1.35rem;font-weight:600;letter-spacing:-.02em;margin:3rem 0 1rem;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06)}
-h3{font-size:1rem;font-weight:600;margin:1.5rem 0 .5rem;color:#34d399}
-p,li{font-size:.88rem;color:#c0c0c8;margin-bottom:.6rem}
-ul,ol{padding-left:1.4rem;margin-bottom:1rem}
-pre{background:#0d0d14;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1rem 0 1.5rem;font-size:.78rem;line-height:1.6}
-code{font-family:'SF Mono',Consolas,monospace}
-pre code{color:#c0c0c8}
-.kw{color:#a78bfa}.str{color:#34d399}.cm{color:#555}.fn{color:#4a9eff}.num{color:#fb923c}.op{color:#6e6e80}
-.note{background:rgba(74,158,255,0.06);border-left:3px solid #4a9eff;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
-.warn{background:rgba(248,113,113,0.06);border-left:3px solid #f87171;padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;font-size:.82rem}
-footer{text-align:center;padding:3rem 0;font-size:.7rem;color:#6e6e80;border-top:1px solid rgba(255,255,255,0.06);margin-top:3rem}
-</style></head><body><div class="wrap">
-<a href="../index.html#microservices" class="back">&larr; Back to Portfolio</a>
-<h1>Java Microservices to Kubernetes Setup Guide</h1>
-<p class="subtitle">3 Spring Boot services &rarr; Jenkins CI &rarr; Docker &rarr; Harbor Registry &rarr; Helm &rarr; Kubernetes with HPA</p>
+:root{--bg:#07090d;--surface:#0d1018;--card:#111520;--border:rgba(255,255,255,0.07);--text:#e8eaf0;--muted:#9ca3af;--accent:#c8a96e;--accent2:#e8c98e;--blue:#60a5fa;--green:#34d399;--dark:#020408}
+html{scroll-behavior:smooth}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;background:rgba(7,9,13,0.95);backdrop-filter:blur(24px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--accent);text-decoration:none}
+.nav-back{font-size:0.68rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:0.5rem;transition:color 0.3s}
+.nav-back:hover{color:var(--accent)}
+.hero{padding:5rem 3rem 3rem;max-width:900px;margin:0 auto;border-bottom:1px solid var(--border)}
+.hero-tag{font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.8rem}
+.hero-tag::before{content:'';width:20px;height:1px;background:var(--accent);opacity:0.5}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4rem);font-weight:600;color:var(--text);line-height:1.0;letter-spacing:-0.02em;margin-bottom:1rem}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero-sub{font-size:0.85rem;color:var(--muted);max-width:680px;line-height:1.9;margin-bottom:2rem}
+.stack-tags{display:flex;flex-wrap:wrap;gap:0.5rem}
+.stack-tag{font-size:0.65rem;padding:0.3rem 0.8rem;border:1px solid var(--border);color:var(--muted);letter-spacing:0.05em}
+.content{max-width:900px;margin:0 auto;padding:3rem}
+.section{margin-bottom:4rem}
+.section-num{font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:0.8rem;display:flex;align-items:center;gap:0.8rem}
+.section-num::after{content:'';flex:1;height:1px;background:var(--border)}
+h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--text);margin-bottom:1rem;line-height:1.2}
+h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--accent2);margin:2rem 0 0.8rem}
+p{font-size:0.85rem;color:var(--muted);line-height:1.9;margin-bottom:1rem}
+p strong{color:var(--text);font-weight:500}
+pre{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--accent);padding:1.5rem;overflow-x:auto;margin:1.5rem 0}
+code{font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--accent2);line-height:1.7}
+pre code{color:#e8eaf0}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:grid;grid-template-columns:60px 1fr;gap:1.5rem;padding:2rem 0;border-bottom:1px solid var(--border)}
+.step:first-child{border-top:1px solid var(--border)}
+.step-num{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:700;color:rgba(255,255,255,0.08);line-height:1;padding-top:0.2rem;transition:color 0.3s}
+.step:hover .step-num{color:var(--accent)}
+.step-content h3{margin-top:0;margin-bottom:0.5rem}
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--border);margin:2rem 0}
+.arch-box{background:var(--surface);padding:1.5rem;text-align:center;transition:background 0.3s}
+.arch-box:hover{background:var(--card)}
+.arch-icon{font-size:1.5rem;margin-bottom:0.5rem}
+.arch-box h4{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--text);margin-bottom:0.3rem}
+.arch-box p{font-size:0.72rem;color:var(--muted);margin:0;line-height:1.5}
+.info-box{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--blue);padding:1.2rem 1.5rem;margin:1.5rem 0}
+.info-box p{margin:0;font-size:0.8rem}
+.info-label{font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:0.4rem;display:block}
+.warn-box{background:var(--card);border:1px solid var(--border);border-left:3px solid #f59e0b;padding:1.2rem 1.5rem;margin:1.5rem 0}
+.warn-box p{margin:0;font-size:0.8rem}
+.warn-label{font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:#f59e0b;margin-bottom:0.4rem;display:block}
+table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.78rem}
+th{text-align:left;padding:0.8rem 1rem;background:var(--card);color:var(--accent);font-weight:500;letter-spacing:0.05em;border-bottom:1px solid var(--border)}
+td{padding:0.75rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--muted);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,0.02);color:var(--text)}
+footer{text-align:center;padding:2rem;font-size:0.65rem;color:var(--muted);border-top:1px solid var(--border);letter-spacing:0.06em;margin-top:4rem}
+@media(max-width:768px){nav{padding:1rem 1.5rem}.hero{padding:3rem 1.5rem 2rem}.content{padding:2rem 1.5rem}.step{grid-template-columns:40px 1fr;gap:1rem}}
 
-<h2>1. Prerequisites</h2>
-<pre><code><span class="cm"># Install JDK 17</span>
-sudo apt install -y openjdk-17-jdk
-java -version
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.9s cubic-bezier(0.16,1,0.3,1),transform 0.9s cubic-bezier(0.16,1,0.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
 
-<span class="cm"># Install Maven</span>
-sudo apt install -y maven
-mvn -version
+/* SCROLL PROGRESS LINE */
+.scroll-line{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;z-index:200;transition:width 0.1s linear}
 
-<span class="cm"># Install Docker</span>
-sudo apt-get update && sudo apt-get install -y docker.io
-sudo usermod -aG docker $USER
+/* STEP HOVER */
+.step{transition:background 0.3s}
+.step:hover{background:rgba(200,169,110,0.02)}
 
-<span class="cm"># Install kubectl</span>
-curl -LO <span class="str">"https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"</span>
-sudo install kubectl /usr/local/bin/kubectl
+/* SECTION NUM LINE ANIMATE */
+.section-num::after{transition:width 0.8s ease}
 
-<span class="cm"># Install Helm</span>
-curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+/* HERO ANIMATIONS */
+.hero-tag{animation:fadeSlideUp 0.7s ease forwards}
+.hero h1{animation:fadeSlideUp 0.7s ease 0.15s forwards;opacity:0}
+.hero-sub{animation:fadeSlideUp 0.7s ease 0.3s forwards;opacity:0}
+.stack-tags{animation:fadeSlideUp 0.7s ease 0.45s forwards;opacity:0}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
-<span class="cm"># Install Jenkins (Docker)</span>
-docker run -d --name jenkins -p 8080:8080 -p 50000:50000 \
-  -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts</code></pre>
+/* ARCH BOX STAGGER */
+.arch-box{transition:background 0.3s,transform 0.3s}
+.arch-box:hover{transform:translateY(-4px)}
+.arch-box:nth-child(1){animation-delay:0.05s}
+.arch-box:nth-child(2){animation-delay:0.1s}
+.arch-box:nth-child(3){animation-delay:0.15s}
+.arch-box:nth-child(4){animation-delay:0.2s}
+.arch-box:nth-child(5){animation-delay:0.25s}
 
-<h2>2. Project Structure</h2>
-<pre><code>microservices/
-├── user-service/
-│   ├── src/main/java/com/app/user/
-│   ├── src/main/resources/application.yml
-│   ├── src/test/java/com/app/user/
-│   ├── Dockerfile
-│   └── pom.xml
-├── order-service/
-│   ├── src/main/java/com/app/order/
-│   ├── src/main/resources/application.yml
-│   ├── src/test/java/com/app/order/
-│   ├── Dockerfile
-│   └── pom.xml
-├── payment-service/
-│   ├── src/main/java/com/app/payment/
-│   ├── src/main/resources/application.yml
-│   ├── src/test/java/com/app/payment/
-│   ├── Dockerfile
-│   └── pom.xml
-├── helm/
-│   └── microservice/          <span class="cm"># Shared Helm chart</span>
-├── k8s/
-│   ├── namespace.yaml
-│   └── ingress.yaml
-├── Jenkinsfile
-└── docker-compose.yml         <span class="cm"># Local dev</span></code></pre>
+/* TABLE ROW TRANSITION */
+td{transition:background 0.2s,color 0.2s}
 
-<h2>3. Spring Boot Application</h2>
-<h3>user-service/pom.xml</h3>
-<pre><code><span class="op">&lt;?</span>xml version=<span class="str">"1.0"</span> encoding=<span class="str">"UTF-8"</span><span class="op">?&gt;</span>
-<span class="op">&lt;</span><span class="kw">project</span><span class="op">&gt;</span>
-  <span class="op">&lt;</span><span class="kw">modelVersion</span><span class="op">&gt;</span>4.0.0<span class="op">&lt;/</span><span class="kw">modelVersion</span><span class="op">&gt;</span>
-  <span class="op">&lt;</span><span class="kw">parent</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-parent<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>3.2.1<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
-  <span class="op">&lt;/</span><span class="kw">parent</span><span class="op">&gt;</span>
+/* CODE BLOCK HOVER */
+pre{transition:border-color 0.3s}
+pre:hover{border-left-color:var(--accent2)}
 
-  <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>com.app<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-  <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>user-service<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-  <span class="op">&lt;</span><span class="kw">version</span><span class="op">&gt;</span>1.0.0<span class="op">&lt;/</span><span class="kw">version</span><span class="op">&gt;</span>
+*::-webkit-scrollbar{display:none}*{scrollbar-width:none;-ms-overflow-style:none}
 
-  <span class="op">&lt;</span><span class="kw">dependencies</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-web<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-data-jpa<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-actuator<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>io.micrometer<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>micrometer-registry-prometheus<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.postgresql<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>postgresql<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>runtime<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.springframework.boot<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>spring-boot-starter-test<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>test<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-    <span class="op">&lt;</span><span class="kw">dependency</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">groupId</span><span class="op">&gt;</span>org.testcontainers<span class="op">&lt;/</span><span class="kw">groupId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">artifactId</span><span class="op">&gt;</span>postgresql<span class="op">&lt;/</span><span class="kw">artifactId</span><span class="op">&gt;</span>
-      <span class="op">&lt;</span><span class="kw">scope</span><span class="op">&gt;</span>test<span class="op">&lt;/</span><span class="kw">scope</span><span class="op">&gt;</span>
-    <span class="op">&lt;/</span><span class="kw">dependency</span><span class="op">&gt;</span>
-  <span class="op">&lt;/</span><span class="kw">dependencies</span><span class="op">&gt;</span>
-<span class="op">&lt;/</span><span class="kw">project</span><span class="op">&gt;</span></code></pre>
+/* UPGRADED LOG LINES */
+.flow-log{margin-top:1.5rem;background:var(--bg);border:1px solid var(--border);padding:1rem 1.2rem;min-height:72px;font-size:0.72rem;font-family:'DM Mono',monospace;line-height:1;overflow:hidden;position:relative}
+.log-line{display:flex;align-items:center;gap:0.6rem;padding:0.35rem 0;opacity:0;transform:translateX(-10px);animation:logSlide 0.35s ease forwards;border-bottom:1px solid rgba(255,255,255,0.03)}
+.log-line:last-child{border-bottom:none}
+@keyframes logSlide{to{opacity:1;transform:translateX(0)}}
+.log-line::before{content:'>';color:var(--accent);font-size:0.65rem;flex-shrink:0;opacity:0.6}
+.log-line.active{color:var(--accent2)}
+.log-line.active::before{color:var(--accent);animation:blink 0.8s infinite}
+@keyframes blink{0%,100%{opacity:0.6}50%{opacity:1}}
+.log-line.done{color:rgba(200,169,110,0.45)}
+.log-line.success{color:var(--green)}
+.log-line.success::before{content:'✓';color:var(--green)}
+.log-line.error{color:#f87171}
+.log-line.error::before{content:'✗';color:#f87171}
 
-<h3>user-service/src/main/resources/application.yml</h3>
-<pre><code><span class="kw">spring</span>:
-  <span class="kw">application</span>:
-    <span class="kw">name</span>: user-service
-  <span class="kw">profiles</span>:
-    <span class="kw">active</span>: <span class="str">${SPRING_PROFILE:dev}</span>
+/* UPGRADED BUTTONS */
+.flow-btn{
+  margin-top:1.2rem;
+  padding:0.7rem 2.5rem;
+  background:linear-gradient(135deg,rgba(200,169,110,0.12),rgba(200,169,110,0.05));
+  border:1px solid var(--accent);
+  color:var(--accent);
+  font-family:'DM Mono',monospace;
+  font-size:0.72rem;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.3s;
+  position:relative;
+  overflow:hidden;
+}
+.flow-btn::before{
+  content:'';
+  position:absolute;
+  top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(200,169,110,0.15),transparent);
+  transition:left 0.5s;
+}
+.flow-btn:hover{
+  background:linear-gradient(135deg,rgba(200,169,110,0.25),rgba(200,169,110,0.1));
+  box-shadow:0 0 24px rgba(200,169,110,0.2),0 0 8px rgba(200,169,110,0.1);
+  letter-spacing:0.2em;
+  color:var(--accent2);
+}
+.flow-btn:hover::before{left:100%}
+.flow-btn:disabled{opacity:0.3;cursor:not-allowed;letter-spacing:0.15em;box-shadow:none}
+.flow-btn:active{transform:scale(0.98)}
 
-  <span class="kw">datasource</span>:
-    <span class="kw">url</span>: <span class="str">jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:userdb}</span>
-    <span class="kw">username</span>: <span class="str">${DB_USER:postgres}</span>
-    <span class="kw">password</span>: <span class="str">${DB_PASS:secret}</span>
-    <span class="kw">hikari</span>:
-      <span class="kw">maximum-pool-size</span>: <span class="num">20</span>
-      <span class="kw">minimum-idle</span>: <span class="num">5</span>
-      <span class="kw">idle-timeout</span>: <span class="num">30000</span>
+/* FLOW NODE pulse when active */
+.flow-node.active{
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px rgba(200,169,110,0.3),0 0 20px rgba(200,169,110,0.15);
+  animation:nodePulse 1s ease infinite;
+}
+@keyframes nodePulse{0%,100%{box-shadow:0 0 0 1px rgba(200,169,110,0.3),0 0 20px rgba(200,169,110,0.15)}50%{box-shadow:0 0 0 3px rgba(200,169,110,0.15),0 0 30px rgba(200,169,110,0.25)}}
 
-  <span class="kw">jpa</span>:
-    <span class="kw">hibernate</span>:
-      <span class="kw">ddl-auto</span>: validate
-    <span class="kw">properties</span>:
-      <span class="kw">hibernate.dialect</span>: org.hibernate.dialect.PostgreSQLDialect
+/* CHIP styles */
+.batch-job-chip{font-size:0.62rem;padding:0.25rem 0.7rem;border:1px solid var(--border);color:var(--muted);transition:all 0.4s;display:inline-block;margin:2px}
+.batch-job-chip.running{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,0.08);box-shadow:0 0 8px rgba(200,169,110,0.15)}
+.batch-job-chip.done{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.08)}
 
-<span class="kw">management</span>:
-  <span class="kw">endpoints</span>:
-    <span class="kw">web.exposure.include</span>: health,info,prometheus,metrics
-  <span class="kw">metrics</span>:
-    <span class="kw">tags</span>:
-      <span class="kw">application</span>: user-service
+</style>
+</head>
+<body>
+<div class="scroll-line" id="scrollLine"></div>
+<nav>
+  <a href="../index.html" class="nav-logo">SL</a>
+  <a href="../index.html" class="nav-back">← Back to Portfolio</a>
+</nav>
 
-<span class="kw">server</span>:
-  <span class="kw">port</span>: <span class="num">8080</span></code></pre>
+<div class="hero">
+  <div class="hero-tag">Infrastructure Tutorial</div>
+  <h1>Java Microservices<br><em>to Kubernetes</em></h1>
+  <p class="hero-sub">Jenkins builds Spring Boot services with Maven, runs tests, builds Docker images, pushes to Harbor registry, and deploys to Kubernetes with Helm — rolling updates with zero downtime.</p>
+  <div class="stack-tags">
+    <span class="stack-tag">Spring Boot</span>
+    <span class="stack-tag">Jenkins</span>
+    <span class="stack-tag">Docker</span>
+    <span class="stack-tag">Harbor</span>
+    <span class="stack-tag">Kubernetes</span>
+    <span class="stack-tag">Helm</span>
+    <span class="stack-tag">HPA</span>
+    <span class="stack-tag">Prometheus</span>
+  </div>
+</div>
 
-<h2>4. Multi-Stage Dockerfile</h2>
-<h3>user-service/Dockerfile</h3>
-<pre><code><span class="cm"># ---- Build Stage ----</span>
-<span class="kw">FROM</span> maven:3.9-eclipse-temurin-17 <span class="kw">AS</span> build
-<span class="kw">WORKDIR</span> /app
-<span class="kw">COPY</span> pom.xml .
-<span class="kw">RUN</span> mvn dependency:go-offline -B
-<span class="kw">COPY</span> src ./src
-<span class="kw">RUN</span> mvn clean package -DskipTests -B
+<div class="content">
 
-<span class="cm"># ---- Runtime Stage ----</span>
-<span class="kw">FROM</span> eclipse-temurin:17-jre-alpine
-<span class="kw">RUN</span> addgroup -S appgroup && adduser -S appuser -G appgroup
+  <div class="section reveal">
+    <div class="section-num">Overview</div>
+    <h2>CI/CD Pipeline Architecture</h2>
+    <p>The pipeline moves from source code to production in five automated stages. A developer pushes to main, Jenkins picks it up, and 15 minutes later the new version is live behind a rolling update — no downtime, automatic rollback on failure.</p>
 
-<span class="kw">WORKDIR</span> /app
-<span class="kw">COPY</span> --from=build /app/target/*.jar app.jar
+    <div class="arch-grid reveal">
+      <div class="arch-box"><h4>Maven Build</h4><p>Compile, unit test, integration test with Testcontainers.</p></div>
+      <div class="arch-box"><h4>Docker Build</h4><p>Multi-stage build. JDK for compile, JRE for runtime. Minimal image.</p></div>
+      <div class="arch-box"><h4>Harbor Push</h4><p>Image tagged with build number, scanned for CVEs, pushed to private registry.</p></div>
+      <div class="arch-box"><h4>Helm Deploy</h4><p>Helm chart templates Kubernetes manifests. Rolling update replaces pods one at a time.</p></div>
+      <div class="arch-box"><h4>HPA + Metrics</h4><p>Horizontal Pod Autoscaler scales on CPU. Prometheus scrapes Spring Actuator.</p></div>
+    </div>
+  </div>
 
-<span class="kw">USER</span> appuser
-<span class="kw">EXPOSE</span> 8080
+  <div class="section reveal">
+    
+  <div class="section reveal">
+    <div class="section-num">Live Flow</div>
+    <h2>CI/CD Pipeline Animation</h2>
+    <p>A developer pushes to main. Watch the Jenkins pipeline build, test, push, and deploy to Kubernetes automatically.</p>
 
-<span class="kw">HEALTHCHECK</span> --interval=30s --timeout=3s --retries=3 \
+<style>
+.pipeline-wrap{background:var(--card);border:1px solid var(--border);padding:2rem 1.5rem;margin:1.5rem 0;overflow:hidden}
+.pipeline-svg-wrap{width:100%;overflow-x:hidden}
+.pipeline-svg-wrap svg{width:100%;height:auto;display:block}
+
+/* Pipeline stage chips */
+.pipeline-stages{display:flex;gap:6px;flex-wrap:wrap;margin-top:1.2rem;padding-top:1.2rem;border-top:1px solid var(--border)}
+.p-chip{font-size:0.62rem;letter-spacing:0.06em;padding:0.3rem 0.9rem;border:1px solid var(--border);color:var(--muted);transition:all 0.5s;position:relative;overflow:hidden}
+.p-chip::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(200,169,110,0.15),transparent);transform:translateX(-100%)}
+.p-chip.running{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,0.06)}
+.p-chip.running::after{animation:chipShimmer 1s ease infinite}
+@keyframes chipShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.p-chip.done{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.06)}
+
+.micro-log-wrap{margin-top:1.2rem}
+</style>
+
+<div class="pipeline-wrap">
+  <div class="pipeline-svg-wrap">
+    <svg viewBox="0 0 820 120" xmlns="http://www.w3.org/2000/svg" id="pipeline-svg">
+      <defs>
+        <filter id="glow-gold">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <filter id="glow-green">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+        </filter>
+        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#c8a96e" stop-opacity="0.15"/>
+          <stop offset="50%" stop-color="#c8a96e" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#c8a96e" stop-opacity="0.15"/>
+        </linearGradient>
+        <!-- Packet gradient -->
+        <radialGradient id="packetGrad">
+          <stop offset="0%" stop-color="#e8c98e"/>
+          <stop offset="100%" stop-color="#c8a96e"/>
+        </radialGradient>
+        <radialGradient id="packetTrail">
+          <stop offset="0%" stop-color="#c8a96e" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#c8a96e" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Connection lines -->
+      <line id="line-1" x1="138" y1="60" x2="232" y2="60" stroke="rgba(200,169,110,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
+      <line id="line-2" x1="302" y1="60" x2="396" y2="60" stroke="rgba(200,169,110,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
+      <line id="line-3" x1="466" y1="60" x2="560" y2="60" stroke="rgba(200,169,110,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
+      <line id="line-4" x1="630" y1="60" x2="724" y2="60" stroke="rgba(200,169,110,0.15)" stroke-width="1" stroke-dasharray="4 4"/>
+
+      <!-- Active line overlays -->
+      <line id="line-1a" x1="138" y1="60" x2="138" y2="60" stroke="#c8a96e" stroke-width="1.5" opacity="0"/>
+      <line id="line-2a" x1="302" y1="60" x2="302" y2="60" stroke="#c8a96e" stroke-width="1.5" opacity="0"/>
+      <line id="line-3a" x1="466" y1="60" x2="466" y2="60" stroke="#c8a96e" stroke-width="1.5" opacity="0"/>
+      <line id="line-4a" x1="630" y1="60" x2="630" y2="60" stroke="#c8a96e" stroke-width="1.5" opacity="0"/>
+
+      <!-- Arrow labels on lines -->
+      <text x="185" y="52" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.5)" letter-spacing="0.5">WEBHOOK</text>
+      <text x="349" y="52" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.5)" letter-spacing="0.5">PUSH</text>
+      <text x="513" y="52" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.5)" letter-spacing="0.5">HELM</text>
+      <text x="677" y="52" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.5)" letter-spacing="0.5">SCALE</text>
+
+      <!-- NODE 1: Git -->
+      <g id="node-git" opacity="0.5">
+        <rect x="14" y="28" width="124" height="64" rx="2" fill="#0d1018" stroke="rgba(200,169,110,0.2)" stroke-width="1"/>
+        <text x="76" y="55" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#e8eaf0" font-weight="600">Git Push</text>
+        <text x="76" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="rgba(156,163,175,0.8)">main branch</text>
+        <rect x="28" y="80" width="96" height="1" fill="rgba(200,169,110,0.1)"/>
+        <text x="76" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.4)" letter-spacing="0.5">COMMIT</text>
+      </g>
+
+      <!-- NODE 2: Jenkins -->
+      <g id="node-jen" opacity="0.5">
+        <rect x="232" y="28" width="124" height="64" rx="2" fill="#0d1018" stroke="rgba(200,169,110,0.2)" stroke-width="1"/>
+        <text x="294" y="55" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#e8eaf0" font-weight="600">Jenkins</text>
+        <text x="294" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="rgba(156,163,175,0.8)">Build Pipeline</text>
+        <rect x="246" y="80" width="96" height="1" fill="rgba(200,169,110,0.1)"/>
+        <text x="294" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.4)" letter-spacing="0.5">CI/CD</text>
+      </g>
+
+      <!-- NODE 3: Harbor -->
+      <g id="node-har" opacity="0.5">
+        <rect x="396" y="28" width="124" height="64" rx="2" fill="#0d1018" stroke="rgba(200,169,110,0.2)" stroke-width="1"/>
+        <text x="458" y="55" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#e8eaf0" font-weight="600">Harbor</text>
+        <text x="458" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="rgba(156,163,175,0.8)">Image Registry</text>
+        <rect x="410" y="80" width="96" height="1" fill="rgba(200,169,110,0.1)"/>
+        <text x="458" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.4)" letter-spacing="0.5">DOCKER</text>
+      </g>
+
+      <!-- NODE 4: Kubernetes -->
+      <g id="node-k8s" opacity="0.5">
+        <rect x="560" y="28" width="124" height="64" rx="2" fill="#0d1018" stroke="rgba(200,169,110,0.2)" stroke-width="1"/>
+        <text x="622" y="55" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#e8eaf0" font-weight="600">Kubernetes</text>
+        <text x="622" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="rgba(156,163,175,0.8)">Rolling Deploy</text>
+        <rect x="574" y="80" width="96" height="1" fill="rgba(200,169,110,0.1)"/>
+        <text x="622" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.4)" letter-spacing="0.5">HELM</text>
+      </g>
+
+      <!-- NODE 5: HPA -->
+      <g id="node-hpa" opacity="0.5">
+        <rect x="724" y="28" width="82" height="64" rx="2" fill="#0d1018" stroke="rgba(200,169,110,0.2)" stroke-width="1"/>
+        <text x="765" y="55" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" fill="#e8eaf0" font-weight="600">HPA</text>
+        <text x="765" y="70" text-anchor="middle" font-family="DM Mono,monospace" font-size="8" fill="rgba(156,163,175,0.8)">Autoscaler</text>
+        <rect x="736" y="80" width="58" height="1" fill="rgba(200,169,110,0.1)"/>
+        <text x="765" y="89" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="rgba(200,169,110,0.4)" letter-spacing="0.5">SCALE</text>
+      </g>
+
+      <!-- Moving packets (hidden initially) -->
+      <circle id="pkt-1" cx="138" cy="60" r="5" fill="url(#packetGrad)" opacity="0" filter="url(#glow-gold)"/>
+      <circle id="pkt-2" cx="302" cy="60" r="5" fill="url(#packetGrad)" opacity="0" filter="url(#glow-gold)"/>
+      <circle id="pkt-3" cx="466" cy="60" r="5" fill="url(#packetGrad)" opacity="0" filter="url(#glow-gold)"/>
+      <circle id="pkt-4" cx="630" cy="60" r="5" fill="url(#packetGrad)" opacity="0" filter="url(#glow-gold)"/>
+    </svg>
+  </div>
+
+  <!-- Stage progress chips -->
+  <div class="pipeline-stages" id="micro-stages"></div>
+
+  <!-- Log -->
+  <div class="micro-log-wrap">
+    <div class="flow-log" id="micro-log"><span class="log-line">Waiting for git push...</span></div>
+  </div>
+</div>
+<button class="flow-btn" onclick="startMicroFlow()">Push to Main</button>
+
+<script>
+function addLogLine(logEl, msg, type) {
+  type = type || 'active';
+  var prev = logEl.querySelectorAll('.log-line.active');
+  for (var i = 0; i < prev.length; i++) {
+    prev[i].classList.remove('active');
+    prev[i].classList.add('done');
+  }
+  var line = document.createElement('span');
+  line.className = 'log-line ' + type;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function activateSVGNode(id, color) {
+  const g = document.getElementById(id);
+  if (!g) return;
+  g.style.opacity = '1';
+  const rect = g.querySelector('rect');
+  if (rect) {
+    rect.setAttribute('stroke', color || '#c8a96e');
+    rect.setAttribute('stroke-width', '1.5');
+    rect.style.filter = 'drop-shadow(0 0 8px rgba(200,169,110,0.4))';
+  }
+}
+function deactivateSVGNode(id) {
+  const g = document.getElementById(id);
+  if (!g) return;
+  g.style.opacity = '0.6';
+  const rect = g.querySelector('rect');
+  if (rect) {
+    rect.setAttribute('stroke', 'rgba(200,169,110,0.35)');
+    rect.setAttribute('stroke-width', '1');
+    rect.style.filter = '';
+  }
+}
+function animateLine(lineId, x1, x2, cb) {
+  const line = document.getElementById(lineId);
+  if (!line) return;
+  line.setAttribute('opacity', '1');
+  line.setAttribute('x2', x1);
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 500, 1);
+    line.setAttribute('x2', x1 + (x2 - x1) * p);
+    if (p < 1) requestAnimationFrame(step);
+    else if (typeof cb === "function") cb();
+  }
+  requestAnimationFrame(step);
+}
+function animatePacket(pktId, x1, x2, cb) {
+  const pkt = document.getElementById(pktId);
+  if (!pkt) return;
+  pkt.setAttribute('cx', x1);
+  pkt.setAttribute('opacity', '1');
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const p = Math.min((ts - start) / 600, 1);
+    const ease = 1 - Math.pow(1 - p, 2);
+    pkt.setAttribute('cx', x1 + (x2 - x1) * ease);
+    pkt.setAttribute('opacity', p < 0.9 ? '1' : (1 - (p - 0.9) * 10).toString());
+    if (p < 1) requestAnimationFrame(step);
+    else { pkt.setAttribute('opacity', '0'); if (typeof cb === "function") cb(); }
+  }
+  requestAnimationFrame(step);
+}
+function completeSVGNode(id) {
+  const g = document.getElementById(id);
+  if (!g) return;
+  g.style.opacity = '1';
+  const rect = g.querySelector('rect');
+  if (rect) {
+    rect.setAttribute('stroke', '#34d399');
+    rect.setAttribute('stroke-width', '1.5');
+    rect.style.filter = 'drop-shadow(0 0 6px rgba(52,211,153,0.35))';
+  }
+}
+
+function startMicroFlow() {
+  const btn = document.querySelector('.flow-btn');
+  if (btn) btn.disabled = true;
+  const log = document.getElementById('micro-log');
+  const stages = document.getElementById('micro-stages');
+  log.innerHTML = '';
+  stages.innerHTML = '';
+
+  ['node-git','node-jen','node-har','node-k8s','node-hpa'].forEach(id => {
+    const g = document.getElementById(id);
+    if (g) {
+      g.style.opacity = '0.5';
+      const rect = g.querySelector('rect');
+      if (rect) { rect.setAttribute('stroke','rgba(200,169,110,0.2)'); rect.setAttribute('stroke-width','1'); rect.style.filter=''; }
+    }
+  });
+  ['line-1a','line-2a','line-3a','line-4a'].forEach(id => {
+    const l = document.getElementById(id);
+    if (l) l.setAttribute('opacity','0');
+  });
+
+  const stageNames = ['Checkout','Maven Build','Unit Tests','Docker Build','Push Harbor','Helm Deploy','Smoke Test'];
+  stageNames.forEach(s => {
+    const chip = document.createElement('span');
+    chip.className = 'p-chip';
+    chip.id = 'pc-' + s.replace(/\s/g,'');
+    chip.textContent = s;
+    stages.appendChild(chip);
+  });
+
+  function setChip(name, state) {
+    const chip = document.getElementById('pc-' + name.replace(/\s/g,''));
+    if (chip) { chip.classList.remove('running','done'); chip.classList.add(state); }
+  }
+
+  const t = (ms, fn) => setTimeout(fn, ms);
+
+  t(0,    () => { activateSVGNode('node-git'); addLogLine(log, 'git push origin main — commit a3f82b1 "fix: payment validation"'); });
+  t(800,  () => { animateLine('line-1a', 138, 232); animatePacket('pkt-1', 138, 232); });
+  t(1400, () => { deactivateSVGNode('node-git'); completeSVGNode('node-git'); activateSVGNode('node-jen'); addLogLine(log, 'Jenkins webhook triggered — starting pipeline build #247'); setChip('Checkout','running'); });
+  t(1800, () => { setChip('Checkout','done'); setChip('Maven Build','running'); addLogLine(log, 'Maven build: compiling 3 services in parallel...'); });
+  t(2600, () => { setChip('Maven Build','done'); setChip('Unit Tests','running'); addLogLine(log, 'Unit tests: 847 passed, 0 failed — 94% coverage'); });
+  t(3400, () => { setChip('Unit Tests','done'); setChip('Docker Build','running'); addLogLine(log, 'Docker multi-stage build: user-service, order-service, payment-service'); });
+  t(4200, () => { setChip('Docker Build','done'); animateLine('line-2a', 302, 396); animatePacket('pkt-2', 302, 396); });
+  t(4900, () => { deactivateSVGNode('node-jen'); completeSVGNode('node-jen'); activateSVGNode('node-har'); setChip('Push Harbor','running'); addLogLine(log, 'Images pushed to Harbor — CVE scan: 0 critical vulnerabilities'); });
+  t(5700, () => { setChip('Push Harbor','done'); animateLine('line-3a', 466, 560); animatePacket('pkt-3', 466, 560); });
+  t(6400, () => { deactivateSVGNode('node-har'); completeSVGNode('node-har'); activateSVGNode('node-k8s'); setChip('Helm Deploy','running'); addLogLine(log, 'Helm upgrade: rolling update — maxSurge:1, maxUnavailable:0'); });
+  t(7200, () => { setChip('Helm Deploy','done'); addLogLine(log, 'Rolling update: pod-1 done  pod-2 done  pod-3 done — zero downtime'); });
+  t(7800, () => { animateLine('line-4a', 630, 724); animatePacket('pkt-4', 630, 724); });
+  t(8500, () => { deactivateSVGNode('node-k8s'); completeSVGNode('node-k8s'); activateSVGNode('node-hpa', '#34d399'); setChip('Smoke Test','running'); addLogLine(log, 'HPA active: 3 replicas scaled to 5 under load'); });
+  t(9300, () => { setChip('Smoke Test','done'); completeSVGNode('node-hpa'); addLogLine(log, 'All health checks passed — build #247 live in 14m 32s', 'success'); if (btn) btn.disabled = false; });
+}
+</script>
+
+
+  <div class="section-num">Step by Step</div>
+    <h2>Build Guide</h2>
+    <div class="steps reveal">
+
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h3>Multi-Stage Dockerfile</h3>
+          <p>The multi-stage build uses a full JDK image to compile and a minimal JRE image to run. This cuts image size from ~500MB to ~150MB and removes build tools from the production image.</p>
+          <pre><code># Stage 1 — Build (JDK + Maven)
+FROM eclipse-temurin:17-jdk-alpine AS build
+WORKDIR /app
+
+# Cache dependencies separately from source code
+COPY pom.xml .
+RUN mvn dependency:go-offline -q
+
+# Build the JAR
+COPY src ./src
+RUN mvn clean package -DskipTests -q
+
+# Stage 2 — Runtime (JRE only — no compiler, no Maven)
+FROM eclipse-temurin:17-jre-alpine
+
+# Non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+# JVM flags: use G1GC, limit heap to 75% of container memory
+ENV JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+UseStringDeduplication"
+
+USER appuser
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
   CMD wget -qO- http://localhost:8080/actuator/health || exit 1
 
-<span class="kw">ENTRYPOINT</span> [<span class="str">"java"</span>, \
-  <span class="str">"-XX:+UseG1GC"</span>, \
-  <span class="str">"-XX:MaxRAMPercentage=75.0"</span>, \
-  <span class="str">"-XX:+UseStringDeduplication"</span>, \
-  <span class="str">"-Djava.security.egd=file:/dev/./urandom"</span>, \
-  <span class="str">"-jar"</span>, <span class="str">"app.jar"</span>]</code></pre>
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]</code></pre>
+        </div>
+      </div>
 
-<div class="note">The same Dockerfile pattern is used for all 3 services. Each service has its own Dockerfile in its directory. The <code>dependency:go-offline</code> step caches Maven dependencies for faster rebuilds.</div>
-
-<h2>5. Jenkins Pipeline</h2>
-<h3>Jenkinsfile</h3>
-<pre><code><span class="kw">pipeline</span> {
-  <span class="kw">agent</span> any
-
-  <span class="kw">environment</span> {
-    HARBOR_URL  = <span class="str">'harbor.internal.company.com'</span>
-    HARBOR_PROJ = <span class="str">'microservices'</span>
-    HARBOR_CRED = credentials(<span class="str">'harbor-robot'</span>)
-    KUBECONFIG  = credentials(<span class="str">'kubeconfig-prod'</span>)
-    SONAR_TOKEN = credentials(<span class="str">'sonarqube-token'</span>)
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h3>Jenkins Pipeline — Build, Test, Push</h3>
+          <p>The Jenkinsfile defines the full pipeline. Parallel stages build all three services simultaneously to cut total build time from 15 minutes to 5 minutes.</p>
+          <pre><code>pipeline {
+  agent any
+  environment {
+    HARBOR = 'harbor.company.internal'
+    HARBOR_CREDS = credentials('harbor-robot')
+    NAMESPACE = 'production'
   }
 
-  <span class="kw">parameters</span> {
-    choice(name: <span class="str">'ENVIRONMENT'</span>, choices: [<span class="str">'dev'</span>, <span class="str">'staging'</span>, <span class="str">'prod'</span>])
-    string(name: <span class="str">'IMAGE_TAG'</span>, defaultValue: <span class="str">"${env.BUILD_NUMBER}"</span>)
-  }
-
-  <span class="kw">stages</span> {
-    <span class="kw">stage</span>(<span class="str">'Checkout'</span>) {
-      <span class="kw">steps</span> {
-        checkout scm
-      }
-    }
-
-    <span class="kw">stage</span>(<span class="str">'Build &amp; Unit Test'</span>) {
-      <span class="kw">parallel</span> {
-        <span class="kw">stage</span>(<span class="str">'user-service'</span>) {
-          <span class="kw">steps</span> {
-            dir(<span class="str">'user-service'</span>) {
-              sh <span class="str">'mvn clean package -B'</span>
+  stages {
+    stage('Build & Test (Parallel)') {
+      parallel {
+        stage('user-service') {
+          steps {
+            dir('user-service') {
+              sh 'mvn clean verify -B'// includes unit + integration tests
             }
           }
-          <span class="kw">post</span> {
-            always { junit <span class="str">'user-service/target/surefire-reports/*.xml'</span> }
-          }
+          post { always { junit 'user-service/target/surefire-reports/*.xml' } }
         }
-        <span class="kw">stage</span>(<span class="str">'order-service'</span>) {
-          <span class="kw">steps</span> {
-            dir(<span class="str">'order-service'</span>) {
-              sh <span class="str">'mvn clean package -B'</span>
-            }
+        stage('order-service') {
+          steps {
+            dir('order-service') { sh 'mvn clean verify -B' }
           }
-          <span class="kw">post</span> {
-            always { junit <span class="str">'order-service/target/surefire-reports/*.xml'</span> }
-          }
+          post { always { junit 'order-service/target/surefire-reports/*.xml' } }
         }
-        <span class="kw">stage</span>(<span class="str">'payment-service'</span>) {
-          <span class="kw">steps</span> {
-            dir(<span class="str">'payment-service'</span>) {
-              sh <span class="str">'mvn clean package -B'</span>
-            }
+        stage('payment-service') {
+          steps {
+            dir('payment-service') { sh 'mvn clean verify -B' }
           }
-          <span class="kw">post</span> {
-            always { junit <span class="str">'payment-service/target/surefire-reports/*.xml'</span> }
-          }
+          post { always { junit 'payment-service/target/surefire-reports/*.xml' } }
         }
       }
     }
 
-    <span class="kw">stage</span>(<span class="str">'Integration Tests'</span>) {
-      <span class="kw">steps</span> {
-        <span class="cm">// Testcontainers spins up PostgreSQL in Docker</span>
-        sh <span class="str">'mvn verify -pl user-service,order-service,payment-service -P integration -B'</span>
-      }
-    }
-
-    <span class="kw">stage</span>(<span class="str">'SonarQube Analysis'</span>) {
-      <span class="kw">steps</span> {
-        withSonarQubeEnv(<span class="str">'sonarqube'</span>) {
-          sh <span class="str">'mvn sonar:sonar -Dsonar.token=$SONAR_TOKEN'</span>
-        }
-      }
-    }
-
-    <span class="kw">stage</span>(<span class="str">'Docker Build &amp; Push'</span>) {
-      <span class="kw">steps</span> {
-        sh <span class="str">"echo $HARBOR_CRED_PSW | docker login $HARBOR_URL -u $HARBOR_CRED_USR --password-stdin"</span>
+    stage('Docker Build & Push') {
+      steps {
         script {
-          <span class="kw">def</span> services = [<span class="str">'user-service'</span>, <span class="str">'order-service'</span>, <span class="str">'payment-service'</span>]
-          <span class="kw">for</span> (svc <span class="kw">in</span> services) {
-            sh <span class="str">"""
-              docker build -t ${HARBOR_URL}/${HARBOR_PROJ}/${svc}:${params.IMAGE_TAG} ${svc}/
-              docker push ${HARBOR_URL}/${HARBOR_PROJ}/${svc}:${params.IMAGE_TAG}
-            """</span>
+          sh "echo ${HARBOR_CREDS_PSW} | docker login ${HARBOR} -u ${HARBOR_CREDS_USR} --password-stdin"
+          ['user-service', 'order-service', 'payment-service'].each { svc ->
+            sh """
+              docker build -t ${HARBOR}/production/${svc}:${BUILD_NUMBER} ${svc}/
+              docker push ${HARBOR}/production/${svc}:${BUILD_NUMBER}
+            """
           }
         }
       }
     }
 
-    <span class="kw">stage</span>(<span class="str">'Helm Deploy'</span>) {
-      <span class="kw">steps</span> {
+    stage('Deploy to Kubernetes') {
+      steps {
         script {
-          <span class="kw">def</span> services = [<span class="str">'user-service'</span>, <span class="str">'order-service'</span>, <span class="str">'payment-service'</span>]
-          <span class="kw">for</span> (svc <span class="kw">in</span> services) {
-            sh <span class="str">"""
-              helm upgrade --install ${svc} helm/microservice/ \
-                --namespace ${params.ENVIRONMENT} \
-                --set image.repository=${HARBOR_URL}/${HARBOR_PROJ}/${svc} \
-                --set image.tag=${params.IMAGE_TAG} \
-                --set env=${params.ENVIRONMENT} \
-                -f helm/microservice/values-${params.ENVIRONMENT}.yaml \
-                --wait --timeout 300s
-            """</span>
+          ['user-service', 'order-service', 'payment-service'].each { svc ->
+            sh """
+              helm upgrade --install ${svc} ./helm/microservice \
+                --namespace ${NAMESPACE} \
+                --set image.tag=${BUILD_NUMBER} \
+                --set image.repository=${HARBOR}/production/${svc} \
+                --wait --timeout 5m
+            """
           }
         }
       }
     }
 
-    <span class="kw">stage</span>(<span class="str">'Smoke Tests'</span>) {
-      <span class="kw">steps</span> {
-        sh <span class="str">"""
-          sleep 10
-          curl -sf http://user-service.${params.ENVIRONMENT}.svc/actuator/health
-          curl -sf http://order-service.${params.ENVIRONMENT}.svc/actuator/health
-          curl -sf http://payment-service.${params.ENVIRONMENT}.svc/actuator/health
-        """</span>
+    stage('Smoke Test') {
+      steps {
+        sh '''
+          kubectl rollout status deployment/user-service -n production
+          kubectl rollout status deployment/order-service -n production
+          kubectl rollout status deployment/payment-service -n production
+        '''
       }
     }
   }
 
-  <span class="kw">post</span> {
+  post {
     failure {
-      slackSend channel: <span class="str">'#deployments'</span>,
-        color: <span class="str">'danger'</span>,
-        message: <span class="str">"FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"</span>
-    }
-    success {
-      slackSend channel: <span class="str">'#deployments'</span>,
-        color: <span class="str">'good'</span>,
-        message: <span class="str">"Deployed ${params.ENVIRONMENT}: ${env.JOB_NAME} #${env.BUILD_NUMBER}"</span>
+      // Auto-rollback on pipeline failure
+      sh '''
+        helm rollback user-service -n production || true
+        helm rollback order-service -n production || true
+        helm rollback payment-service -n production || true
+      '''
     }
   }
 }</code></pre>
+        </div>
+      </div>
 
-<h2>6. Harbor Registry Setup</h2>
-<pre><code><span class="cm"># Download Harbor installer</span>
-wget https://github.com/goharbor/harbor/releases/download/v2.10.0/harbor-online-installer-v2.10.0.tgz
-tar xzf harbor-online-installer-v2.10.0.tgz && cd harbor
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h3>Helm Chart — Kubernetes Manifests</h3>
+          <p>A single reusable Helm chart templates Deployments, Services, Ingress, and HPA for all three services. Values files per service override the defaults.</p>
+          <pre><code"># helm/microservice/values.yaml — defaults
+replicaCount: 2
+image:
+  repository: harbor.company.internal/production/user-service
+  tag: latest
+  pullPolicy: IfNotPresent
 
-<span class="cm"># Copy and edit config</span>
-cp harbor.yml.tmpl harbor.yml</code></pre>
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
 
-<h3>harbor.yml (key sections)</h3>
-<pre><code><span class="kw">hostname</span>: harbor.internal.company.com
-<span class="kw">https</span>:
-  <span class="kw">port</span>: <span class="num">443</span>
-  <span class="kw">certificate</span>: /etc/ssl/harbor/cert.pem
-  <span class="kw">private_key</span>: /etc/ssl/harbor/key.pem
-<span class="kw">harbor_admin_password</span>: <span class="str">ChangeMeNow!</span>
-<span class="kw">database</span>:
-  <span class="kw">password</span>: <span class="str">db-secret-pass</span>
-<span class="kw">data_volume</span>: /data/harbor</code></pre>
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
 
-<pre><code><span class="cm"># Install</span>
-sudo ./install.sh --with-trivy
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 15
 
-<span class="cm"># Create project and robot account via CLI</span>
-curl -k -u admin:ChangeMeNow! -X POST \
-  https://harbor.internal.company.com/api/v2.0/projects \
-  -H <span class="str">"Content-Type: application/json"</span> \
-  -d <span class="str">'{"project_name":"microservices","public":false}'</span>
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
 
-<span class="cm"># Create robot account for Jenkins</span>
-curl -k -u admin:ChangeMeNow! -X POST \
-  https://harbor.internal.company.com/api/v2.0/robots \
-  -H <span class="str">"Content-Type: application/json"</span> \
-  -d <span class="str">'{
-    "name": "jenkins-push",
-    "duration": -1,
-    "level": "project",
-    "permissions": [{
-      "namespace": "microservices",
-      "kind": "project",
-      "access": [
-        {"resource": "repository", "action": "push"},
-        {"resource": "repository", "action": "pull"}
-      ]
-    }]
-  }'</span></code></pre>
+# Rolling update strategy — replace one pod at a time
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0  # Zero downtime</code></pre>
 
-<div class="note">Store the robot account token in Jenkins Credentials as a Username/Password credential with ID <code>harbor-robot</code>.</div>
-
-<h2>7. Helm Chart</h2>
-<h3>helm/microservice/Chart.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: v2
-<span class="kw">name</span>: microservice
-<span class="kw">description</span>: Generic chart for Spring Boot microservices
-<span class="kw">version</span>: 1.0.0
-<span class="kw">appVersion</span>: <span class="str">"1.0.0"</span></code></pre>
-
-<h3>helm/microservice/values.yaml</h3>
-<pre><code><span class="kw">replicaCount</span>: <span class="num">2</span>
-
-<span class="kw">image</span>:
-  <span class="kw">repository</span>: harbor.internal.company.com/microservices/user-service
-  <span class="kw">tag</span>: latest
-  <span class="kw">pullPolicy</span>: IfNotPresent
-
-<span class="kw">service</span>:
-  <span class="kw">type</span>: ClusterIP
-  <span class="kw">port</span>: <span class="num">80</span>
-  <span class="kw">targetPort</span>: <span class="num">8080</span>
-
-<span class="kw">ingress</span>:
-  <span class="kw">enabled</span>: <span class="kw">true</span>
-  <span class="kw">className</span>: nginx
-  <span class="kw">hosts</span>:
-    - <span class="kw">host</span>: api.company.com
-      <span class="kw">paths</span>:
-        - <span class="kw">path</span>: /api/users
-          <span class="kw">pathType</span>: Prefix
-  <span class="kw">tls</span>:
-    - <span class="kw">secretName</span>: api-tls
-      <span class="kw">hosts</span>: [api.company.com]
-
-<span class="kw">resources</span>:
-  <span class="kw">requests</span>:
-    <span class="kw">cpu</span>: 250m
-    <span class="kw">memory</span>: 512Mi
-  <span class="kw">limits</span>:
-    <span class="kw">cpu</span>: <span class="num">1000</span>m
-    <span class="kw">memory</span>: 1Gi
-
-<span class="kw">autoscaling</span>:
-  <span class="kw">enabled</span>: <span class="kw">true</span>
-  <span class="kw">minReplicas</span>: <span class="num">2</span>
-  <span class="kw">maxReplicas</span>: <span class="num">8</span>
-  <span class="kw">targetCPUUtilizationPercentage</span>: <span class="num">70</span>
-  <span class="kw">targetMemoryUtilizationPercentage</span>: <span class="num">80</span>
-
-<span class="kw">env</span>:
-  <span class="kw">SPRING_PROFILE</span>: prod
-  <span class="kw">DB_HOST</span>: user-db-postgresql
-  <span class="kw">DB_PORT</span>: <span class="str">"5432"</span>
-  <span class="kw">DB_NAME</span>: userdb
-
-<span class="kw">secrets</span>:
-  <span class="kw">DB_USER</span>: db-credentials
-  <span class="kw">DB_PASS</span>: db-credentials</code></pre>
-
-<h3>helm/microservice/templates/deployment.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: apps/v1
-<span class="kw">kind</span>: Deployment
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: {{ .Release.Name }}
-  <span class="kw">labels</span>:
-    app: {{ .Release.Name }}
-<span class="kw">spec</span>:
-  {{- <span class="kw">if not</span> .Values.autoscaling.enabled }}
-  <span class="kw">replicas</span>: {{ .Values.replicaCount }}
-  {{- <span class="kw">end</span> }}
-  <span class="kw">selector</span>:
-    <span class="kw">matchLabels</span>:
-      app: {{ .Release.Name }}
-  <span class="kw">template</span>:
-    <span class="kw">metadata</span>:
-      <span class="kw">labels</span>:
-        app: {{ .Release.Name }}
-      <span class="kw">annotations</span>:
-        prometheus.io/scrape: <span class="str">"true"</span>
-        prometheus.io/path: /actuator/prometheus
-        prometheus.io/port: <span class="str">"8080"</span>
-    <span class="kw">spec</span>:
-      <span class="kw">containers</span>:
-        - <span class="kw">name</span>: {{ .Release.Name }}
-          <span class="kw">image</span>: <span class="str">"{{ .Values.image.repository }}:{{ .Values.image.tag }}"</span>
-          <span class="kw">imagePullPolicy</span>: {{ .Values.image.pullPolicy }}
-          <span class="kw">ports</span>:
-            - <span class="kw">containerPort</span>: <span class="num">8080</span>
-          <span class="kw">env</span>:
-            {{- range $key, $val := .Values.env }}
-            - <span class="kw">name</span>: {{ $key }}
-              <span class="kw">value</span>: {{ $val | quote }}
-            {{- end }}
-            {{- range $key, $secret := .Values.secrets }}
-            - <span class="kw">name</span>: {{ $key }}
-              <span class="kw">valueFrom</span>:
-                <span class="kw">secretKeyRef</span>:
-                  <span class="kw">name</span>: {{ $secret }}
-                  <span class="kw">key</span>: {{ $key | lower }}
-            {{- end }}
-          <span class="kw">readinessProbe</span>:
-            <span class="kw">httpGet</span>:
-              <span class="kw">path</span>: /actuator/health/readiness
-              <span class="kw">port</span>: <span class="num">8080</span>
-            <span class="kw">initialDelaySeconds</span>: <span class="num">20</span>
-            <span class="kw">periodSeconds</span>: <span class="num">10</span>
-          <span class="kw">livenessProbe</span>:
-            <span class="kw">httpGet</span>:
-              <span class="kw">path</span>: /actuator/health/liveness
-              <span class="kw">port</span>: <span class="num">8080</span>
-            <span class="kw">initialDelaySeconds</span>: <span class="num">30</span>
-            <span class="kw">periodSeconds</span>: <span class="num">15</span>
-          <span class="kw">resources</span>:
+          <pre><code"># helm/microservice/templates/deployment.yaml (key section)
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+  template:
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      <span class="kw">imagePullSecrets</span>:
-        - <span class="kw">name</span>: harbor-pull-secret</code></pre>
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-db-secret
+                  key: password</code></pre>
+        </div>
+      </div>
 
-<h3>helm/microservice/templates/service.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: v1
-<span class="kw">kind</span>: Service
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: {{ .Release.Name }}
-<span class="kw">spec</span>:
-  <span class="kw">type</span>: {{ .Values.service.type }}
-  <span class="kw">ports</span>:
-    - <span class="kw">port</span>: {{ .Values.service.port }}
-      <span class="kw">targetPort</span>: {{ .Values.service.targetPort }}
-      <span class="kw">protocol</span>: TCP
-  <span class="kw">selector</span>:
-    app: {{ .Release.Name }}</code></pre>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h3>Horizontal Pod Autoscaler</h3>
+          <p>HPA automatically scales pod count based on CPU and memory utilization. When CPU exceeds 70%, Kubernetes adds pods. When it drops, it removes them after a cool-down period.</p>
+          <pre><code"># helm/microservice/templates/hpa.yaml
+{{- if .Values.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Release.Name }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5min before scaling down
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60  # Remove 1 pod per minute
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+        - type: Pods
+          value: 4
+          periodSeconds: 60  # Add up to 4 pods per minute
+{{- end }}</code></pre>
+          <div class="info-box reveal">
+            <span class="info-label">Real World Result</span>
+            <p>At Optima Apps this HPA configuration handled a 10x traffic spike without manual intervention — the cluster scaled from 2 pods to 18 pods in under 3 minutes and scaled back down within 10 minutes of the spike ending.</p>
+          </div>
+        </div>
+      </div>
 
-<h3>helm/microservice/templates/hpa.yaml</h3>
-<pre><code>{{- <span class="kw">if</span> .Values.autoscaling.enabled }}
-<span class="kw">apiVersion</span>: autoscaling/v2
-<span class="kw">kind</span>: HorizontalPodAutoscaler
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: {{ .Release.Name }}
-<span class="kw">spec</span>:
-  <span class="kw">scaleTargetRef</span>:
-    <span class="kw">apiVersion</span>: apps/v1
-    <span class="kw">kind</span>: Deployment
-    <span class="kw">name</span>: {{ .Release.Name }}
-  <span class="kw">minReplicas</span>: {{ .Values.autoscaling.minReplicas }}
-  <span class="kw">maxReplicas</span>: {{ .Values.autoscaling.maxReplicas }}
-  <span class="kw">metrics</span>:
-    - <span class="kw">type</span>: Resource
-      <span class="kw">resource</span>:
-        <span class="kw">name</span>: cpu
-        <span class="kw">target</span>:
-          <span class="kw">type</span>: Utilization
-          <span class="kw">averageUtilization</span>: {{ .Values.autoscaling.targetCPUUtilizationPercentage }}
-    - <span class="kw">type</span>: Resource
-      <span class="kw">resource</span>:
-        <span class="kw">name</span>: memory
-        <span class="kw">target</span>:
-          <span class="kw">type</span>: Utilization
-          <span class="kw">averageUtilization</span>: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
-{{- <span class="kw">end</span> }}</code></pre>
-
-<h2>8. Kubernetes Namespace &amp; RBAC</h2>
-<h3>k8s/namespace.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: v1
-<span class="kw">kind</span>: Namespace
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: prod
-  <span class="kw">labels</span>:
-    env: production
----
-<span class="kw">apiVersion</span>: v1
-<span class="kw">kind</span>: ServiceAccount
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: microservice-sa
-  <span class="kw">namespace</span>: prod
----
-<span class="kw">apiVersion</span>: rbac.authorization.k8s.io/v1
-<span class="kw">kind</span>: Role
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: microservice-role
-  <span class="kw">namespace</span>: prod
-<span class="kw">rules</span>:
-  - <span class="kw">apiGroups</span>: [<span class="str">""</span>]
-    <span class="kw">resources</span>: [<span class="str">"configmaps"</span>, <span class="str">"secrets"</span>]
-    <span class="kw">verbs</span>: [<span class="str">"get"</span>, <span class="str">"list"</span>, <span class="str">"watch"</span>]
----
-<span class="kw">apiVersion</span>: rbac.authorization.k8s.io/v1
-<span class="kw">kind</span>: RoleBinding
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: microservice-binding
-  <span class="kw">namespace</span>: prod
-<span class="kw">subjects</span>:
-  - <span class="kw">kind</span>: ServiceAccount
-    <span class="kw">name</span>: microservice-sa
-<span class="kw">roleRef</span>:
-  <span class="kw">kind</span>: Role
-  <span class="kw">name</span>: microservice-role
-  <span class="kw">apiGroup</span>: rbac.authorization.k8s.io</code></pre>
-<pre><code><span class="cm"># Apply namespaces and RBAC</span>
-kubectl apply -f k8s/namespace.yaml
-
-<span class="cm"># Create Harbor pull secret in each namespace</span>
-kubectl create secret docker-registry harbor-pull-secret \
-  --namespace prod \
-  --docker-server=harbor.internal.company.com \
-  --docker-username=robot\$jenkins-push \
-  --docker-password=&lt;robot-token&gt;</code></pre>
-
-<h2>9. PostgreSQL per Service</h2>
-<pre><code><span class="cm"># Add Bitnami repo</span>
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
-
-<span class="cm"># Install PostgreSQL for each service</span>
-helm install user-db bitnami/postgresql \
-  --namespace prod \
-  --set auth.database=userdb \
-  --set auth.username=app_user \
-  --set auth.password=secret-user-pass \
-  --set primary.persistence.size=20Gi \
-  --set metrics.enabled=true
-
-helm install order-db bitnami/postgresql \
-  --namespace prod \
-  --set auth.database=orderdb \
-  --set auth.username=app_order \
-  --set auth.password=secret-order-pass \
-  --set primary.persistence.size=20Gi \
-  --set metrics.enabled=true
-
-helm install payment-db bitnami/postgresql \
-  --namespace prod \
-  --set auth.database=paymentdb \
-  --set auth.username=app_payment \
-  --set auth.password=secret-payment-pass \
-  --set primary.persistence.size=20Gi \
-  --set metrics.enabled=true</code></pre>
-
-<pre><code><span class="cm"># Store credentials as K8s secrets</span>
-kubectl create secret generic db-credentials \
-  --namespace prod \
-  --from-literal=db_user=app_user \
-  --from-literal=db_pass=secret-user-pass</code></pre>
-
-<div class="warn">Never store passwords in plain text in your repo. Use a secrets manager (Vault, AWS Secrets Manager) or Sealed Secrets for GitOps workflows.</div>
-
-<h2>10. NGINX Ingress &amp; TLS</h2>
-<pre><code><span class="cm"># Install NGINX Ingress Controller</span>
-helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace \
-  --set controller.replicaCount=2
-
-<span class="cm"># Install cert-manager for auto TLS</span>
-helm install cert-manager jetstack/cert-manager \
-  --namespace cert-manager --create-namespace \
-  --set installCRDs=true</code></pre>
-
-<h3>k8s/cluster-issuer.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: cert-manager.io/v1
-<span class="kw">kind</span>: ClusterIssuer
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: letsencrypt-prod
-<span class="kw">spec</span>:
-  <span class="kw">acme</span>:
-    <span class="kw">server</span>: https://acme-v02.api.letsencrypt.org/directory
-    <span class="kw">email</span>: devops@company.com
-    <span class="kw">privateKeySecretRef</span>:
-      <span class="kw">name</span>: letsencrypt-prod
-    <span class="kw">solvers</span>:
-      - <span class="kw">http01</span>:
-          <span class="kw">ingress</span>:
-            <span class="kw">class</span>: nginx</code></pre>
-
-<h3>helm/microservice/templates/ingress.yaml</h3>
-<pre><code>{{- <span class="kw">if</span> .Values.ingress.enabled }}
-<span class="kw">apiVersion</span>: networking.k8s.io/v1
-<span class="kw">kind</span>: Ingress
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: {{ .Release.Name }}
-  <span class="kw">annotations</span>:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: <span class="str">"true"</span>
-    nginx.ingress.kubernetes.io/proxy-body-size: <span class="str">"10m"</span>
-<span class="kw">spec</span>:
-  <span class="kw">ingressClassName</span>: {{ .Values.ingress.className }}
-  <span class="kw">tls</span>:
-    {{- range .Values.ingress.tls }}
-    - <span class="kw">hosts</span>:
-        {{- range .hosts }}
-        - {{ . }}
-        {{- end }}
-      <span class="kw">secretName</span>: {{ .secretName }}
-    {{- end }}
-  <span class="kw">rules</span>:
-    {{- range .Values.ingress.hosts }}
-    - <span class="kw">host</span>: {{ .host }}
-      <span class="kw">http</span>:
-        <span class="kw">paths</span>:
-          {{- range .paths }}
-          - <span class="kw">path</span>: {{ .path }}
-            <span class="kw">pathType</span>: {{ .pathType }}
-            <span class="kw">backend</span>:
-              <span class="kw">service</span>:
-                <span class="kw">name</span>: {{ $.Release.Name }}
-                <span class="kw">port</span>:
-                  <span class="kw">number</span>: 80
-          {{- end }}
-    {{- end }}
-{{- <span class="kw">end</span> }}</code></pre>
-
-<h2>11. Monitoring — Prometheus &amp; Grafana</h2>
-<pre><code><span class="cm"># Install kube-prometheus-stack</span>
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring --create-namespace \
-  --set grafana.adminPassword=admin-secret \
-  --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false</code></pre>
-
-<h3>helm/microservice/templates/servicemonitor.yaml</h3>
-<pre><code><span class="kw">apiVersion</span>: monitoring.coreos.com/v1
-<span class="kw">kind</span>: ServiceMonitor
-<span class="kw">metadata</span>:
-  <span class="kw">name</span>: {{ .Release.Name }}
-<span class="kw">spec</span>:
-  <span class="kw">selector</span>:
-    <span class="kw">matchLabels</span>:
+      <div class="step">
+        <div class="step-num">05</div>
+        <div class="step-content">
+          <h3>Prometheus Monitoring</h3>
+          <p>Spring Boot Actuator exposes metrics at <code>/actuator/prometheus</code>. A ServiceMonitor tells Prometheus to scrape it automatically. No manual configuration needed.</p>
+          <pre><code"># ServiceMonitor — tells Prometheus to scrape this service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    release: prometheus  # Must match Prometheus selector label
+spec:
+  selector:
+    matchLabels:
       app: {{ .Release.Name }}
-  <span class="kw">endpoints</span>:
-    - <span class="kw">port</span>: http
-      <span class="kw">path</span>: /actuator/prometheus
-      <span class="kw">interval</span>: 15s</code></pre>
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s</code></pre>
 
-<div class="note">After deploying, open Grafana at <code>http://monitoring-grafana.monitoring.svc</code> and import dashboard ID <strong>4701</strong> (JVM Micrometer) for Spring Boot metrics.</div>
+          <pre><code"># Spring Boot — application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+    export:
+      prometheus:
+        enabled: true</code></pre>
+        </div>
+      </div>
 
-<h2>12. Testing &amp; Verification</h2>
-<pre><code><span class="cm"># Check pods</span>
-kubectl get pods -n prod
-kubectl get svc -n prod
-kubectl get ingress -n prod
+      <div class="step">
+        <div class="step-num">06</div>
+        <div class="step-content">
+          <h3>Verification and Rollback</h3>
+          <p>After every deployment verify the rollout status and check that pods are healthy. If anything looks wrong, a single Helm command rolls back the entire release.</p>
+          <pre><code"># Check all deployments rolled out successfully
+kubectl rollout status deployment/user-service -n production
+kubectl rollout status deployment/order-service -n production
+kubectl rollout status deployment/payment-service -n production
 
-<span class="cm"># Check HPA</span>
-kubectl get hpa -n prod
+# Check pod health
+kubectl get pods -n production -l app=user-service
 
-<span class="cm"># Test health endpoints</span>
-curl -sf https://api.company.com/api/users/actuator/health
-curl -sf https://api.company.com/api/orders/actuator/health
-curl -sf https://api.company.com/api/payments/actuator/health
+# Check HPA is working
+kubectl get hpa -n production
 
-<span class="cm"># View logs</span>
-kubectl logs -l app=user-service -n prod --tail=50 -f
+# View resource usage
+kubectl top pods -n production
 
-<span class="cm"># Rollback if needed</span>
-helm rollback user-service 1 -n prod
-helm rollback order-service 1 -n prod
-helm rollback payment-service 1 -n prod
+# Check recent events for issues
+kubectl describe deployment user-service -n production | grep -A 20 Events
 
-<span class="cm"># Scale manually</span>
-kubectl scale deployment user-service -n prod --replicas=4
+# Rollback to previous release if needed
+helm rollback user-service -n production     # Rolls back one version
+helm rollback user-service 3 -n production   # Rolls back to specific revision
 
-<span class="cm"># Check Prometheus targets</span>
-kubectl port-forward svc/monitoring-prometheus 9090:9090 -n monitoring</code></pre>
+# View rollout history
+helm history user-service -n production</code></pre>
+        </div>
+      </div>
 
-<div class="warn">Before deploying to prod, always test in staging first. Use <code>helm diff</code> plugin to preview changes: <code>helm diff upgrade user-service helm/microservice/ -f values-prod.yaml</code></div>
+    </div>
+  </div>
 
-<footer>Stefan Laza — DevOps Engineer</footer>
-</div></body></html>
+  <div class="section reveal">
+    <div class="section-num">Reference</div>
+    <h2>Key Kubernetes Objects</h2>
+    <table class="reveal">
+      <tr><th>Object</th><th>Purpose</th><th>Defined In</th></tr>
+      <tr><td>Deployment</td><td>Manages pod replicas and rolling updates</td><td>Helm template</td></tr>
+      <tr><td>Service</td><td>Stable DNS name and load balancing for pods</td><td>Helm template</td></tr>
+      <tr><td>HPA</td><td>Auto-scales pod count based on CPU/memory</td><td>Helm template</td></tr>
+      <tr><td>Ingress</td><td>Routes external HTTP traffic to services</td><td>Helm template</td></tr>
+      <tr><td>Secret</td><td>Database passwords, API keys — base64 encoded</td><td>Manual / Sealed Secrets</td></tr>
+      <tr><td>ServiceMonitor</td><td>Tells Prometheus which pods to scrape</td><td>Helm template</td></tr>
+      <tr><td>ServiceAccount</td><td>Identity for pods — controls API access</td><td>Helm template</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>Stefan Lazarevic — Technical Product Manager — Queens, New York — 2026</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Scroll progress line
+  const line = document.getElementById('scrollLine');
+  if (line) {
+    window.addEventListener('scroll', () => {
+      const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+      line.style.width = pct + '%';
+    }, {passive: true});
+  }
+
+  // Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, {threshold: 0.07});
+    revealEls.forEach(el => obs.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('visible'));
+  }
+});
+</script>
+
+</body>
+</html>
